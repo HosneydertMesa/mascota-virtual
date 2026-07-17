@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' blob: data:; connect-src 'none'; object-src 'none'; base-uri 'none'">
+  <title>Mascota Virtual - Compañero de Escritorio</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Main layout container for the transparent Electron window -->
+  <div id="pet-window-container">
+    
+    <!-- Speech/Dialogue Bubble (Hidden by default, shown dynamically via CSS class) -->
+    <div id="speech-bubble" class="interactive">
+      <div id="speech-text">¡Hola! Soy tu nuevo compañero de trabajo. ¡Hagamos cosas asombrosas hoy!</div>
+    </div>
+
+    <section id="quick-chat-panel" class="interactive" aria-label="Chat rápido" hidden>
+      <header class="quick-chat-header">
+        <div>
+          <strong id="quick-chat-title">Habla con Luna</strong>
+          <span id="quick-chat-subtitle">Tu compañera está escuchando</span>
+        </div>
+        <button id="quick-chat-close" type="button" aria-label="Cerrar chat rápido">&times;</button>
+      </header>
+      <div id="quick-chat-reply" class="quick-chat-reply">¿Qué tienes en mente?</div>
+      <div class="quick-chat-input-row">
+        <input id="quick-chat-input" type="text" maxlength="500" autocomplete="off" placeholder="Escribe algo breve...">
+        <button id="quick-chat-send" type="button" aria-label="Enviar mensaje">
+          <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- Pet Container (Holds the SVG and controls. Operates on interactive hover) -->
+    <div id="pet-container" class="interactive">
+      <button id="quick-chat-btn" class="interactive" title="Chat rápido" aria-label="Abrir chat rápido" aria-expanded="false">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path><path d="M8 10h.01M12 10h.01M16 10h.01"></path></svg>
+      </button>
+      
+      <!-- Settings Gear Button (inside pet container to float right next to it) -->
+      <button id="settings-btn" class="interactive" title="Abrir Panel de Control">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+      </button>
+      
+      <!-- Zzz Sleeping Particles Container (animated via CSS keyframes) -->
+      <div class="zzz-container">
+        <span class="zzz-1">z</span>
+        <span class="zzz-2">z</span>
+        <span class="zzz-3">z</span>
+      </div>
+      
+      <!-- SVG loaded dynamically inside this wrapper -->
+      <div id="pet-svg-wrapper"></div>
+    </div>
+  </div>
+
+  <!-- Scripts: Mascot Assets & Main Renderer Orchestrator -->
+  <script src="assets/cat.js"></script>
+  <script src="assets/dog.js"></script>
+  <script src="services/pet-audio.js"></script>
+  <script src="renderer.js"></script>
+</body>
+</html>

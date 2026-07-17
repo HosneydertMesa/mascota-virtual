@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Logs
+debug.log
+*.log
+
+# Build / distribution
+dist/
+out/
+coverage/
+
+# Agent tooling (sdlc scaffold)
+# Track .mavis/skills/ (project tooling); ignore generated state / secrets
+.mavis/mcp.json
+.mavis/.cache/
+.mavis/state/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Env
+.env
+.env.local

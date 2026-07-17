@@ -1,0 +1,22 @@
+{
+  "name": "mascota-virtual",
+  "version": "1.0.0",
+  "description": "Un compañero de escritorio virtual con IA y Pomodoro",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "check": "node --check main.js && node --check preload.js && node --check src/renderer.js && node --check src/dashboard-renderer.js && node --check src/services/ai.js && node --check src/services/pet-audio.js",
+    "test": "node --test test/*.test.js"
+  },
+  "keywords": [
+    "desktop-pet",
+    "pomodoro",
+    "ai-assistant",
+    "electron"
+  ],
+  "author": "Antigravity",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^43.1.0"
+  }
+}
