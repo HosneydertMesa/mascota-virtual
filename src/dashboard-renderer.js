@@ -207,11 +207,9 @@ function playNotification() {
     oscillator.connect(gain).connect(context.destination);
     oscillator.start();
     oscillator.stop(context.currentTime + 0.45);
-  } catch (error) {
+  } catch (_error) {
     // Soft-fail: si el audio no esta disponible, el timer sigue funcionando.
-    // Si necesitas diagnosticar, descomenta la siguiente linea en dev:
-    // console.debug('Audio no disponible:', error);
-    void error;
+    // Para diagnosticar, agregar log dentro de este catch en dev.
   }
 }
 
