@@ -56,13 +56,21 @@ function shOut(cmd, args = [], opts = {}) {
 }
 
 function runNpm(script) {
-  // npm.cmd en Windows; npm en unix. spawnSync para que el output fluya.
+  // En Windows, npm es un .cmd que Node no puede spawnear directo (EINVAL).
+  // Solución: spawnear cmd.exe /c npm.cmd, que no necesita shell:true.
+  // En unix, npm es un binario y se puede spawnear directo.
   const isWin = process.platform === 'win32';
-  const cmd = isWin ? 'npm.cmd' : 'npm';
-  const result = spawnSync(cmd, ['run', script, '--silent'], {
-    cwd: ROOT,
+  const cmd = isWin ? 'cmd.exe' : 'npm';
+  const args = isWin ? ['/c', 'npm.cmd', 'run', script] : ['run', script];
+  const result = spawnSync(cmd, args, {
+    cwd: getRoot(),
     stdio: 'inherit'
   });
+  if (process.env.SDLC_DEBUG) {
+    process.stderr.write(`[SDLC_DEBUG] runNpm(${script}): status=${result.status} signal=${result.signal} error=${result.error?.message}\n`);
+    if (result.stdout) process.stderr.write(`STDOUT: ${result.stdout}`);
+    if (result.stderr) process.stderr.write(`STDERR: ${result.stderr}`);
+  }
   return result.status === 0;
 }
 
@@ -88,7 +96,7 @@ function hasDir(...parts) {
 }
 
 function hasFile(...parts) {
-  const p = path.join(ROOT, ...parts);
+  const p = path.join(getRoot(), ...parts);
   return fs.existsSync(p);
 }
 
