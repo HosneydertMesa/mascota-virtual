@@ -9,6 +9,9 @@ const { registerGlobalShortcuts } = require('./src/core/global-shortcuts');
 const { executeBehavior, buildMainDeps } = require('./src/core/pet-behavior');
 const { loadPetName, savePetName } = require('./src/services/pet-name-store');
 const { validatePetName, getPetName } = require('./src/core/pet-micro-presence');
+const { loadMood, saveMood } = require('./src/services/mood-store');
+const { startMoodTick } = require('./src/services/mood-tick');
+const { applyInteraction, buildMoodContext } = require('./src/core/pet-mood');
 const {
   clamp,
   getPetProfile,
@@ -42,6 +45,8 @@ let isQuitting = false;
 let activePetType = 'cat';
 let aiState = 'IDLE';
 let currentX = 0;
+let currentMood = null;
+let moodTickHandle = null;
 let currentTargetX = 0;
 let velocityX = 0;
 let lastMotionTime = 0;
@@ -755,13 +760,26 @@ ipcMain.handle('ai:send-message', async (event, payload) => {
   const petType = normalizePetType(payload?.petType);
   const storedName = loadPetName(app.getPath('userData'));
   const petName = getPetName(storedName, petType);
+  // A1 — mood system: aplicar interaction chat (boost happiness + curiosity)
+  if (currentMood) {
+    currentMood = applyInteraction(currentMood, 'chat');
+    try { saveMood(app.getPath('userData'), currentMood); } catch (e) { logDebug('MOOD SAVE: ' + e.message); }
+  }
+  const moodContext = currentMood ? buildMoodContext(currentMood) : '';
   return sendMessageToMiniMax(
     apiKey,
     petType,
     Array.isArray(payload?.history) ? payload.history : [],
     userMessage,
-    petName
+    petName,
+    moodContext
   );
+});
+
+// A1 — IPC para que el dashboard pueda ver el mood actual
+ipcMain.handle('mood:get', event => {
+  if (!isKnownSender(event)) throw new Error('Solicitud no autorizada.');
+  return currentMood || null;
 });
 
 ipcMain.handle('ai:quick-tip', async (event, payload) => {
@@ -812,6 +830,23 @@ function handleQuickCaptureShortcut() {
 app.whenReady().then(() => {
   createPetWindow();
   initMainDeps();
+  // A1 — mood system: cargar mood desde disco + iniciar tick periodico
+  try {
+    currentMood = loadMood(app.getPath('userData'));
+    logDebug('MOOD INIT', { energy: currentMood.energy, happiness: currentMood.happiness });
+  } catch (error) {
+    logDebug('MOOD INIT ERROR: ' + error.message);
+    currentMood = null;
+  }
+  moodTickHandle = startMoodTick({
+    getMood: () => currentMood,
+    setMood: (m) => {
+      currentMood = m;
+      try { saveMood(app.getPath('userData'), m); } catch (e) { logDebug('MOOD TICK SAVE: ' + e.message); }
+    },
+    intervalMs: 60_000,
+    logDebug
+  });
   powerMonitorHandle = createPowerMonitor({
     powerMonitor,
     setSleeping: value => setSleepingState(value, 'powermonitor'),
@@ -831,6 +866,10 @@ app.whenReady().then(() => {
 app.on('before-quit', () => {
   isQuitting = true;
   clearAllTimers();
+  if (moodTickHandle) {
+    moodTickHandle.stop();
+    moodTickHandle = null;
+  }
   if (powerMonitorHandle) {
     try {
       powerMonitorHandle.detach();
