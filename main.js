@@ -7,6 +7,8 @@ const { getQuickTip, sendMessageToMiniMax } = require('./src/services/ai');
 const { createPowerMonitor } = require('./src/services/power-monitor');
 const { registerGlobalShortcuts } = require('./src/core/global-shortcuts');
 const { executeBehavior, buildMainDeps } = require('./src/core/pet-behavior');
+const { loadPetName, savePetName } = require('./src/services/pet-name-store');
+const { validatePetName, getPetName } = require('./src/core/pet-micro-presence');
 const {
   clamp,
   getPetProfile,
@@ -730,16 +732,35 @@ ipcMain.handle('ai:clear-key', event => {
   return { configured: false };
 });
 
+// Pet name (P7) — guardado en <userData>/pet-name.json
+ipcMain.handle('pet-name:get', event => {
+  if (!isKnownSender(event)) throw new Error('Solicitud no autorizada.');
+  const stored = loadPetName(app.getPath('userData'));
+  return { name: stored };
+});
+
+ipcMain.handle('pet-name:set', (event, candidate) => {
+  if (!isDashboardSender(event)) throw new Error('Solicitud no autorizada.');
+  const validated = validatePetName(candidate);
+  if (!validated) throw new Error('Nombre inválido. Usá letras, números, espacios y los caracteres . _ - \'.');
+  savePetName(app.getPath('userData'), validated);
+  return { name: validated };
+});
+
 ipcMain.handle('ai:send-message', async (event, payload) => {
   if (!isKnownSender(event)) throw new Error('Solicitud no autorizada.');
   const apiKey = readEncryptedApiKey();
   const userMessage = typeof payload?.userMessage === 'string' ? payload.userMessage.trim() : '';
   if (!userMessage || userMessage.length > 4000) throw new Error('El mensaje está vacío o es demasiado largo.');
+  const petType = normalizePetType(payload?.petType);
+  const storedName = loadPetName(app.getPath('userData'));
+  const petName = getPetName(storedName, petType);
   return sendMessageToMiniMax(
     apiKey,
-    normalizePetType(payload?.petType),
+    petType,
     Array.isArray(payload?.history) ? payload.history : [],
-    userMessage
+    userMessage,
+    petName
   );
 });
 

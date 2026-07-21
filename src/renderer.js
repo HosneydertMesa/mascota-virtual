@@ -520,6 +520,7 @@ function animateTail() {
 window.addEventListener('DOMContentLoaded', () => {
   setupInteraction();
   initSettings();
+  initMicroPresence();
   requestAnimationFrame(animateTail);
   setTimeout(() => {
     triggerHappyBounce();
@@ -528,3 +529,109 @@ window.addEventListener('DOMContentLoaded', () => {
       : '¡Hola! ¡Soy Max! Hoy será un gran día de trabajo. Haz doble clic en mí.');
   }, 2000);
 });
+
+/* === Micro presence (batch 1) === */
+/* Las funciones puras viven en src/core/pet-micro-presence.js pero el renderer
+   no tiene require; las reimplementamos minimalmente acá (mismas formulas).
+   En proxima iteracion se puede exponer via preload. */
+
+const PUPIL_MAX_RADIUS = 4;
+const YAWN_INTERVAL_MS = 5 * 60 * 1000; // 5 min
+let lastYawnAt = new Date();
+let lastInteractionAt = Date.now();
+
+function shouldPupilDilateLocal() {
+  const h = new Date().getHours();
+  return h >= 20 || h < 7;
+}
+
+function clampLocal(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+function computePupilPositionLocal(eyeCenter, cursorPos) {
+  const dx = cursorPos.x - eyeCenter.x;
+  const dy = cursorPos.y - eyeCenter.y;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  if (dist <= PUPIL_MAX_RADIUS || dist === 0) {
+    return { x: eyeCenter.x, y: eyeCenter.y };
+  }
+  const scale = PUPIL_MAX_RADIUS / dist;
+  return { x: eyeCenter.x + dx * scale, y: eyeCenter.y + dy * scale };
+}
+
+function initMicroPresence() {
+  // M1 — agregar clase 'breathing' al wrapper
+  if (petSvgWrapper) petSvgWrapper.classList.add('breathing');
+
+  // M3 — pupil dilation
+  if (shouldPupilDilateLocal()) {
+    document.body.classList.add('pupils-dilated');
+  }
+  // Re-evaluar cada hora
+  setInterval(() => {
+    document.body.classList.toggle('pupils-dilated', shouldPupilDilateLocal());
+  }, 60 * 60 * 1000);
+
+  // M2 — eye tracking (mousemove)
+  document.addEventListener('mousemove', handlePupilTracking);
+  // Inicializar pupilas al centro
+  initPupilPositions();
+
+  // M4 — yawn trigger cada 5 min en idle
+  setInterval(checkYawn, 30 * 1000); // check cada 30s
+}
+
+function initPupilPositions() {
+  const pupils = document.querySelectorAll('.pet-pupil');
+  if (pupils.length === 0) return; // SVGs no tienen pupilas todavia
+  pupils.forEach(pupil => {
+    const cx = parseFloat(pupil.getAttribute('data-anchor-x') || pupil.getAttribute('cx') || '0');
+    const cy = parseFloat(pupil.getAttribute('data-anchor-y') || pupil.getAttribute('cy') || '0');
+    const r = shouldPupilDilateLocal() ? 3.2 : 2.0;
+    pupil.setAttribute('r', String(r));
+    pupil.setAttribute('cx', String(cx));
+    pupil.setAttribute('cy', String(cy));
+  });
+}
+
+function handlePupilTracking(event) {
+  lastInteractionAt = Date.now();
+  const pupils = document.querySelectorAll('.pet-pupil');
+  if (pupils.length === 0) return;
+  const wrapper = petSvgWrapper;
+  if (!wrapper) return;
+  const wrapperRect = wrapper.getBoundingClientRect();
+  // Las coordenadas de la pupila estan en el sistema del SVG.
+  // Por ahora usamos una aproximacion: cursor en pixeles de pantalla
+  // contra el anchor del ojo (tambien en pixeles de pantalla via getBoundingClientRect).
+  const scale = wrapperRect.width / 130; // viewBox es 0 0 130 130
+  const cursorSvg = {
+    x: (event.clientX - wrapperRect.left) / Math.max(scale, 0.01),
+    y: (event.clientY - wrapperRect.top) / Math.max(scale, 0.01)
+  };
+  pupils.forEach(pupil => {
+    const anchorX = parseFloat(pupil.getAttribute('data-anchor-x') || '0');
+    const anchorY = parseFloat(pupil.getAttribute('data-anchor-y') || '0');
+    const newPos = computePupilPositionLocal({ x: anchorX, y: anchorY }, cursorSvg);
+    pupil.setAttribute('cx', newPos.x.toFixed(2));
+    pupil.setAttribute('cy', newPos.y.toFixed(2));
+  });
+}
+
+function checkYawn() {
+  const idleMs = Date.now() - lastInteractionAt;
+  if (idleMs < YAWN_INTERVAL_MS) return;
+  const elapsed = Date.now() - lastYawnAt.getTime();
+  if (elapsed < YAWN_INTERVAL_MS) return;
+  triggerYawn();
+  lastYawnAt = new Date();
+}
+
+function triggerYawn() {
+  if (!petSvgWrapper) return;
+  petSvgWrapper.classList.add('pet-yawn');
+  setTimeout(() => petSvgWrapper.classList.remove('pet-yawn'), 1700);
+  // Sugerir break via speech bubble (placeholder; en batch 1.5 lo conectamos a mood system)
+  showSpeech(currentPet === 'cat'
+    ? '*bosteza* ... ¿un descansito quizás?'
+    : '*bosteza* ... ¿salimos a estirar las patas?');
+}
