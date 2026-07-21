@@ -652,8 +652,9 @@ function cmdStrict() {
     console.log(`  ${dim('--')} PLAN     ${dim('saltado (solo commits triviales desde el tag)')}`);
   }
 
-  // GATE: REVIEW (con filtro de fecha si hay tag)
-  if (commitsSince.length > 0) {
+  // GATE: REVIEW (con filtro de fecha si hay tag, skipea si todos los commits son triviales)
+  const allTrivial = nonTrivial.length === 0 && trivial.length > 0;
+  if (commitsSince.length > 0 && !allTrivial) {
     const since = tagDate(lastTag);
     const review = gateReview({ since });
     const mark = review.passed ? green('✓') : red('✗');
@@ -665,12 +666,14 @@ function cmdStrict() {
       errors.push(hint);
       failed = true;
     }
+  } else if (allTrivial) {
+    console.log(`  ${dim('--')} REVIEW   ${dim('saltado (todos los commits desde el tag son triviales)')}`);
   } else {
     console.log(`  ${dim('--')} REVIEW   ${dim('saltado (sin commits nuevos)')}`);
   }
 
-  // GATE: QA (con filtro de fecha si hay tag)
-  if (commitsSince.length > 0) {
+  // GATE: QA (con filtro de fecha si hay tag, skipea si todos los commits son triviales)
+  if (commitsSince.length > 0 && !allTrivial) {
     const since = tagDate(lastTag);
     const qa = gateQa({ since });
     const mark = qa.passed ? green('✓') : red('✗');
@@ -682,6 +685,8 @@ function cmdStrict() {
       errors.push(hint);
       failed = true;
     }
+  } else if (allTrivial) {
+    console.log(`  ${dim('--')} QA       ${dim('saltado (todos los commits desde el tag son triviales)')}`);
   } else {
     console.log(`  ${dim('--')} QA       ${dim('saltado (sin commits nuevos)')}`);
   }

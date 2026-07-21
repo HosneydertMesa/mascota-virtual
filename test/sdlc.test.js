@@ -349,3 +349,65 @@ test('tagDate: retorna null si no se pasa tag', () => {
     assert.equal(sdlc.tagDate(''), null);
   });
 });
+
+// --- skip review/qa cuando todos los commits son triviales -----------------
+
+test('strict: solo commits docs/chore desde el tag → skipea review/qa', () => {
+  return withTmpDir((dir) => {
+    fs.mkdirSync(path.join(dir, 'docs', 'plans'), { recursive: true });
+    fs.mkdirSync(path.join(dir, 'docs', 'reviews'), { recursive: true });
+    fs.writeFileSync(path.join(dir, 'docs', 'reviews', 'old.md'), '## Verdict\nAPPROVED\n');
+    fs.mkdirSync(path.join(dir, 'docs', 'qa'), { recursive: true });
+    fs.writeFileSync(path.join(dir, 'docs', 'qa', 'old.md'), '# QA\n');
+    fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ name: 't', version: '1.0.0' }));
+
+    fs.writeFileSync(path.join(dir, 'x.js'), '// x');
+    spawnSync('git', ['config', 'user.email', 't@t'], { cwd: dir });
+    spawnSync('git', ['config', 'user.name', 't'], { cwd: dir });
+    spawnSync('git', ['add', '.'], { cwd: dir });
+    spawnSync('git', ['commit', '-m', 'initial'], { cwd: dir });
+    spawnSync('git', ['tag', 'v1.0.0'], { cwd: dir });
+
+    // Varios commits triviales
+    fs.writeFileSync(path.join(dir, 'x.js'), '// x2');
+    spawnSync('git', ['add', 'x.js'], { cwd: dir });
+    spawnSync('git', ['commit', '-m', 'docs: typo'], { cwd: dir });
+    fs.writeFileSync(path.join(dir, 'x.js'), '// x3');
+    spawnSync('git', ['add', 'x.js'], { cwd: dir });
+    spawnSync('git', ['commit', '-m', 'chore: bump'], { cwd: dir });
+
+    const r = spawnSync('node', [SCRIPT, 'strict'], { cwd: dir, encoding: 'utf8' });
+    assert.equal(r.status, 0, `strict fallo: ${r.stdout}\n${r.stderr}`);
+    assert.match(r.stdout, /saltado \(todos los commits/);
+  });
+});
+
+test('strict: mix de feat + docs → sigue exigiendo review/qa', () => {
+  return withTmpDir((dir) => {
+    fs.mkdirSync(path.join(dir, 'docs', 'plans'), { recursive: true });
+    fs.writeFileSync(path.join(dir, 'docs', 'plans', 'x.md'), '# plan');
+    fs.mkdirSync(path.join(dir, 'docs', 'reviews'), { recursive: true });
+    fs.mkdirSync(path.join(dir, 'docs', 'qa'), { recursive: true });
+    fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ name: 't', version: '1.0.0' }));
+
+    fs.writeFileSync(path.join(dir, 'x.js'), '// x');
+    spawnSync('git', ['config', 'user.email', 't@t'], { cwd: dir });
+    spawnSync('git', ['config', 'user.name', 't'], { cwd: dir });
+    spawnSync('git', ['add', '.'], { cwd: dir });
+    spawnSync('git', ['commit', '-m', 'initial'], { cwd: dir });
+    spawnSync('git', ['tag', 'v1.0.0'], { cwd: dir });
+
+    // feat: no-trivial
+    fs.writeFileSync(path.join(dir, 'x.js'), '// x2');
+    spawnSync('git', ['add', 'x.js'], { cwd: dir });
+    spawnSync('git', ['commit', '-m', 'feat: add x2'], { cwd: dir });
+    // docs: trivial después
+    fs.writeFileSync(path.join(dir, 'x.js'), '// x3');
+    spawnSync('git', ['add', 'x.js'], { cwd: dir });
+    spawnSync('git', ['commit', '-m', 'docs: typo'], { cwd: dir });
+
+    const r = spawnSync('node', [SCRIPT, 'strict'], { cwd: dir, encoding: 'utf8' });
+    assert.equal(r.status, 1, `strict debería haber fallado: ${r.stdout}`);
+    assert.match(r.stdout, /REVIEW/);
+  });
+});
