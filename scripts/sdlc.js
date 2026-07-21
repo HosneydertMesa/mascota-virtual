@@ -194,12 +194,17 @@ function gateDoc() {
   if (!hasDir('docs', 'deliverables')) {
     return { passed: false, evidence: 'no existe docs/deliverables/' };
   }
-  const docs = listDir('docs', 'deliverables').filter(f => f.endsWith('.docx'));
+  // Acepta DOCX (formal) y MD (liviano, para proyectos personales)
+  const docx = listDir('docs', 'deliverables').filter(f => f.endsWith('.docx'));
+  const md = listDir('docs', 'deliverables').filter(f => f.endsWith('.md'));
+  const total = docx.length + md.length;
+  if (total === 0) {
+    return { passed: false, evidence: 'docs/deliverables/ existe pero vacío' };
+  }
+  const examples = [...docx, ...md].slice(0, 3).join(', ');
   return {
-    passed: docs.length > 0,
-    evidence: docs.length > 0
-      ? `${docs.length} DOCX: ${docs.slice(0, 3).join(', ')}`
-      : 'docs/deliverables/ existe pero vacío'
+    passed: true,
+    evidence: `${total} deliverable(s) (${docx.length} DOCX, ${md.length} MD): ${examples}`
   };
 }
 
