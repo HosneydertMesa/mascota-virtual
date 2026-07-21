@@ -86,17 +86,29 @@ build:    npm run build
 ## SDLC Workflow (este repo)
 
 > Flujo por defecto para features no triviales. Adáptalo a tu realidad.
+>
+> **Orquestador**: `node scripts/sdlc.js` (ver `docs/sdlc/PHASES.md` para detalle de cada gate).
+> Estado rápido: `npm run sdlc:status` · Siguiente gate: `npm run sdlc:next`.
 
 ```
-1. PLAN     →  /sdlc-plan "<feature>"
-2. DESIGN   →  design doc en docs/design/<feature>.md (auto-gen DOCX con /sdlc-doc)
+1. PLAN     →  /sdlc-plan "<feature>"  (output: docs/plans/<feature>.md)
+2. DESIGN   →  design doc en docs/deliverables/<feature>-design-<fecha>.docx (con /sdlc-doc design)
 3. IMPLEMENT → /sdlc-team implement "<feature>"  (Leader → Implementer → Verifier)
-4. REVIEW   →  /sdlc-review (automático en pre-commit hook + manual con skill)
-5. TEST     →  nightly cron en .grok/sdlc-setup/cron/nightly-tests.ps1
-6. MERGE    →  PR con MCP GitHub (auto-review + auto-assign)
-7. DOCS     →  /sdlc-doc finalize "<feature>"  (DOCX con changelog)
-8. DEPLOY   →  manual o via CI, segun tu pipeline
+4. DEV GATE →  npm run sdlc:dev  (sintaxis + tests + pre-commit hook)
+5. REVIEW   →  /sdlc-review  (captura diff con npm run sdlc:review, output: docs/reviews/)
+6. QA       →  npm run sdlc:qa  (checklist manual, sign-off en docs/qa/)
+7. RELEASE  →  npm run sdlc:release  (bump version + tag + push)
+8. DOCS     →  /sdlc-doc finalize "<feature>"  (DOCX con changelog en docs/deliverables/)
+9. DEPLOY   →  manual o via CI, segun tu pipeline
 ```
+
+**Gates atajo** (no todos los features pasan los 9):
+- Bugfix trivial → solo paso 4 (DEV)
+- Feature mediana → 1, 3, 4, 5, 6, 7, 8
+- Refactor sin lógica → 3, 4, 5
+- Hotfix → 4, 5 (exprés), 7 (doc al día siguiente)
+
+Ver `docs/sdlc/PHASES.md` para criterios de salida de cada gate.
 
 ---
 

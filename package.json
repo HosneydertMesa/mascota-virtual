@@ -6,7 +6,14 @@
   "scripts": {
     "start": "electron .",
     "check": "node --check main.js && node --check preload.js && node --check src/renderer.js && node --check src/dashboard-renderer.js && node --check src/services/ai.js && node --check src/services/pet-audio.js",
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/*.test.js",
+    "sdlc": "node scripts/sdlc.js",
+    "sdlc:status": "node scripts/sdlc.js status",
+    "sdlc:next": "node scripts/sdlc.js next",
+    "sdlc:dev": "node scripts/sdlc.js dev",
+    "sdlc:review": "node scripts/sdlc.js review",
+    "sdlc:qa": "node scripts/sdlc.js qa",
+    "sdlc:release": "node scripts/sdlc.js release"
   },
   "keywords": [
     "desktop-pet",
