@@ -6,6 +6,7 @@ const path = require('path');
 const { getQuickTip, sendMessageToMiniMax } = require('./src/services/ai');
 const { createPowerMonitor } = require('./src/services/power-monitor');
 const { registerGlobalShortcuts } = require('./src/core/global-shortcuts');
+const { executeBehavior, buildMainDeps } = require('./src/core/pet-behavior');
 const {
   clamp,
   getPetProfile,
@@ -428,81 +429,31 @@ function runGravityFall(win, startX, startY, targetDisplay) {
   timers.fall = setTimeout(tick, 0);
 }
 
+// T1 — refactor: executePetBehavior ahora delega al modulo puro
+// src/core/pet-behavior.js. La logica de decision vive en el modulo
+// (testeable sin Electron); main.js solo provee el contexto.
+let mainDeps = null;
+function initMainDeps() {
+  mainDeps = buildMainDeps({
+    screen,
+    getPetWindow: () => petWindow,
+    setIsSleeping: (value) => { isSleeping = Boolean(value); },
+    getCurrentX: () => currentX,
+    startMovement,
+    stopMovement,
+    chooseNewTarget,
+    getCursorTrackingState,
+    logDebug,
+    constants: { MARGIN_SAFETY, PET_VISIBLE_SIZE }
+  });
+}
+
 function executePetBehavior(sanitizedAction) {
-  const action = typeof sanitizedAction === 'string'
-    ? sanitizedAction
-    : normalizePetAction(sanitizedAction?.action);
-  const intent = normalizeIntent(sanitizedAction?.intent);
-
-  // sleep siempre gana (intent o action)
-  if (intent === 'sleep' || action === 'sleep') {
-    isSleeping = true;
-    stopMovement({ notify: false });
-    return;
+  if (!mainDeps) {
+    logDebug('WARN: executePetBehavior called before initMainDeps');
+    return { did: 'noop' };
   }
-
-  // stay: parar sin dormir (util cuando el usuario quiere silencio)
-  if (intent === 'stay') {
-    isSleeping = false;
-    stopMovement({ notify: true, state: 'IDLE' });
-    return;
-  }
-
-  isSleeping = false;
-
-  // approach: cursor tracking activo
-  if (intent === 'approach') {
-    const tracking = getCursorTrackingState();
-    if (tracking.active && !tracking.close) {
-      startMovement(tracking.target, 'CURIOUS');
-    } else if (tracking.close) {
-      // Ya estamos al lado del cursor: no nos movamos al azar.
-      // La IA puede disparar feedback visual via action (jump/wag).
-      stopMovement({ notify: true, state: 'IDLE' });
-    } else {
-      // Cursor fuera de rango: wander hacia el area general
-      chooseNewTarget('AI_APPROACH');
-    }
-    return;
-  }
-
-  // retreat: opuesto al cursor
-  if (intent === 'retreat') {
-    const cursor = screen.getCursorScreenPoint();
-    const bounds = petWindow.getBounds();
-    const absolutePetCenter = bounds.x + currentX + PET_VISIBLE_SIZE.width / 2;
-    const cursorDelta = cursor.x - absolutePetCenter;
-    // Si cursorDelta es 0 (cursor encima de la mascota) no hay "opuesto" claro.
-    // Elegimos una direccion aleatoria para no quedarnos quietos.
-    const oppositeSign = Math.abs(cursorDelta) > 0
-      ? -Math.sign(cursorDelta)
-      : (Math.random() < 0.5 ? -1 : 1);
-    const area = screen.getDisplayNearestPoint(cursor).workArea;
-    const target = clamp(
-      oppositeSign === 1 ? area.width - MARGIN_SAFETY - PET_VISIBLE_SIZE.width - 18 : MARGIN_SAFETY + 18,
-      MARGIN_SAFETY + 18,
-      bounds.width - MARGIN_SAFETY - PET_VISIBLE_SIZE.width - 18
-    );
-    startMovement(target, 'AI_RETREAT');
-    return;
-  }
-
-  // play: forzar movimiento energetico hacia el cursor
-  if (intent === 'play') {
-    const tracking = getCursorTrackingState();
-    if (tracking.active) {
-      startMovement(tracking.target, 'CURIOUS');
-    } else {
-      chooseNewTarget('AI_PLAY');
-    }
-    return;
-  }
-
-  // wander (o action=walk): paseo normal
-  if (intent === 'wander' || action === 'walk') {
-    chooseNewTarget('AI_WANDER');
-    return;
-  }
+  return executeBehavior(sanitizedAction, mainDeps);
 }
 
 function attachWindowDiagnostics(win, label) {
@@ -839,6 +790,7 @@ function handleQuickCaptureShortcut() {
 
 app.whenReady().then(() => {
   createPetWindow();
+  initMainDeps();
   powerMonitorHandle = createPowerMonitor({
     powerMonitor,
     setSleeping: value => setSleepingState(value, 'powermonitor'),
