@@ -5,6 +5,32 @@
 
 ---
 
+> ## ⚠️ MANDATORY: SDLC gates para TODO cambio no trivial
+>
+> **REGLA NO NEGOCIABLE**: Cualquier cambio que no sea cosmético (typo, dep update)
+> **DEBE** pasar por los 6 gates del SDLC en orden. Ver `docs/sdlc/PHASES.md`.
+>
+> **No es opcional. No es "para features grandes". Es para TODO.**
+>
+> **Cómo se enforce**:
+> - Pre-commit hook rechaza `feat:` / `fix:` / `refactor:` sin plan en `docs/plans/`
+> - `sdlc:strict` falla si cerrás una feature sin plan + review + QA + release
+> - El orquestador (`scripts/sdlc.js`) tiene un `status` que muestra qué gate falta
+>
+> **Por qué**: Los quick fixes que se saltean el pipeline introducen bugs regresivos
+> (ejemplo real: yo mismo en esta sesión cambié de modelo AI y de formato de output
+> sin un plan, y rompí el parser 2 veces — algo que el review habría pillado).
+>
+> **Tu trabajo como dev**:
+> 1. Antes de tocar código, corré `npm run sdlc:plan "<feature>"` y seguí el flujo
+> 2. Si vas a hacer "solo un cambio chico" sin plan, preguntate: ¿romperá algo?
+>    Si la respuesta es "tal vez", necesita plan igual.
+> 3. Después de implementar, **siempre** corré `npm run sdlc:dev` antes de commitear
+> 4. Antes de mergear/cerrar, **siempre** corré `npm run sdlc:review`
+> 5. Si te da fiaca documentar, ese es el sintoma de que el cambio es más grande de lo que pensás
+
+---
+
 ## Project Overview
 
 | Field | Value |

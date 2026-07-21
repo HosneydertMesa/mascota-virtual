@@ -1,11 +1,33 @@
 # Phase Gates — mascotaVirtual
 
+> ## ⚠️ MANDATORY — LEE ESTO PRIMERO
+>
+> **TODOS los cambios no triviales** (features, bugfixes, refactors > 5 lineas)
+> **DEBEN** pasar por los 6 gates en orden. **Quick fixes** que se saltean
+> el pipeline **están prohibidos** — son la causa #1 de bugs regresivos.
+>
+> **Cuándo se permiten skip** (solo cambios triviales, < 5 lineas):
+> - Fix de typo en comentario
+> - Update de versión de dependencia
+> - Cambio cosmético sin lógica
+>
+> **Enforcement automático**:
+> - El comando `sdlc:strict` falla si intentás cerrar una feature sin plan + review + QA
+> - El pre-commit hook rechaza commits `feat:`/`fix:`/`refactor:` sin plan en `docs/plans/`
+> - El `status` muestra `⚠ MANDATORY` si hay gates saltados
+>
+> **Anti-patterns** que rompen este sistema (no hagas):
+> - ❌ Commitear código sin plan → el pre-commit hook te bloquea
+> - ❌ "Lo arreglo rapidito sin documentar" → genera bugs regresivos
+> - ❌ Cerrar feature sin REVIEW → `sdlc:release` falla
+
 Pipeline de 6 gates que conecta los 4 skills del SDLC (`sdlc-plan`, `sdlc-team`,
 `sdlc-review`, `sdlc-doc`) con checkpoints automáticos y manuales.
 
-> **Orquestador**: `node scripts/sdlc.js` (ver `--help`).
-> **Estado actual**: `node scripts/sdlc.js status`.
-> **Siguiente gate**: `node scripts/sdlc.js next`.
+> **Orquestador**: `node scripts/sdlc.js` (ver `help`).
+> **Estado actual**: `node scripts/sdlc.js status` o `npm run sdlc:status`.
+> **Siguiente gate**: `node scripts/sdlc.js next` o `npm run sdlc:next`.
+> **Strict mode** (rechaza features sin todos los gates): `npm run sdlc:strict`.
 
 ---
 

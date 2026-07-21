@@ -511,10 +511,162 @@ function cmdHelp() {
   console.log(`  ${bold('qa')}                   Re-valida tests + muestra checklist (GATE 3)`);
   console.log(`  ${bold('release')}              Plan de bump + tag + push (GATE 4)`);
   console.log(`  ${bold('doc   "<feature>"')}   Dispara /sdlc-doc finalize (GATE 5)`);
+  console.log(`  ${bold('strict')}               MANDATORY pre-flight: falla si commits sin plan/review/qa (GATE -1)`);
   console.log(`  ${bold('help')}                 Muestra esta ayuda`);
   console.log('');
   console.log('Más info: docs/sdlc/PHASES.md');
   console.log('Skills:   /sdlc-plan, /sdlc-team, /sdlc-review, /sdlc-doc');
+}
+
+// --- strict mode: pre-flight check antes de merge/push --------------------
+// Falla si hay cambios desde el último tag sin que TODOS los gates (plan, review,
+// qa, release) esten firmados. Esto evita el patron "commiteo rapido sin gates".
+//
+// Logica:
+//   1. Detectar si hay cambios sin commitear (working tree dirty) → fail
+//   2. Contar commits desde el último tag (o todos si no hay tag)
+//   3. Si hay commits nuevos, exigir:
+//      - docs/plans/*.md  (al menos un plan)
+//      - docs/reviews/*.md con verdict APPROVED
+//      - docs/qa/*.md     (al menos un sign-off)
+//   4. Solo si el último tag coincide con package.json:version → gate release OK
+//
+// Excepciones:
+//   - chore:, docs:, test:, style:, perf:, build:, ci:  no requieren plan
+//   - Si SOLO hubo commits exentos desde el tag → no se exige review/qa
+function cmdStrict() {
+  console.log(bold(cyan('\n=== SDLC STRICT MODE — pre-flight gate check ===\n')));
+  let failed = false;
+  const errors = [];
+  const warnings = [];
+
+  // 0. Working tree clean?
+  if (!isClean()) {
+    errors.push('Working tree dirty — hay cambios sin commitear. Commiteá primero.');
+    failed = true;
+  }
+
+  // 1. Detectar commits desde último tag
+  const tagsRaw = shOut('git', ['tag', '-l', 'v*'], { allowFail: true });
+  const semverTags = tagsRaw.split('\n').filter(t => /^v\d+\.\d+\.\d+/.test(t));
+  const lastTag = semverTags.length > 0 ? semverTags[semverTags.length - 1] : null;
+
+  let commitsSince = [];
+  if (lastTag) {
+    commitsSince = shOut('git', ['log', `${lastTag}..HEAD`, '--oneline'], { allowFail: true })
+      .split('\n').filter(l => l.trim().length > 0);
+  } else {
+    // No hay tag → todos los commits cuentan
+    commitsSince = shOut('git', ['log', '--oneline'], { allowFail: true })
+      .split('\n').filter(l => l.trim().length > 0);
+  }
+
+  console.log(`Tag base:         ${lastTag ? green(lastTag) : yellow('(ninguno — se consideran todos los commits)')}`);
+  console.log(`Commits nuevos:   ${commitsSince.length === 0 ? green('0') : yellow(commitsSince.length.toString())}`);
+
+  if (commitsSince.length > 0) {
+    console.log(dim('  Detalle:'));
+    commitsSince.slice(0, 10).forEach(c => console.log(dim(`    ${c}`)));
+    if (commitsSince.length > 10) console.log(dim(`    ... y ${commitsSince.length - 10} más`));
+  }
+  console.log('');
+
+  // 2. Clasificar commits: triviales (no requieren gates) vs no-triviales
+  //    Triviales: chore, docs, test, style, perf, build, ci
+  //    No triviales: feat, fix, refactor, revert, o cualquier otro
+  const trivialTypes = new Set(['chore', 'docs', 'test', 'style', 'perf', 'build', 'ci']);
+  const nonTrivial = [];
+  const trivial = [];
+  for (const line of commitsSince) {
+    // Formato esperado: "abc1234 feat(scope): mensaje" o "abc1234 feat: mensaje"
+    const m = line.match(/^[a-f0-9]+\s+([a-zA-Z]+)(\([^)]+\))?!?:\s/);
+    const type = m ? m[1].toLowerCase() : '';
+    if (trivialTypes.has(type)) {
+      trivial.push(line);
+    } else {
+      // Sin tipo detectable o tipo no-trivial → exigir plan
+      nonTrivial.push(line);
+    }
+  }
+
+  // 3. Evaluar gates
+  console.log(bold('Gate check:'));
+
+  // GATE: PLAN
+  if (nonTrivial.length > 0) {
+    const plan = gatePlan();
+    const mark = plan.passed ? green('✓') : red('✗');
+    console.log(`  ${mark} PLAN     ${plan.evidence}`);
+    if (!plan.passed) {
+      errors.push(`PLAN: hay ${nonTrivial.length} commit(s) no-triviales (feat/fix/refactor) sin docs/plans/*.md. Corré: /sdlc-plan "<feature>"`);
+      failed = true;
+    }
+  } else {
+    console.log(`  ${dim('--')} PLAN     ${dim('saltado (solo commits triviales desde el tag)')}`);
+  }
+
+  // GATE: REVIEW
+  if (commitsSince.length > 0) {
+    const review = gateReview();
+    const mark = review.passed ? green('✓') : red('✗');
+    console.log(`  ${mark} REVIEW   ${review.evidence}`);
+    if (!review.passed) {
+      errors.push(`REVIEW: hay commits nuevos pero ningún docs/reviews/*.md con verdict APPROVED. Corré: /sdlc-review`);
+      failed = true;
+    }
+  } else {
+    console.log(`  ${dim('--')} REVIEW   ${dim('saltado (sin commits nuevos)')}`);
+  }
+
+  // GATE: QA
+  if (commitsSince.length > 0) {
+    const qa = gateQa();
+    const mark = qa.passed ? green('✓') : red('✗');
+    console.log(`  ${mark} QA       ${qa.evidence}`);
+    if (!qa.passed) {
+      errors.push(`QA: hay commits nuevos pero ningún sign-off en docs/qa/*.md. Corré: /sdlc-qa y firmá el checklist.`);
+      failed = true;
+    }
+  } else {
+    console.log(`  ${dim('--')} QA       ${dim('saltado (sin commits nuevos)')}`);
+  }
+
+  // GATE: RELEASE
+  const release = gateRelease();
+  const mark = release.passed ? green('✓') : yellow('!');
+  console.log(`  ${mark} RELEASE  ${release.evidence}`);
+  if (!release.passed) {
+    // No es error: si nunca se hizo release, no es motivo para bloquear.
+    // Pero si el último tag está desincronizado con package.json, sí es error.
+    if (release.evidence.startsWith('último tag')) {
+      errors.push(`RELEASE: ${release.evidence}. Corré: npm version patch -m "chore(release): v%s"`);
+      failed = true;
+    } else {
+      warnings.push(`RELEASE: ${release.evidence} (no es bloqueante en pre-flight)`);
+    }
+  }
+
+  // 4. Resultado
+  console.log('');
+  if (warnings.length > 0) {
+    console.log(yellow(bold('Warnings:')));
+    warnings.forEach(w => console.log(yellow(`  ! ${w}`)));
+    console.log('');
+  }
+  if (failed) {
+    console.log(red(bold('✗ STRICT MODE FAILED')));
+    console.log(red('No podés mergear/pushear sin pasar los gates:'));
+    console.log('');
+    errors.forEach(e => console.log(red(`  X ${e}`)));
+    console.log('');
+    console.log(dim('Si esto es una excepción legítima, agregale `--no-verify` al commit'));
+    console.log(dim('o actualizá los gates pendientes. Pero NO lo hagas por defecto.'));
+    process.exit(1);
+  }
+
+  console.log(green(bold('✓ STRICT MODE OK — todos los gates cumplidos')));
+  console.log(dim('Podés mergear/pushear.'));
+  process.exit(0);
 }
 
 // --- entry point ------------------------------------------------------------
@@ -531,6 +683,7 @@ function main() {
     qa: cmdQa,
     release: cmdRelease,
     doc: cmdDoc,
+    strict: cmdStrict,
     help: cmdHelp,
     '--help': cmdHelp,
     '-h': cmdHelp
@@ -564,7 +717,8 @@ module.exports = {
   gateReview,
   gateQa,
   gateRelease,
-  gateDoc
+  gateDoc,
+  cmdStrict
 };
 
 if (require.main === module) {

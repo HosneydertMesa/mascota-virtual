@@ -169,3 +169,87 @@ test('CLI: doc sin feature sale con codigo 2', () => {
   const r = spawnSync('node', [SCRIPT, 'doc'], { encoding: 'utf8' });
   assert.equal(r.status, 2);
 });
+
+// --- strict mode ------------------------------------------------------------
+
+test('strict: sin planes/reviews/qa y con commits no-triviales → falla', () => {
+  return withTmpDir((dir) => {
+    // Crea un commit no-trivial (feat:) sin plan
+    fs.writeFileSync(path.join(dir, 'x.js'), '// x');
+    spawnSync('git', ['config', 'user.email', 't@t'], { cwd: dir });
+    spawnSync('git', ['config', 'user.name', 't'], { cwd: dir });
+    spawnSync('git', ['add', 'x.js'], { cwd: dir });
+    spawnSync('git', ['commit', '-m', 'feat: add x'], { cwd: dir });
+
+    const r = spawnSync('node', [SCRIPT, 'strict'], { cwd: dir, encoding: 'utf8' });
+    assert.equal(r.status, 1);
+    assert.match(r.stdout + r.stderr, /STRICT MODE FAILED/);
+  });
+});
+
+test('strict: con plan + review APPROVED + qa sign-off + tag → pasa', () => {
+  return withTmpDir((dir) => {
+    fs.mkdirSync(path.join(dir, 'docs', 'plans'), { recursive: true });
+    fs.writeFileSync(path.join(dir, 'docs', 'plans', 'x.md'), '# plan');
+    fs.mkdirSync(path.join(dir, 'docs', 'reviews'), { recursive: true });
+    fs.writeFileSync(path.join(dir, 'docs', 'reviews', 'x.md'), '## Verdict\nAPPROVED\n');
+    fs.mkdirSync(path.join(dir, 'docs', 'qa'), { recursive: true });
+    fs.writeFileSync(path.join(dir, 'docs', 'qa', 'x.md'), '# QA sign-off\n');
+    fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ name: 't', version: '1.0.0' }));
+
+    fs.writeFileSync(path.join(dir, 'x.js'), '// x');
+    spawnSync('git', ['config', 'user.email', 't@t'], { cwd: dir });
+    spawnSync('git', ['config', 'user.name', 't'], { cwd: dir });
+    spawnSync('git', ['add', '.'], { cwd: dir });
+    spawnSync('git', ['commit', '-m', 'feat: add x'], { cwd: dir });
+    spawnSync('git', ['tag', 'v1.0.0'], { cwd: dir });
+
+    // Agregar un commit trivial después del tag → no debe requerir plan
+    fs.writeFileSync(path.join(dir, 'x.js'), '// x2');
+    spawnSync('git', ['add', 'x.js'], { cwd: dir });
+    spawnSync('git', ['commit', '-m', 'chore: typo'], { cwd: dir });
+
+    const r = spawnSync('node', [SCRIPT, 'strict'], { cwd: dir, encoding: 'utf8' });
+    assert.equal(r.status, 0, `strict fallo: ${r.stdout}\n${r.stderr}`);
+    assert.match(r.stdout, /STRICT MODE OK/);
+  });
+});
+
+test('strict: solo commits triviales desde el tag → no exige plan', () => {
+  return withTmpDir((dir) => {
+    fs.mkdirSync(path.join(dir, 'docs', 'plans'), { recursive: true }); // dir existe pero vacio
+    fs.mkdirSync(path.join(dir, 'docs', 'reviews'), { recursive: true });
+    fs.writeFileSync(path.join(dir, 'docs', 'reviews', 'x.md'), '## Verdict\nAPPROVED\n');
+    fs.mkdirSync(path.join(dir, 'docs', 'qa'), { recursive: true });
+    fs.writeFileSync(path.join(dir, 'docs', 'qa', 'x.md'), '# QA\n');
+    fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ name: 't', version: '1.0.0' }));
+
+    fs.writeFileSync(path.join(dir, 'x.js'), '// x');
+    spawnSync('git', ['config', 'user.email', 't@t'], { cwd: dir });
+    spawnSync('git', ['config', 'user.name', 't'], { cwd: dir });
+    spawnSync('git', ['add', '.'], { cwd: dir });
+    spawnSync('git', ['commit', '-m', 'initial'], { cwd: dir });
+    spawnSync('git', ['tag', 'v1.0.0'], { cwd: dir });
+
+    // Solo commit trivial
+    fs.writeFileSync(path.join(dir, 'x.js'), '// x2');
+    spawnSync('git', ['add', 'x.js'], { cwd: dir });
+    spawnSync('git', ['commit', '-m', 'docs: typo'], { cwd: dir });
+
+    const r = spawnSync('node', [SCRIPT, 'strict'], { cwd: dir, encoding: 'utf8' });
+    assert.equal(r.status, 0, `strict fallo: ${r.stdout}\n${r.stderr}`);
+  });
+});
+
+test('strict: working tree dirty → falla', () => {
+  return withTmpDir((dir) => {
+    fs.writeFileSync(path.join(dir, 'uncommitted.js'), '// x');
+    const r = spawnSync('node', [SCRIPT, 'strict'], { cwd: dir, encoding: 'utf8' });
+    assert.equal(r.status, 1);
+    assert.match(r.stdout + r.stderr, /dirty|sin commitear/);
+  });
+});
+
+test('cmdStrict está exportado en module.exports', () => {
+  assert.equal(typeof sdlc.cmdStrict, 'function');
+});
