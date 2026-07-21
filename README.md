@@ -1,5 +1,7 @@
 # Mascota Virtual
 
+[![CI](https://github.com/Antigravity/mascota-virtual/actions/workflows/ci.yml/badge.svg)](https://github.com/Antigravity/mascota-virtual/actions/workflows/ci.yml)
+
 Compañero de escritorio virtual con IA y temporizador Pomodoro. Vive en una
 ventana transparente que se asienta en la barra de tareas, se deja arrastrar
 por la pantalla, persigue el cursor y responde por chat con dos mascotas
