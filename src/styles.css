@@ -1200,3 +1200,43 @@ input:disabled {
   white-space: pre-wrap;
   font-style: italic;
 }
+
+/* === Micro presence (batch 1) === */
+
+/* M1 — Respiración idle. Aplicar al SVG-container. Sutil, no distrae. */
+#pet-svg-wrapper.breathing {
+  animation: petBreathe 3.2s infinite ease-in-out;
+  transform-origin: 50% 60%;
+}
+
+@keyframes petBreathe {
+  0%, 100% { transform: scaleY(1.00); }
+  50%      { transform: scaleY(1.04); }
+}
+
+/* M3 — Pupil dilation nocturna. Pupilas se agrandan 1.6x */
+.pet-pupil {
+  transition: r 0.6s ease, cx 0.18s ease, cy 0.18s ease;
+}
+body.pupils-dilated .pet-pupil {
+  /* Sin transform (no afecta el parent), usa el atributo r en SVG */
+  /* El renderer setea el radio via JS; esta clase es la senial */
+}
+
+/* M4 — Yawn overlay. Un parpadeo simple por ahora. */
+.pet-yawn {
+  animation: petYawn 1.6s ease-in-out;
+}
+@keyframes petYawn {
+  0%   { opacity: 0; transform: scaleY(0.6); }
+  20%  { opacity: 1; transform: scaleY(1.0); }
+  60%  { opacity: 1; transform: scaleY(1.0); }
+  100% { opacity: 0; transform: scaleY(0.6); }
+}
+
+/* Hint al lado del input del pet name */
+.settings-hint {
+  font-size: 0.78rem;
+  color: var(--text-secondary, #888);
+  margin: 4px 0 0 0;
+}

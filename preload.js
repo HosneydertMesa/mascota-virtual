@@ -36,6 +36,10 @@ contextBridge.exposeInMainWorld('api', {
   aiSendMessage: (payload) => ipcRenderer.invoke('ai:send-message', payload),
   aiQuickTip: (payload) => ipcRenderer.invoke('ai:quick-tip', payload),
 
+  // P7 — pet name
+  getPetName: () => ipcRenderer.invoke('pet-name:get'),
+  setPetName: (name) => ipcRenderer.invoke('pet-name:set', name),
+
   onSwitchTab: (callback) => subscribe('switch-tab', callback),
   onPetMoveState: (callback) => subscribe('pet-move-state', callback),
   onPetAction: (callback) => subscribe('pet-action', callback),

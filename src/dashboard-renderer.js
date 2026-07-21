@@ -36,6 +36,8 @@ const saveSettingsBtn = document.getElementById('save-settings-btn');
 const catPreview = document.getElementById('cat-preview');
 const dogPreview = document.getElementById('dog-preview');
 const soundEnabledInput = document.getElementById('sound-enabled-input');
+const petNameInput = document.getElementById('pet-name-input');
+const petNameStatus = document.getElementById('pet-name-status');
 const chatPetAvatar = document.getElementById('chat-pet-avatar');
 const chatPetName = document.getElementById('chat-pet-name');
 const chatPetStatus = document.getElementById('chat-pet-status');
@@ -102,6 +104,17 @@ async function initSettings() {
   soundEnabledInput.checked = soundEnabled;
   applyPetTheme();
 
+  // P7 — cargar nombre de la mascota desde el main
+  try {
+    const { name } = await window.api.getPetName();
+    if (name) petNameInput.value = name;
+    petNameStatus.textContent = name
+      ? `Actual: ${name}. Cambialo si querés.`
+      : 'Usando el nombre por defecto (Luna/Max según la mascota).';
+  } catch (error) {
+    petNameStatus.textContent = 'No se pudo cargar el nombre.';
+  }
+
   catPreview.innerHTML = window.catSVG;
   dogPreview.innerHTML = window.dogSVG;
   mascotCards.forEach(card => card.classList.toggle('active', card.dataset.pet === currentPet));
@@ -148,6 +161,20 @@ saveSettingsBtn.addEventListener('click', async () => {
     soundEnabled = soundEnabledInput.checked;
     localStorage.setItem('soundEnabled', String(soundEnabled));
     window.api.syncSettings({ pet: currentPet, soundEnabled });
+
+    // P7 — guardar nombre de la mascota
+    const newPetName = petNameInput.value.trim();
+    if (newPetName) {
+      try {
+        const result = await window.api.setPetName(newPetName);
+        if (result?.name) {
+          petNameStatus.textContent = `Guardado como: ${result.name}.`;
+        }
+      } catch (error) {
+        alert(`Nombre inválido: ${error.message}`);
+      }
+    }
+
     updateApiStatus();
     alert('¡Ajustes guardados correctamente!');
   } catch (error) {

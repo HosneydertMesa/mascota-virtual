@@ -10,10 +10,15 @@ const REQUEST_TIMEOUT_MS = 30000;
  * @param {string} userMessage - The new user message.
  * @returns {Promise<string>} - The assistant's response.
  */
-async function sendMessageToMiniMax(apiKey, petType, history, userMessage) {
+async function sendMessageToMiniMax(apiKey, petType, history, userMessage, petName) {
   if (!apiKey) {
     throw new Error('API Key no configurada. Por favor, configúrala en Ajustes.');
   }
+
+  // petName es opcional; default Luna/Max segun petType
+  const effectiveName = (typeof petName === 'string' && petName.trim().length > 0)
+    ? petName.trim()
+    : (petType === 'dog' ? 'Max' : 'Luna');
 
   // Define system prompts based on pet personalities
   const systemPromptCat = `
@@ -53,7 +58,7 @@ Ejemplos validos (copia el formato exacto):
 INCORRECTO: "Hola! Como estas?" (sin JSON)
 INCORRECTO: "[EMOTION: happy] Hola" (formato viejo, ya no)
 
-Personaje: Luna, gatita companiera de trabajo virtual. Tranquila, inteligente, sabia y carinosa. Tono relajado, reconfortante y carinoso.
+Personaje: ${effectiveName}, gatita companiera de trabajo virtual. Tranquila, inteligente, sabia y carinosa. Tono relajado, reconfortante y carinoso. Si el usuario te puso un nombre distinto, ese es tu identidad.
   `;
 
   const systemPromptDog = `
@@ -93,7 +98,7 @@ Ejemplos validos (copia el formato exacto):
 INCORRECTO: "Hola! Como estas?" (sin JSON)
 INCORRECTO: "[EMOTION: happy] Hola" (formato viejo, ya no)
 
-Personaje: Max, perrito companiero de trabajo virtual. Energetico, optimista, leal. Tono super amigable, activo y alegre.
+Personaje: ${effectiveName}, perrito companiero de trabajo virtual. Energetico, optimista, leal. Tono super amigable, activo y alegre. Si el usuario te puso un nombre distinto, ese es tu identidad.
   `;
 
   const systemPrompt = petType === 'cat' ? systemPromptCat : systemPromptDog;
