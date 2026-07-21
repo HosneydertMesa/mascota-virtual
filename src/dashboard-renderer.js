@@ -289,6 +289,10 @@ function parseReply(reply) {
   const candidateAction = actionMatch?.[1]?.toLowerCase();
   const candidateSound = soundMatch?.[1]?.toLowerCase();
   const candidateIntent = intentMatch?.[1]?.toLowerCase();
+  // Si la IA no devolvio NINGUN tag, el system prompt no se cumplio.
+  if (!emotionMatch && !actionMatch && !soundMatch && !intentMatch) {
+    console.warn('[parseReply] IA no devolvio tags. Respuesta:', JSON.stringify(content).slice(0, 200));
+  }
   const emotion = ALLOWED_EMOTIONS.has(candidateEmotion) ? candidateEmotion : 'happy';
   const action = ALLOWED_ACTIONS.has(candidateAction) ? candidateAction : 'none';
   const sound = ALLOWED_SOUNDS.has(candidateSound) ? candidateSound : 'none';

@@ -258,6 +258,11 @@ function parsePetReply(reply) {
   const actionCandidate = actionMatch?.[1]?.toLowerCase();
   const soundCandidate = soundMatch?.[1]?.toLowerCase();
   const intentCandidate = intentMatch?.[1]?.toLowerCase();
+  // Si la IA no devolvio NINGUN tag, el system prompt no se cumplio.
+  // Logueamos para diagnosticar. El fallback abajo (happy/none/none/none) sigue funcionando.
+  if (!emotionMatch && !actionMatch && !soundMatch && !intentMatch) {
+    console.warn('[parsePetReply] IA no devolvio tags. Respuesta:', JSON.stringify(content).slice(0, 200));
+  }
   content = content
     .replace(/\[EMOTION:\s*[a-z_]+\]/ig, '')
     .replace(/\[ACTION:\s*[a-z_]+\]/ig, '')
