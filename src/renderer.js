@@ -262,59 +262,6 @@ function parsePetReply(reply) {
 // Parsea respuesta de la IA. Intenta JSON, fallback a tags viejos, fallback a texto libre.
 // (Implementado en PetProtocol.parsePetReply)
 
-function parsePetReply(reply) {
-  const content = cleanThinkingTags(reply);
-
-  // Camino primario: JSON
-  const parsed = tryParseJsonReply(content);
-  if (parsed && typeof parsed === 'object') {
-    return {
-      content: typeof parsed.content === 'string' ? parsed.content.trim() : '',
-      emotion: ALLOWED_EMOTIONS.has(parsed.emotion) ? parsed.emotion : 'happy',
-      action: ALLOWED_ACTIONS.has(parsed.action) ? parsed.action : 'none',
-      sound: ALLOWED_SOUNDS.has(parsed.sound) ? parsed.sound : 'none',
-      intent: ALLOWED_INTENTS.has(parsed.intent) ? parsed.intent : 'none'
-    };
-  }
-
-  // Fallback: tags viejos [EMOTION:..] por si un modelo viejo responde asi
-  const emotionMatch = content.match(/\[EMOTION:\s*([a-z_]+)\]/i);
-  const actionMatch = content.match(/\[ACTION:\s*([a-z_]+)\]/i);
-  const soundMatch = content.match(/\[SOUND:\s*([a-z_]+)\]/i);
-  const intentMatch = content.match(/\[INTENT:\s*([a-z_]+)\]/i);
-  if (emotionMatch || actionMatch || soundMatch || intentMatch) {
-    const emotionCandidate = emotionMatch?.[1]?.toLowerCase();
-    const actionCandidate = actionMatch?.[1]?.toLowerCase();
-    const soundCandidate = soundMatch?.[1]?.toLowerCase();
-    const intentCandidate = intentMatch?.[1]?.toLowerCase();
-    const cleanedContent = content
-      .replace(/\[EMOTION:\s*[a-z_]+\]/ig, '')
-      .replace(/\[ACTION:\s*[a-z_]+\]/ig, '')
-      .replace(/\[SOUND:\s*[a-z_]+\]/ig, '')
-      .replace(/\[INTENT:\s*[a-z_]+\]/ig, '')
-      .trim();
-    return {
-      content: cleanedContent,
-      emotion: ALLOWED_EMOTIONS.has(emotionCandidate) ? emotionCandidate : 'happy',
-      action: ALLOWED_ACTIONS.has(actionCandidate) ? actionCandidate : 'none',
-      sound: ALLOWED_SOUNDS.has(soundCandidate) ? soundCandidate : 'none',
-      intent: ALLOWED_INTENTS.has(intentCandidate) ? intentCandidate : 'none'
-    };
-  }
-
-  // Sin JSON ni tags: warn + fallback total
-  if (content.length > 0) {
-    console.warn('[parsePetReply] Respuesta sin JSON ni tags. Mostrando como texto libre.');
-  }
-  return {
-    content,
-    emotion: 'happy',
-    action: 'none',
-    sound: 'none',
-    intent: 'none'
-  };
-}
-
 function inferSound(text) {
   const normalized = String(text || '').toLowerCase();
   if (currentPet === 'cat') {
