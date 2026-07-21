@@ -84,7 +84,7 @@ test('hace POST al endpoint correcto con headers y body bien formado', async () 
   assert.ok(capturedOptions.signal, 'debe pasar un AbortSignal');
 
   const body = JSON.parse(capturedOptions.body);
-  assert.equal(body.model, 'MiniMax-M2.5');
+  assert.equal(body.model, 'MiniMax-M3');
   assert.equal(body.temperature, 0.7);
   assert.equal(body.messages[0].role, 'system');
   assert.match(body.messages[0].content, /Luna/);

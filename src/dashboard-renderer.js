@@ -272,6 +272,22 @@ timerResetBtn.addEventListener('click', () => {
   updateTimerUI();
 });
 
+// Intenta extraer un JSON object de la respuesta. Acepta ```json ... ```.
+function tryParseJsonReply(content) {
+  const cleaned = String(content || '')
+    .replace(/```json\s*/gi, '')
+    .replace(/```\s*$/g, '')
+    .trim();
+  const start = cleaned.indexOf('{');
+  const end = cleaned.lastIndexOf('}');
+  if (start === -1 || end === -1 || end <= start) return null;
+  try {
+    return JSON.parse(cleaned.slice(start, end + 1));
+  } catch (_e) {
+    return null;
+  }
+}
+
 function parseReply(reply) {
   let content = String(reply || '');
   let thinking = '';
@@ -281,29 +297,57 @@ function parseReply(reply) {
     content = content.replace(thinkMatch[0], '').trim();
   }
 
+  // Camino primario: JSON
+  const parsed = tryParseJsonReply(content);
+  if (parsed && typeof parsed === 'object') {
+    return {
+      thinking,
+      content: typeof parsed.content === 'string' ? parsed.content.trim() : '',
+      emotion: ALLOWED_EMOTIONS.has(parsed.emotion) ? parsed.emotion : 'happy',
+      action: ALLOWED_ACTIONS.has(parsed.action) ? parsed.action : 'none',
+      sound: ALLOWED_SOUNDS.has(parsed.sound) ? parsed.sound : 'none',
+      intent: ALLOWED_INTENTS.has(parsed.intent) ? parsed.intent : 'none'
+    };
+  }
+
+  // Fallback: tags viejos [EMOTION:..] por si un modelo viejo responde asi
   const emotionMatch = content.match(/\[EMOTION:\s*([a-z_]+)\]/i);
   const actionMatch = content.match(/\[ACTION:\s*([a-z_]+)\]/i);
   const soundMatch = content.match(/\[SOUND:\s*([a-z_]+)\]/i);
   const intentMatch = content.match(/\[INTENT:\s*([a-z_]+)\]/i);
-  const candidateEmotion = emotionMatch?.[1]?.toLowerCase();
-  const candidateAction = actionMatch?.[1]?.toLowerCase();
-  const candidateSound = soundMatch?.[1]?.toLowerCase();
-  const candidateIntent = intentMatch?.[1]?.toLowerCase();
-  // Si la IA no devolvio NINGUN tag, el system prompt no se cumplio.
-  if (!emotionMatch && !actionMatch && !soundMatch && !intentMatch) {
-    console.warn('[parseReply] IA no devolvio tags. Respuesta:', JSON.stringify(content).slice(0, 200));
+  if (emotionMatch || actionMatch || soundMatch || intentMatch) {
+    const candidateEmotion = emotionMatch?.[1]?.toLowerCase();
+    const candidateAction = actionMatch?.[1]?.toLowerCase();
+    const candidateSound = soundMatch?.[1]?.toLowerCase();
+    const candidateIntent = intentMatch?.[1]?.toLowerCase();
+    const cleanedContent = content
+      .replace(/\[EMOTION:\s*[a-z_]+\]/ig, '')
+      .replace(/\[ACTION:\s*[a-z_]+\]/ig, '')
+      .replace(/\[SOUND:\s*[a-z_]+\]/ig, '')
+      .replace(/\[INTENT:\s*[a-z_]+\]/ig, '')
+      .trim();
+    return {
+      thinking,
+      content: cleanedContent,
+      emotion: ALLOWED_EMOTIONS.has(candidateEmotion) ? candidateEmotion : 'happy',
+      action: ALLOWED_ACTIONS.has(candidateAction) ? candidateAction : 'none',
+      sound: ALLOWED_SOUNDS.has(candidateSound) ? candidateSound : 'none',
+      intent: ALLOWED_INTENTS.has(candidateIntent) ? candidateIntent : 'none'
+    };
   }
-  const emotion = ALLOWED_EMOTIONS.has(candidateEmotion) ? candidateEmotion : 'happy';
-  const action = ALLOWED_ACTIONS.has(candidateAction) ? candidateAction : 'none';
-  const sound = ALLOWED_SOUNDS.has(candidateSound) ? candidateSound : 'none';
-  const intent = ALLOWED_INTENTS.has(candidateIntent) ? candidateIntent : 'none';
-  content = content
-    .replace(/\[EMOTION:\s*[a-z_]+\]/ig, '')
-    .replace(/\[ACTION:\s*[a-z_]+\]/ig, '')
-    .replace(/\[SOUND:\s*[a-z_]+\]/ig, '')
-    .replace(/\[INTENT:\s*[a-z_]+\]/ig, '')
-    .trim();
-  return { thinking, content, emotion, action, sound, intent };
+
+  // Sin JSON ni tags: warn + fallback
+  if (content.length > 0) {
+    console.warn('[parseReply] Respuesta sin JSON ni tags. Mostrando como texto libre.');
+  }
+  return {
+    thinking,
+    content,
+    emotion: 'happy',
+    action: 'none',
+    sound: 'none',
+    intent: 'none'
+  };
 }
 
 function persistChatHistory() {
