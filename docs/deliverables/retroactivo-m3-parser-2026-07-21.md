@@ -1,12 +1,12 @@
-# Release Notes: v1.2.0 — M3 parser + strict-mode
+# Release Notes: v1.2.0 + v1.2.1 — M3 parser + strict-mode + cmdStrict date-filter
 
-> Release notes formales del batch retroactivo.
+> Release notes formales del batch retroactivo + patch inmediato.
 > Para el design doc completo del feature anterior (Capa 1),
 > ver `docs/deliverables/pet-animation-capa1-finalize-2026-07-21.md`.
 
-**Fecha**: 2026-07-21
+**Fechas**: 2026-07-21
 **Versión anterior**: v1.1.1
-**Tag**: v1.2.0 (minor — feature nueva: M3 + strict mode)
+**Tags**: v1.2.0 (minor) + v1.2.1 (patch)
 
 ## Resumen ejecutivo
 
@@ -113,20 +113,59 @@ garantía sistémica de que no vuelva a pasar.
 
 ## Trabajo futuro (carry-over del review)
 
+- [x] **MINOR-4**: Endurecer `cmdStrict` con validación de fecha
+      → **CERRADO en v1.2.1** (commit `00a4a8a`)
 - [ ] **MINOR-1**: Verificar nombre real del modelo M3 en DevTools
       Network tab. Si es distinto, ajustar `DEFAULT_MODEL` y bumpear
-      a v1.2.1.
+      a v1.2.2.
 - [ ] **MINOR-2**: Consolidar `ALLOWED_INTENTS` en `pet-protocol.js`
       y eliminar la copia en `renderer.js`.
 - [ ] **MINOR-3**: Simplificar UMD a CommonJS puro cuando se confirme
       el entorno final.
-- [ ] **MINOR-4**: Endurecer `cmdStrict` con validación de fecha
-      (review/qa deben ser posteriores al último tag).
+- [ ] **NUEVO-MINOR-1**: Tolerancia de clock skew en CI (±60s)
+- [ ] **NUEVO-MINOR-2**: `gatePlan({ since })` también
 - [ ] Cuando M3 confirme JSON estable, quitar el fallback a tags.
 - [ ] Agregar `sdlc:strict` a GitHub Actions como pre-merge check
       (cuando se configure el remote).
 - [ ] Validación visual end-to-end del feature M3 en una máquina
       con GUI (no se pudo hacer en este sandbox).
+
+## v1.2.1 — patch (commit `00a4a8a`)
+
+### Cambios
+
+- `feat(sdlc): date-filter review/qa in cmdStrict (close MINOR-4)`
+- Nuevos helpers: `tagDate(tag)`, `opts.since` en `gateReview` y `gateQa`
+- 7 tests nuevos (70/70 verde)
+- `cmdStatus` mantiene firma vieja (no rompe vista general)
+- Sin cambios de runtime, solo tooling
+
+### Antes vs después
+
+**Antes**: `cmdStrict` aceptaba cualquier review APPROVED, aunque fuera
+de un feature de hace 6 meses. Un feature nuevo podía "heredar" el
+verde de uno viejo.
+
+**Después**: `cmdStrict` filtra review/qa por `mtime >= tagDate(lastTag)`.
+Solo cuentan los del batch actual. Ejemplo de salida:
+
+```
+✓ PLAN     3 plan(es)
+✓ REVIEW   1 review(s) con APPROVED (desde 2026-07-21)
+✓ QA       1 sign-off(s) (desde 2026-07-21): close-minor4-2026-07-21.md
+✓ RELEASE  tag v1.2.0 coincide
+```
+
+### Review y QA del cambio
+
+- `docs/reviews/close-minor4-2026-07-21.md` — APPROVED, 2 MINOR carry-over
+- `docs/qa/close-minor4-2026-07-21.md` — APROBADO
+
+### Carry-over nuevo de v1.2.1
+
+- Tolerancia de clock skew para CI (±60s) — `MINOR-1` del nuevo review
+- `gatePlan({ since })` también — `MINOR-2` del nuevo review
+- Cuando se sume CI, smoke test del filtro en runner
 
 ## Anexo: comandos del release
 
