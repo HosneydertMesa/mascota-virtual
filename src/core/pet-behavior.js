@@ -143,29 +143,45 @@ function executeBehavior(sanitizedAction, deps) {
  * Esta función vive en pet-behavior.js (no en main.js) para mantener
  * la lógica de wiring centralizada y testeable.
  *
- * @param {object} ctx - referencias al main process (windows, electron, state)
+ * Acepta callbacks (get/set) en lugar de refs mutables para que main.js
+ * no tenga que cambiar la forma de sus variables (`let isSleeping = false`
+ * se mantiene, solo se pasa un setter).
+ *
+ * @param {object} ctx - referencias al main process
+ *   - screen (Electron screen module)
+ *   - getPetWindow(): BrowserWindow (lazy, se asigna tarde en app.whenReady)
+ *   - setIsSleeping(value: boolean): void
+ *   - getCurrentX(): number
+ *   - startMovement, stopMovement, chooseNewTarget, getCursorTrackingState: functions
+ *   - logDebug(msg, meta): void
+ *   - constants: { MARGIN_SAFETY, PET_VISIBLE_SIZE }
  * @returns {object} deps listo para pasar a executeBehavior
  */
 function buildMainDeps(ctx) {
-  // ctx = {
-  //   petWindow, screen, isSleepingRef (object con .value mutable),
-  //   startMovement, stopMovement, chooseNewTarget, getCursorTrackingState,
-  //   logDebug, constants
-  // }
-  const log = ctx.logDebug || (() => {});
   return {
-    setSleeping: (value) => { ctx.isSleepingRef.value = Boolean(value); },
+    setSleeping: (value) => ctx.setIsSleeping(Boolean(value)),
     stopMovement: ctx.stopMovement,
     startMovement: ctx.startMovement,
     chooseNewTarget: ctx.chooseNewTarget,
     getCursorTrackingState: ctx.getCursorTrackingState,
     getCursorPoint: () => ctx.screen.getCursorScreenPoint(),
-    getPetBounds: () => ctx.petWindow.getBounds(),
+    getPetBounds: () => {
+      const w = ctx.getPetWindow();
+      if (!w) return { x: 0, y: 0, width: 0, height: 0 };
+      try {
+        if (typeof w.isDestroyed === 'function' && w.isDestroyed()) {
+          return { x: 0, y: 0, width: 0, height: 0 };
+        }
+      } catch (_e) {
+        return { x: 0, y: 0, width: 0, height: 0 };
+      }
+      return w.getBounds();
+    },
     getDisplayWorkArea: (point) => ctx.screen.getDisplayNearestPoint(point).workArea,
-    getCurrentX: () => ctx.currentXRef.value,
+    getCurrentX: () => ctx.getCurrentX(),
     constants: ctx.constants,
     random: Math.random,
-    log: (msg, meta) => log(`BEHAVIOR: ${msg}`, meta || {})
+    log: (msg, meta) => ctx.logDebug(`BEHAVIOR: ${msg}`, meta || {})
   };
 }
 

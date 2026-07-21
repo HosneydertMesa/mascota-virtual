@@ -184,23 +184,23 @@ test('executeBehavior: dep random inyectable (retreat con cursorDelta=0 → elig
   assert.equal(calls.startMovement[0].target, 30); // -1 → lado izquierdo
 });
 
-test('buildMainDeps: factory arma deps desde contexto de main', () => {
-  const isSleepingRef = { value: false };
-  const currentXRef = { value: 100 };
-  const calls = { setSleeping: [], startMovement: [], stopMovement: [] };
+test('buildMainDeps: factory arma deps desde contexto de main (callbacks)', () => {
+  let isSleeping = false;
+  let currentX = 100;
+  const calls = { logDebug: [] };
   const ctx = {
-    petWindow: { getBounds: () => ({ x: 0, y: 0, width: 320, height: 250 }) },
     screen: {
       getCursorScreenPoint: () => ({ x: 100, y: 100 }),
       getDisplayNearestPoint: () => ({ workArea: { x: 0, y: 0, width: 1920, height: 1080 } })
     },
-    isSleepingRef,
-    currentXRef,
-    startMovement: (t, s) => calls.startMovement.push({ t, s }),
-    stopMovement: (o) => calls.stopMovement.push(o),
+    getPetWindow: () => ({ getBounds: () => ({ x: 0, y: 0, width: 320, height: 250 }) }),
+    setIsSleeping: (v) => { isSleeping = v; },
+    getCurrentX: () => currentX,
+    startMovement: () => {},
+    stopMovement: () => {},
     chooseNewTarget: () => {},
     getCursorTrackingState: () => ({ active: false, close: false, target: 0 }),
-    logDebug: (msg) => { calls.setSleeping.push(msg); },
+    logDebug: (msg, meta) => { calls.logDebug.push({ msg, meta }); },
     constants: {
       MARGIN_SAFETY: 12,
       PET_VISIBLE_SIZE: { width: 130, height: 130 }
@@ -208,16 +208,40 @@ test('buildMainDeps: factory arma deps desde contexto de main', () => {
   };
 
   const deps = buildMainDeps(ctx);
-  // Verifico que setSleeping cambia el ref
+  // setSleeping via callback
   deps.setSleeping(true);
-  assert.equal(isSleepingRef.value, true);
-  // Verifico que getCurrentX lee del ref
+  assert.equal(isSleeping, true);
+  // getCurrentX via callback
   assert.equal(deps.getCurrentX(), 100);
-  // Verifico que los reads funcionan
-  const cursor = deps.getCursorPoint();
-  assert.deepEqual(cursor, { x: 100, y: 100 });
+  // getCursorPoint
+  assert.deepEqual(deps.getCursorPoint(), { x: 100, y: 100 });
+  // getPetBounds
+  assert.equal(deps.getPetBounds().width, 320);
+  // getDisplayWorkArea
+  assert.equal(deps.getDisplayWorkArea({ x: 0, y: 0 }).width, 1920);
+  // log
+  deps.log('test', { foo: 'bar' });
+  assert.equal(calls.logDebug[0].msg, 'BEHAVIOR: test');
+  assert.deepEqual(calls.logDebug[0].meta, { foo: 'bar' });
+});
+
+test('buildMainDeps: getPetBounds maneja petWindow null o destruido', () => {
+  const ctx = {
+    screen: {
+      getCursorScreenPoint: () => ({ x: 0, y: 0 }),
+      getDisplayNearestPoint: () => ({ workArea: { x: 0, y: 0, width: 1920, height: 1080 } })
+    },
+    getPetWindow: () => null,  // todavia no se creo
+    setIsSleeping: () => {},
+    getCurrentX: () => 0,
+    startMovement: () => {},
+    stopMovement: () => {},
+    chooseNewTarget: () => {},
+    getCursorTrackingState: () => ({ active: false, close: false, target: 0 }),
+    logDebug: () => {},
+    constants: { MARGIN_SAFETY: 12, PET_VISIBLE_SIZE: { width: 130, height: 130 } }
+  };
+  const deps = buildMainDeps(ctx);
   const bounds = deps.getPetBounds();
-  assert.equal(bounds.width, 320);
-  const area = deps.getDisplayWorkArea({ x: 0, y: 0 });
-  assert.equal(area.width, 1920);
+  assert.deepEqual(bounds, { x: 0, y: 0, width: 0, height: 0 });
 });
