@@ -439,7 +439,12 @@ function executePetBehavior(sanitizedAction) {
     const tracking = getCursorTrackingState();
     if (tracking.active && !tracking.close) {
       startMovement(tracking.target, 'CURIOUS');
+    } else if (tracking.close) {
+      // Ya estamos al lado del cursor: no nos movamos al azar.
+      // La IA puede disparar feedback visual via action (jump/wag).
+      stopMovement({ notify: true, state: 'IDLE' });
     } else {
+      // Cursor fuera de rango: wander hacia el area general
       chooseNewTarget('AI_APPROACH');
     }
     return;
@@ -451,18 +456,18 @@ function executePetBehavior(sanitizedAction) {
     const bounds = petWindow.getBounds();
     const absolutePetCenter = bounds.x + currentX + PET_VISIBLE_SIZE.width / 2;
     const cursorDelta = cursor.x - absolutePetCenter;
-    if (Math.abs(cursorDelta) > 0) {
-      const oppositeSign = -Math.sign(cursorDelta);
-      const area = screen.getDisplayNearestPoint(cursor).workArea;
-      const target = clamp(
-        oppositeSign === 1 ? area.width - MARGIN_SAFETY - PET_VISIBLE_SIZE.width - 18 : MARGIN_SAFETY + 18,
-        MARGIN_SAFETY + 18,
-        bounds.width - MARGIN_SAFETY - PET_VISIBLE_SIZE.width - 18
-      );
-      startMovement(target, 'AI_RETREAT');
-    } else {
-      chooseNewTarget('AI_RETREAT');
-    }
+    // Si cursorDelta es 0 (cursor encima de la mascota) no hay "opuesto" claro.
+    // Elegimos una direccion aleatoria para no quedarnos quietos.
+    const oppositeSign = Math.abs(cursorDelta) > 0
+      ? -Math.sign(cursorDelta)
+      : (Math.random() < 0.5 ? -1 : 1);
+    const area = screen.getDisplayNearestPoint(cursor).workArea;
+    const target = clamp(
+      oppositeSign === 1 ? area.width - MARGIN_SAFETY - PET_VISIBLE_SIZE.width - 18 : MARGIN_SAFETY + 18,
+      MARGIN_SAFETY + 18,
+      bounds.width - MARGIN_SAFETY - PET_VISIBLE_SIZE.width - 18
+    );
+    startMovement(target, 'AI_RETREAT');
     return;
   }
 
