@@ -1,9 +1,10 @@
 'use strict';
 
-const { app, BrowserWindow, ipcMain, safeStorage, screen } = require('electron');
+const { app, BrowserWindow, globalShortcut, ipcMain, safeStorage, screen } = require('electron');
 const fs = require('fs');
 const path = require('path');
 const { getQuickTip, sendMessageToMiniMax } = require('./src/services/ai');
+const { registerGlobalShortcuts } = require('./src/core/global-shortcuts');
 const {
   clamp,
   getPetProfile,
@@ -44,6 +45,7 @@ let lastPositionSent = Number.NaN;
 let lastMoveState = { state: null, direction: null };
 let dragStartPos = { x: 0, y: 0 };
 let dragStartMousePos = { x: 0, y: 0 };
+let globalShortcutsHandle = null;
 
 const timers = {
   movement: null,
@@ -793,8 +795,38 @@ ipcMain.handle('ai:quick-tip', async (event, payload) => {
 process.on('uncaughtException', error => logDebug(`UNCAUGHT EXCEPTION: ${serializeError(error)}`));
 process.on('unhandledRejection', reason => logDebug(`UNHANDLED REJECTION: ${serializeError(reason)}`));
 
+// T4 — globalShortcut handlers. Viven en main porque necesitan acceso a
+// windows + IPC state. El modulo core/global-shortcuts solo se encarga del
+// "register / unregister" con manejo de errores.
+
+function handlePomodoroToggleShortcut() {
+  if (dashboardWindow && !dashboardWindow.isDestroyed()) {
+    safeSend(dashboardWindow, 'pomodoro-toggle');
+    if (typeof dashboardWindow.focus === 'function') dashboardWindow.focus();
+    return;
+  }
+  createDashboardWindow('pomodoro');
+}
+
+function handlePetSleepShortcut() {
+  if (!petWindow || petWindow.isDestroyed()) return;
+  isSleeping = true;
+  stopMovement({ notify: false });
+  safeSend(petWindow, 'pet-sleep');
+}
+
+function handleQuickCaptureShortcut() {
+  if (!petWindow || petWindow.isDestroyed()) return;
+  safeSend(petWindow, 'quick-capture-trigger');
+}
+
 app.whenReady().then(() => {
   createPetWindow();
+  globalShortcutsHandle = registerGlobalShortcuts(globalShortcut, logDebug, {
+    onPomodoroToggle: handlePomodoroToggleShortcut,
+    onPetSleep: handlePetSleepShortcut,
+    onQuickCapture: handleQuickCaptureShortcut
+  });
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createPetWindow();
   });
@@ -803,6 +835,10 @@ app.whenReady().then(() => {
 app.on('before-quit', () => {
   isQuitting = true;
   clearAllTimers();
+  if (globalShortcutsHandle) {
+    globalShortcutsHandle.unregisterAll();
+    globalShortcutsHandle = null;
+  }
 });
 
 app.on('child-process-gone', (_event, details) => {
