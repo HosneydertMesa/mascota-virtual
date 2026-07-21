@@ -134,7 +134,7 @@ function gateDev() {
   };
 }
 
-function gateReview() {
+function gateReview(opts = {}) {
   if (!hasDir('docs', 'reviews')) {
     return { passed: false, evidence: 'no existe docs/reviews/' };
   }
@@ -143,31 +143,78 @@ function gateReview() {
     return { passed: false, evidence: 'docs/reviews/ existe pero vacío' };
   }
   // Busca reviews con verdict APPROVED
-  const approved = reviews.filter(f => {
+  let approved = reviews.filter(f => {
     try {
       const content = fs.readFileSync(path.join(getRoot(), 'docs', 'reviews', f), 'utf8');
       return /APPROVED/i.test(content) && !/CHANGES_REQUESTED/i.test(content);
     } catch { return false; }
   });
+  // Filtro por fecha (strict mode): solo reviews con mtime >= opts.since (ms)
+  if (opts.since && approved.length > 0) {
+    const cutoff = opts.since;
+    const before = approved.length;
+    approved = approved.filter(f => {
+      try {
+        const stat = fs.statSync(path.join(getRoot(), 'docs', 'reviews', f));
+        return stat.mtimeMs >= cutoff;
+      } catch { return false; }
+    });
+    if (approved.length === 0 && before > 0) {
+      return {
+        passed: false,
+        evidence: `0 review(s) con APPROVED desde ${new Date(cutoff).toISOString().slice(0, 10)} (${before} total pero son de antes)`
+      };
+    }
+  }
   return {
     passed: approved.length > 0,
     evidence: approved.length > 0
-      ? `${approved.length} review(s) con APPROVED`
+      ? `${approved.length} review(s) con APPROVED${opts.since ? ` (desde ${new Date(opts.since).toISOString().slice(0, 10)})` : ''}`
       : `${reviews.length} review(s), ninguno con APPROVED todavía`
   };
 }
 
-function gateQa() {
+function gateQa(opts = {}) {
   if (!hasDir('docs', 'qa')) {
     return { passed: false, evidence: 'no existe docs/qa/' };
   }
-  const signoffs = listDir('docs', 'qa').filter(f => f.endsWith('.md'));
+  let signoffs = listDir('docs', 'qa').filter(f => f.endsWith('.md'));
+  if (signoffs.length === 0) {
+    return { passed: false, evidence: 'docs/qa/ existe pero sin sign-offs' };
+  }
+  // Filtro por fecha (strict mode)
+  if (opts.since) {
+    const cutoff = opts.since;
+    const before = signoffs.length;
+    signoffs = signoffs.filter(f => {
+      try {
+        const stat = fs.statSync(path.join(getRoot(), 'docs', 'qa', f));
+        return stat.mtimeMs >= cutoff;
+      } catch { return false; }
+    });
+    if (signoffs.length === 0 && before > 0) {
+      return {
+        passed: false,
+        evidence: `0 sign-off(s) desde ${new Date(cutoff).toISOString().slice(0, 10)} (${before} total pero son de antes)`
+      };
+    }
+  }
   return {
     passed: signoffs.length > 0,
     evidence: signoffs.length > 0
-      ? `${signoffs.length} sign-off(s): ${signoffs.slice(0, 3).join(', ')}`
+      ? `${signoffs.length} sign-off(s)${opts.since ? ` (desde ${new Date(opts.since).toISOString().slice(0, 10)})` : ''}: ${signoffs.slice(0, 3).join(', ')}`
       : 'docs/qa/ existe pero sin sign-offs'
   };
+}
+
+// Timestamp (ms) del commit apuntado por `tag`, o null si no existe / no hay tag.
+// Usado por cmdStrict para filtrar review/qa por fecha.
+function tagDate(tag) {
+  if (!tag) return null;
+  const ts = shOut('git', ['log', '-1', '--format=%ct', tag], { allowFail: true });
+  const n = parseInt(ts, 10);
+  if (!Number.isFinite(n)) return null;
+  return n * 1000; // segundos -> ms
 }
 
 function gateRelease() {
@@ -605,26 +652,34 @@ function cmdStrict() {
     console.log(`  ${dim('--')} PLAN     ${dim('saltado (solo commits triviales desde el tag)')}`);
   }
 
-  // GATE: REVIEW
+  // GATE: REVIEW (con filtro de fecha si hay tag)
   if (commitsSince.length > 0) {
-    const review = gateReview();
+    const since = tagDate(lastTag);
+    const review = gateReview({ since });
     const mark = review.passed ? green('✓') : red('✗');
     console.log(`  ${mark} REVIEW   ${review.evidence}`);
     if (!review.passed) {
-      errors.push(`REVIEW: hay commits nuevos pero ningún docs/reviews/*.md con verdict APPROVED. Corré: /sdlc-review`);
+      const hint = since
+        ? `REVIEW: hay commits nuevos pero ningún docs/reviews/*.md con verdict APPROVED desde ${new Date(since).toISOString().slice(0, 10)}. Corré: /sdlc-review`
+        : `REVIEW: hay commits nuevos pero ningún docs/reviews/*.md con verdict APPROVED. Corré: /sdlc-review`;
+      errors.push(hint);
       failed = true;
     }
   } else {
     console.log(`  ${dim('--')} REVIEW   ${dim('saltado (sin commits nuevos)')}`);
   }
 
-  // GATE: QA
+  // GATE: QA (con filtro de fecha si hay tag)
   if (commitsSince.length > 0) {
-    const qa = gateQa();
+    const since = tagDate(lastTag);
+    const qa = gateQa({ since });
     const mark = qa.passed ? green('✓') : red('✗');
     console.log(`  ${mark} QA       ${qa.evidence}`);
     if (!qa.passed) {
-      errors.push(`QA: hay commits nuevos pero ningún sign-off en docs/qa/*.md. Corré: /sdlc-qa y firmá el checklist.`);
+      const hint = since
+        ? `QA: hay commits nuevos pero ningún sign-off en docs/qa/*.md desde ${new Date(since).toISOString().slice(0, 10)}. Corré: /sdlc-qa y firmá el checklist.`
+        : `QA: hay commits nuevos pero ningún sign-off en docs/qa/*.md. Corré: /sdlc-qa y firmá el checklist.`;
+      errors.push(hint);
       failed = true;
     }
   } else {
@@ -718,7 +773,8 @@ module.exports = {
   gateQa,
   gateRelease,
   gateDoc,
-  cmdStrict
+  cmdStrict,
+  tagDate
 };
 
 if (require.main === module) {

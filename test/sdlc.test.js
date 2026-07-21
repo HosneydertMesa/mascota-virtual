@@ -253,3 +253,99 @@ test('strict: working tree dirty → falla', () => {
 test('cmdStrict está exportado en module.exports', () => {
   assert.equal(typeof sdlc.cmdStrict, 'function');
 });
+
+// --- date filter en gates (MINOR-4 del review retroactivo) ------------------
+
+test('gateReview: con opts.since, filtra reviews con mtime < cutoff', () => {
+  return withTmpDir((dir) => {
+    fs.mkdirSync(path.join(dir, 'docs', 'reviews'), { recursive: true });
+    const reviewPath = path.join(dir, 'docs', 'reviews', 'old.md');
+    fs.writeFileSync(reviewPath, '## Verdict\nAPPROVED\n');
+    // Forzar mtime viejo (ayer)
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    fs.utimesSync(reviewPath, yesterday, yesterday);
+
+    const cutoff = Date.now(); // ahora
+    const r = sdlc.gateReview({ since: cutoff });
+    assert.equal(r.passed, false);
+    assert.match(r.evidence, /0 review\(s\) con APPROVED desde/);
+  });
+});
+
+test('gateReview: con opts.since, acepta reviews con mtime >= cutoff', () => {
+  return withTmpDir((dir) => {
+    fs.mkdirSync(path.join(dir, 'docs', 'reviews'), { recursive: true });
+    const reviewPath = path.join(dir, 'docs', 'reviews', 'fresh.md');
+    fs.writeFileSync(reviewPath, '## Verdict\nAPPROVED\n');
+    // Forzar mtime futuro (5s adelante) para evitar race con el cutoff
+    const future = new Date(Date.now() + 5000);
+    fs.utimesSync(reviewPath, future, future);
+
+    const cutoff = Date.now();
+    const r = sdlc.gateReview({ since: cutoff });
+    assert.equal(r.passed, true);
+    assert.match(r.evidence, /1 review\(s\) con APPROVED/);
+  });
+});
+
+test('gateReview: sin opts.since, comportamiento legacy (no filtra)', () => {
+  return withTmpDir((dir) => {
+    fs.mkdirSync(path.join(dir, 'docs', 'reviews'), { recursive: true });
+    const reviewPath = path.join(dir, 'docs', 'reviews', 'old.md');
+    fs.writeFileSync(reviewPath, '## Verdict\nAPPROVED\n');
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    fs.utimesSync(reviewPath, yesterday, yesterday);
+
+    const r = sdlc.gateReview();
+    assert.equal(r.passed, true);
+    assert.match(r.evidence, /1 review\(s\) con APPROVED/);
+    assert.doesNotMatch(r.evidence, /desde/);
+  });
+});
+
+test('gateQa: con opts.since, filtra sign-offs con mtime < cutoff', () => {
+  return withTmpDir((dir) => {
+    fs.mkdirSync(path.join(dir, 'docs', 'qa'), { recursive: true });
+    const qaPath = path.join(dir, 'docs', 'qa', 'old.md');
+    fs.writeFileSync(qaPath, '# QA\n');
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    fs.utimesSync(qaPath, yesterday, yesterday);
+
+    const cutoff = Date.now();
+    const r = sdlc.gateQa({ since: cutoff });
+    assert.equal(r.passed, false);
+    assert.match(r.evidence, /0 sign-off\(s\) desde/);
+  });
+});
+
+test('tagDate: retorna timestamp en ms para tag existente', () => {
+  return withTmpDir((dir) => {
+    fs.writeFileSync(path.join(dir, 'x.js'), '// x');
+    spawnSync('git', ['config', 'user.email', 't@t'], { cwd: dir });
+    spawnSync('git', ['config', 'user.name', 't'], { cwd: dir });
+    spawnSync('git', ['add', 'x.js'], { cwd: dir });
+    spawnSync('git', ['commit', '-m', 'initial'], { cwd: dir });
+    spawnSync('git', ['tag', 'v1.0.0'], { cwd: dir });
+
+    const ts = sdlc.tagDate('v1.0.0');
+    assert.ok(typeof ts === 'number');
+    assert.ok(ts > 0);
+    // Tiene que ser cercano a ahora (dentro de 1 hora)
+    const diff = Math.abs(Date.now() - ts);
+    assert.ok(diff < 60 * 60 * 1000, `tagDate muy lejos de ahora: ${diff}ms`);
+  });
+});
+
+test('tagDate: retorna null para tag inexistente', () => {
+  return withTmpDir(() => {
+    assert.equal(sdlc.tagDate('v99.0.0'), null);
+  });
+});
+
+test('tagDate: retorna null si no se pasa tag', () => {
+  return withTmpDir(() => {
+    assert.equal(sdlc.tagDate(null), null);
+    assert.equal(sdlc.tagDate(undefined), null);
+    assert.equal(sdlc.tagDate(''), null);
+  });
+});
