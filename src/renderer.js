@@ -446,6 +446,35 @@ window.api.onTriggerAutonomousTip(async () => {
   }
 });
 
+// Eventos del sistema operativo (lock/unlock/suspend/resume) llegan desde
+// main via IPC `pet-system-event`. Reaccionamos igual que si el usuario
+// hubiera puesto a dormir a la mascota manualmente.
+window.api.onSystemEvent(data => {
+  if (!data || typeof data.event !== 'string') return;
+  if (data.event === 'lock' || data.event === 'suspend') {
+    // El main process ya seteó isSleeping=true y frena el movimiento.
+    // Solo tenemos que actualizar la visual.
+    if (sleepTimeout) {
+      clearTimeout(sleepTimeout);
+      sleepTimeout = null;
+    }
+    closeQuickChat();
+    speechBubble.classList.remove('visible');
+    setVisualState('sleeping');
+  } else if (data.event === 'unlock' || data.event === 'resume') {
+    // El main espera 5s antes de marcar isSleeping=false; nosotros
+    // podemos reflejar el wake visualmente alineados con eso usando el
+    // mismo delay para evitar un flash "despierto → durmiendo".
+    setTimeout(() => {
+      if (currentVisualState === 'sleeping') {
+        setVisualState('idle');
+        window.api.setSleeping(false);
+      }
+      scheduleSleep();
+    }, 5000);
+  }
+});
+
 function maybeTwitchEar() {
   if (currentVisualState === 'sleeping' || isDragging) return;
   // ~0.25% por frame => ~1 twitch cada ~6.6s a 60fps

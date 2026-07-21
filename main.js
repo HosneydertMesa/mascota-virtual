@@ -1,9 +1,10 @@
 'use strict';
 
-const { app, BrowserWindow, ipcMain, safeStorage, screen } = require('electron');
+const { app, BrowserWindow, ipcMain, powerMonitor, safeStorage, screen } = require('electron');
 const fs = require('fs');
 const path = require('path');
 const { getQuickTip, sendMessageToMiniMax } = require('./src/services/ai');
+const { createPowerMonitor } = require('./src/services/power-monitor');
 const {
   clamp,
   getPetProfile,
@@ -95,6 +96,19 @@ function clearTimer(name) {
 
 function clearAllTimers() {
   Object.keys(timers).forEach(clearTimer);
+}
+
+// Punto único de cambio para `isSleeping`. Lo usan el IPC `set-sleeping`
+// (renderer→main) y el powerMonitor (OS→main). Centralizar evita que dos
+// fuentes compitan por el estado.
+function setSleepingState(value, source = 'unknown') {
+  isSleeping = Boolean(value);
+  if (isSleeping) stopMovement({ notify: false });
+  logDebug(`SLEEP STATE: isSleeping=${isSleeping} (source=${source})`);
+}
+
+function notifyPetSystemEvent(payload) {
+  safeSend(petWindow, 'pet-system-event', payload);
 }
 
 function isPetSender(event) {
@@ -736,8 +750,7 @@ ipcMain.on('trigger-pet-action', (event, action) => {
 
 ipcMain.on('set-sleeping', (event, sleeping) => {
   if (!isPetSender(event)) return;
-  isSleeping = Boolean(sleeping);
-  if (isSleeping) stopMovement({ notify: false });
+  setSleepingState(Boolean(sleeping), 'renderer');
 });
 
 ipcMain.handle('ai:get-status', event => {
@@ -793,8 +806,18 @@ ipcMain.handle('ai:quick-tip', async (event, payload) => {
 process.on('uncaughtException', error => logDebug(`UNCAUGHT EXCEPTION: ${serializeError(error)}`));
 process.on('unhandledRejection', reason => logDebug(`UNHANDLED REJECTION: ${serializeError(reason)}`));
 
+// PowerMonitor: reacciona a lock/unlock/suspend/resume del OS.
+// Se inicializa una vez (app.whenReady) y se libera en before-quit.
+let powerMonitorHandle = null;
+
 app.whenReady().then(() => {
   createPetWindow();
+  powerMonitorHandle = createPowerMonitor({
+    powerMonitor,
+    setSleeping: value => setSleepingState(value, 'powermonitor'),
+    notifyRenderer: payload => notifyPetSystemEvent(payload),
+    logDebug
+  });
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createPetWindow();
   });
@@ -803,6 +826,14 @@ app.whenReady().then(() => {
 app.on('before-quit', () => {
   isQuitting = true;
   clearAllTimers();
+  if (powerMonitorHandle) {
+    try {
+      powerMonitorHandle.detach();
+    } catch (error) {
+      logDebug(`POWERMONITOR DETACH ERROR: ${serializeError(error)}`);
+    }
+    powerMonitorHandle = null;
+  }
 });
 
 app.on('child-process-gone', (_event, details) => {
