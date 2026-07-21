@@ -33,10 +33,8 @@ const quickChatReply = document.getElementById('quick-chat-reply');
 const quickChatInput = document.getElementById('quick-chat-input');
 const quickChatSend = document.getElementById('quick-chat-send');
 
-const ALLOWED_EMOTIONS = new Set(['happy', 'calm', 'sleepy', 'sad', 'excited']);
-const ALLOWED_ACTIONS = new Set(['jump', 'walk', 'sleep', 'wag', 'none']);
-const ALLOWED_SOUNDS = new Set(['meow', 'purr', 'bark', 'whine', 'sniff', 'none']);
-const ALLOWED_INTENTS = new Set(['approach', 'retreat', 'play', 'sleep', 'wander', 'stay', 'none']);
+// Allow-lists y parser de respuestas de la IA viven en PetProtocol (src/core/pet-protocol.js).
+// Carga via <script> antes de este archivo (ver index.html).
 
 function applyPetTheme() {
   document.body.dataset.pet = currentPet;
@@ -248,22 +246,21 @@ function cleanThinkingTags(text) {
   return String(text || '').replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
 }
 
-// Intenta extraer un JSON object de la respuesta. Acepta ```json ... ```.
-// Devuelve null si no encuentra o si el parse falla.
-function tryParseJsonReply(content) {
-  const cleaned = String(content || '')
-    .replace(/```json\s*/gi, '')
-    .replace(/```\s*$/g, '')
-    .trim();
-  const start = cleaned.indexOf('{');
-  const end = cleaned.lastIndexOf('}');
-  if (start === -1 || end === -1 || end <= start) return null;
-  try {
-    return JSON.parse(cleaned.slice(start, end + 1));
-  } catch (_e) {
-    return null;
-  }
+// Wrapper que usa PetProtocol con el pet actual.
+function parsePetReply(reply) {
+  return window.PetProtocol.parsePetReply(reply, currentPet);
 }
+
+// Intenta extraer un JSON object de la respuesta. Acepta:
+// - JSON puro: {"emotion":"happy",...}
+// - JSON en markdown: ```json\n{...}\n```
+// - JSON con prosa alrededor: "...texto... {...} ...mas texto..."
+// - JSON con thinking antes: <think>...</think>{...}
+// Devuelve { parsed, error } donde error explica por qué falló si aplica.
+// (Implementado en PetProtocol, expuesto via window.PetProtocol)
+
+// Parsea respuesta de la IA. Intenta JSON, fallback a tags viejos, fallback a texto libre.
+// (Implementado en PetProtocol.parsePetReply)
 
 function parsePetReply(reply) {
   const content = cleanThinkingTags(reply);
