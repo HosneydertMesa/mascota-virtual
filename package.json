@@ -14,7 +14,8 @@
     "sdlc:review": "node scripts/sdlc.js review",
     "sdlc:qa": "node scripts/sdlc.js qa",
     "sdlc:release": "node scripts/sdlc.js release",
-    "sdlc:strict": "node scripts/sdlc.js strict"
+    "sdlc:strict": "node scripts/sdlc.js strict",
+    "sdlc:worktree": "node scripts/sdlc-worktree.js"
   },
   "keywords": [
     "desktop-pet",

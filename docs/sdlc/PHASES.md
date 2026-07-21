@@ -294,3 +294,52 @@ Cuando agregues un nuevo gate (por ejemplo, "performance budget" o "accessibilit
 4. Si tiene criterios visuales, agregalos al checklist del gate siguiente.
 
 El orquestador está diseñado para que cada gate sea un módulo pequeño y testeable.
+
+---
+
+## Workers en paralelo (batch features)
+
+**Problema**: cuando N workers comparten el mismo `cwd` y cada uno hace `git checkout` a su branch, se pisan en archivos centrales (`main.js`, `package.json`) y rompen el working tree del orquestador.
+
+**Solución**: **git worktrees** — cada worker opera en su propio directorio físico (sibling del repo principal), apuntando a su propia branch.
+
+### Workflow recomendado
+
+1. **Orquestador (sesión root)**: define el batch en `docs/plans/<batch>-<fecha>.md` con N features independientes.
+2. **Crear worktrees** desde el orquestador:
+   ```bash
+   npm run sdlc:worktree -- add feat/mood-system
+   npm run sdlc:worktree -- add feat/micro-presence
+   ```
+   Esto crea `../mascotaVirtual-feat-mood-system/` y `../mascotaVirtual-feat-micro-presence/`, cada uno con su branch.
+3. **Lanzar workers** (sub-agentes) con `run_in_background: true`. Cada uno trabaja en su worktree.
+4. **Orquestador supervisa**: revisa `git log origin/<branch>` de cada worker. NO modifica el main repo mientras los workers estén activos.
+5. **Merge serializado** cuando cada worker termina:
+   - El worker pushea su branch al origin
+   - El orquestador hace `git fetch` + `git merge <branch>` en el main repo
+   - Resuelve conflictos si los hay
+   - Continúa con el siguiente worker
+6. **Cleanup**: `npm run sdlc:worktree -- remove feat/<branch>` o `--clean` para borrar worktrees mergeados.
+
+### Reglas para workers
+
+- ❌ NO hacer `git checkout` desde el worktree a otras branches
+- ❌ NO hacer `git stash` (cada worktree es independiente)
+- ❌ NO modificar el main repo mientras trabaje en el worktree
+- ✅ Commitear y pushear en su branch (no merge a main, eso lo hace el orquestador)
+- ✅ Tests verdes localmente antes de pushear
+- ✅ Mensaje de commit conventional (feat/fix/refactor/chore/docs/test)
+
+### Comandos
+
+```bash
+npm run sdlc:worktree -- add <branch>      # Crea ../mascotaVirtual-<branch>
+npm run sdlc:worktree -- list               # Lista worktrees activos
+npm run sdlc:worktree -- remove <branch>    # Elimina worktree (branch sigue)
+npm run sdlc:worktree -- clean              # Elimina worktrees mergeadas a main
+```
+
+### Lecciones aprendidas
+
+- **mascotaVirtual batch 0 (2026-07-21)**: 3 workers compartieron cwd, se pisaron en main.js. Resolución manual: stash + merge conflict. Después se agregó este patrón + helper `sdlc-worktree.js`. Documentado en user memory cross-project.
+
