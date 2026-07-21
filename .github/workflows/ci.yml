@@ -1,5 +1,9 @@
 name: CI
 
+# Triggers:
+#   - push a main (cada commit en main corre CI)
+#   - pull_request contra main (cada PR corre CI antes de mergear)
+#   - workflow_dispatch (boton "Run workflow" en GitHub UI para correr manual)
 on:
   push:
     branches: [main]
@@ -7,6 +11,8 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Si llega un push nuevo a la misma branch mientras CI corre, cancela el viejo.
+# Evita gastar minutos en builds obsoletos.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -15,6 +21,12 @@ jobs:
   test:
     name: ${{ matrix.os }} / node ${{ matrix.node-version }}
     runs-on: ${{ matrix.os }}
+    # Timeout 15 min: CI no deberia tardar mas. Si llega a 15, hay un problema
+    # (dependency install colgado, test runner colgado) y queremos cortar pronto.
+    timeout-minutes: 15
+
+    # fail-fast: false -> si una combinacion de la matrix falla, las demas siguen
+    # corriendo. Asi obtenemos senal completa de que OS/Node son los rotos.
     strategy:
       fail-fast: false
       matrix:
@@ -25,12 +37,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node ${{ matrix.node-version }}
+      - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: npm
 
+      # Cache explicito de node_modules, keyed por OS + Node + lockfile.
+      # Mas estricto que el cache:'npm' de setup-node (que solo usa el lockfile),
+      # porque evita falsos hits cuando cambia la plataforma.
+      # restore-keys: si el cache exacto no existe, busca el mas reciente del
+      # mismo OS+Node (sin lockfile) o mismo OS (cualquier node) para acortar
+      # el npm ci en el primer build.
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: npm-${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            npm-${{ runner.os }}-${{ matrix.node-version }}-
+            npm-${{ runner.os }}-
+
+      # npm ci (NO npm install): borra node_modules y reinstala desde package-lock.json
+      # exacto. Garantiza builds reproducibles.
       - name: Install dependencies
         run: npm ci
 
@@ -40,7 +68,8 @@ jobs:
       - name: Run tests
         run: npm test
 
+      # sdlc:dev corre check + test via scripts/sdlc.js. El pre-commit hook
+      # local NO se activa en CI (no hay .git/hooks/pre-commit en el runner
+      # limpio), asi que solo valida sintaxis + tests. Si falla, CI falla.
       - name: SDLC dev gate
-        run: node scripts/sdlc.js dev
-        # El sdlc:dev corre el pre-commit hook local. En CI no hay hook,
-        # asi que solo valida sintaxis + tests. Si falla, el CI falla.
+        run: npm run sdlc:dev
