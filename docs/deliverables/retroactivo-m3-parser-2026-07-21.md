@@ -1,12 +1,12 @@
-# Release Notes: v1.2.0 + v1.2.1 — M3 parser + strict-mode + cmdStrict date-filter
+# Release Notes: v1.2.0 + v1.2.1 + v1.2.2 — M3 parser + strict-mode + cmdStrict refinements
 
-> Release notes formales del batch retroactivo + patch inmediato.
+> Release notes formales del batch retroactivo + 2 patches de refinamiento.
 > Para el design doc completo del feature anterior (Capa 1),
 > ver `docs/deliverables/pet-animation-capa1-finalize-2026-07-21.md`.
 
 **Fechas**: 2026-07-21
 **Versión anterior**: v1.1.1
-**Tags**: v1.2.0 (minor) + v1.2.1 (patch)
+**Tags**: v1.2.0 (minor) + v1.2.1 (patch) + v1.2.2 (patch)
 
 ## Resumen ejecutivo
 
@@ -166,6 +166,48 @@ Solo cuentan los del batch actual. Ejemplo de salida:
 - Tolerancia de clock skew para CI (±60s) — `MINOR-1` del nuevo review
 - `gatePlan({ since })` también — `MINOR-2` del nuevo review
 - Cuando se sume CI, smoke test del filtro en runner
+
+## v1.2.2 — patch (commit `da69536`)
+
+### Edge case cerrado
+
+Descubierto en v1.2.1: `cmdStrict` exigía review/qa para CUALQUIER
+commit nuevo desde el último tag, incluyendo `docs:` triviales. Eso
+provocaba un loop: un commit de CHANGELOG no se podía mergear sin su
+propio review/qa firmado, y el review/qa no se podía firmar sin
+commitearlo primero.
+
+### Cambios
+
+- `fix(sdlc): skip review/qa gates when all commits since tag are trivial`
+- Nueva lógica: si TODOS los commits desde el tag son `chore`/`docs`/
+  `test`/`style`/`perf`/`build`/`ci`/`revert`, se skipean los gates
+  REVIEW y QA (solo se exige PLAN si hay commit no-trivial + siempre
+  RELEASE).
+- 2 tests nuevos (72/72 verde)
+- Backward-compatible: batches con commits no-triviales siguen
+  exigiendo review/qa
+
+### Review y QA
+
+- `docs/reviews/skip-trivial-gates-2026-07-21.md` — APPROVED
+- `docs/qa/skip-trivial-gates-2026-07-21.md` — APROBADO
+
+### Antes vs después
+
+**Antes** (v1.2.1, un commit `docs:` después del tag):
+```
+✗ REVIEW   0 review(s) con APPROVED desde 2026-07-21 (3 total pero son de antes)
+✗ QA       0 sign-off(s) desde 2026-07-21 (3 total pero son de antes)
+✗ STRICT MODE FAILED
+```
+
+**Después** (v1.2.2, mismo caso):
+```
+-- REVIEW   saltado (todos los commits desde el tag son triviales)
+-- QA       saltado (todos los commits desde el tag son triviales)
+✓ STRICT MODE OK
+```
 
 ## Anexo: comandos del release
 
