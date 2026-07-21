@@ -24,6 +24,8 @@ const PET_PROFILES = Object.freeze({
 const ALLOWED_ACTIONS = new Set(['none', 'jump', 'walk', 'sleep', 'wag']);
 const ALLOWED_EMOTIONS = new Set(['happy', 'calm', 'sleepy', 'sad', 'excited']);
 const ALLOWED_SOUNDS = new Set(['none', 'meow', 'purr', 'bark', 'whine', 'sniff']);
+// AI-decided movement intents. 'none' = no explicit intent, fallback to action.
+const ALLOWED_INTENTS = new Set(['none', 'approach', 'retreat', 'play', 'sleep', 'wander', 'stay']);
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
@@ -58,6 +60,11 @@ function normalizePetSound(value) {
   return ALLOWED_SOUNDS.has(normalized) ? normalized : 'none';
 }
 
+function normalizeIntent(value) {
+  const normalized = typeof value === 'string' ? value.toLowerCase() : 'none';
+  return ALLOWED_INTENTS.has(normalized) ? normalized : 'none';
+}
+
 function calculateDesiredVelocity(distance, profile) {
   if (Math.abs(distance) <= profile.arrivalRadius) return 0;
   const brakingSpeed = Math.sqrt(2 * profile.deceleration * Math.abs(distance));
@@ -90,9 +97,11 @@ function stepMotion({ position, velocity, target, deltaSeconds, min, max, profil
 
 module.exports = {
   PET_PROFILES,
+  ALLOWED_INTENTS,
   clamp,
   getPetProfile,
   normalizeEmotion,
+  normalizeIntent,
   normalizePetAction,
   normalizePetSound,
   normalizePetType,

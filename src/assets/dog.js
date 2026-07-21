@@ -59,14 +59,17 @@ const dogIdleSVG = `
     <!-- Spot on head top right -->
     <circle cx="120" cy="56" r="8" fill="url(#dog-patch)" opacity="0.85" />
 
-    <!-- Left Floppy Ear -->
-    <path d="M 62,60 C 50,60 40,85 46,105 C 50,115 62,110 60,80 Z" fill="url(#dog-patch)" />
-    <!-- Ear inner shadow details -->
-    <path d="M 59,64 C 52,65 46,84 49,98 C 52,104 59,102 58,80 Z" fill="#7e2d00" opacity="0.15" />
+    <!-- Left Floppy Ear (wrapped for ear-twitch animation) -->
+    <g class="pet-ear pet-ear-left" style="transform-origin: 50px 90px;">
+      <path d="M 62,60 C 50,60 40,85 46,105 C 50,115 62,110 60,80 Z" fill="url(#dog-patch)" />
+      <path d="M 59,64 C 52,65 46,84 49,98 C 52,104 59,102 58,80 Z" fill="#7e2d00" opacity="0.15" />
+    </g>
 
     <!-- Right Floppy Ear -->
-    <path d="M 138,60 C 150,60 160,85 154,105 C 150,115 138,110 140,80 Z" fill="url(#dog-patch)" />
-    <path d="M 141,64 C 148,65 154,84 151,98 C 148,104 141,102 142,80 Z" fill="#7e2d00" opacity="0.15" />
+    <g class="pet-ear pet-ear-right" style="transform-origin: 150px 90px;">
+      <path d="M 138,60 C 150,60 160,85 154,105 C 150,115 138,110 140,80 Z" fill="url(#dog-patch)" />
+      <path d="M 141,64 C 148,65 154,84 151,98 C 148,104 141,102 142,80 Z" fill="#7e2d00" opacity="0.15" />
+    </g>
 
     <!-- Glossy Highlight on Head Top -->
     <path d="M 78,48 Q 100,38 122,48" stroke="#ffffff" stroke-width="2.5" fill="none" opacity="0.35" stroke-linecap="round" />

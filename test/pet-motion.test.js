@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
 const {
   getPetProfile,
   normalizeEmotion,
+  normalizeIntent,
   normalizePetAction,
   normalizePetSound,
   normalizePetType,
@@ -20,6 +21,24 @@ test('normaliza entradas de IA a valores permitidos', () => {
   assert.equal(normalizePetSound('open_microphone'), 'none');
   assert.equal(normalizePetType('dog'), 'dog');
   assert.equal(normalizePetType('dragon'), 'cat');
+});
+
+test('normalizeIntent acepta los 6 intents validos (cualquier case)', () => {
+  assert.equal(normalizeIntent('APPROACH'), 'approach');
+  assert.equal(normalizeIntent('Retreat'), 'retreat');
+  assert.equal(normalizeIntent('PLAY'), 'play');
+  assert.equal(normalizeIntent('sleep'), 'sleep');
+  assert.equal(normalizeIntent('Wander'), 'wander');
+  assert.equal(normalizeIntent('stay'), 'stay');
+});
+
+test('normalizeIntent cae a "none" para inputs invalidos o vacios', () => {
+  assert.equal(normalizeIntent('destroy_everything'), 'none');
+  assert.equal(normalizeIntent(''), 'none');
+  assert.equal(normalizeIntent(null), 'none');
+  assert.equal(normalizeIntent(undefined), 'none');
+  assert.equal(normalizeIntent(123), 'none');
+  assert.equal(normalizeIntent({ hack: true }), 'none');
 });
 
 test('el movimiento acelera sin superar el perfil', () => {

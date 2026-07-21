@@ -53,13 +53,17 @@ const catIdleSVG = `
 
   <!-- Head Group (Breathing & Head Bob) -->
   <g class="anim-breath" style="transform-origin: 100px 180px;">
-    <!-- Left Ear -->
-    <path d="M 60,68 L 45,25 Q 75,40 75,55 Z" fill="url(#cat-skin)" />
-    <path d="M 62,64 L 50,34 Q 71,46 72,54 Z" fill="url(#cat-ear)" />
+    <!-- Left Ear (wrapped for ear-twitch animation) -->
+    <g class="pet-ear pet-ear-left" style="transform-origin: 60px 65px;">
+      <path d="M 60,68 L 45,25 Q 75,40 75,55 Z" fill="url(#cat-skin)" />
+      <path d="M 62,64 L 50,34 Q 71,46 72,54 Z" fill="url(#cat-ear)" />
+    </g>
 
     <!-- Right Ear -->
-    <path d="M 140,68 L 155,25 Q 125,40 125,55 Z" fill="url(#cat-skin)" />
-    <path d="M 138,64 L 150,34 Q 129,46 128,54 Z" fill="url(#cat-ear)" />
+    <g class="pet-ear pet-ear-right" style="transform-origin: 140px 65px;">
+      <path d="M 140,68 L 155,25 Q 125,40 125,55 Z" fill="url(#cat-skin)" />
+      <path d="M 138,64 L 150,34 Q 129,46 128,54 Z" fill="url(#cat-ear)" />
+    </g>
 
     <!-- Head Base -->
     <circle cx="100" cy="74" r="44" fill="url(#cat-skin)" />

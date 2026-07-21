@@ -17,6 +17,7 @@ const MAX_CHAT_MESSAGES = 40;
 const ALLOWED_EMOTIONS = new Set(['happy', 'calm', 'sleepy', 'sad', 'excited']);
 const ALLOWED_ACTIONS = new Set(['jump', 'walk', 'sleep', 'wag', 'none']);
 const ALLOWED_SOUNDS = new Set(['meow', 'purr', 'bark', 'whine', 'sniff', 'none']);
+const ALLOWED_INTENTS = new Set(['approach', 'retreat', 'play', 'sleep', 'wander', 'stay', 'none']);
 
 const closeBtn = document.getElementById('close-dashboard-btn');
 const tabButtons = document.querySelectorAll('.tab-btn');
@@ -236,7 +237,7 @@ function startTimer() {
         petType: currentPet,
         context: finishedMode === 'focus' ? 'break_start' : 'focus_start'
       });
-      if (tip) window.api.triggerPetAction({ type: 'speak', text: tip, emotion: 'calm', action: 'none', sound: 'none' });
+      if (tip) window.api.triggerPetAction({ type: 'speak', text: tip, emotion: 'calm', action: 'none', sound: 'none', intent: 'none' });
     } catch (error) {
       console.error('Error getting Pomodoro tip:', error);
     }
@@ -283,18 +284,22 @@ function parseReply(reply) {
   const emotionMatch = content.match(/\[EMOTION:\s*([a-z_]+)\]/i);
   const actionMatch = content.match(/\[ACTION:\s*([a-z_]+)\]/i);
   const soundMatch = content.match(/\[SOUND:\s*([a-z_]+)\]/i);
+  const intentMatch = content.match(/\[INTENT:\s*([a-z_]+)\]/i);
   const candidateEmotion = emotionMatch?.[1]?.toLowerCase();
   const candidateAction = actionMatch?.[1]?.toLowerCase();
   const candidateSound = soundMatch?.[1]?.toLowerCase();
+  const candidateIntent = intentMatch?.[1]?.toLowerCase();
   const emotion = ALLOWED_EMOTIONS.has(candidateEmotion) ? candidateEmotion : 'happy';
   const action = ALLOWED_ACTIONS.has(candidateAction) ? candidateAction : 'none';
   const sound = ALLOWED_SOUNDS.has(candidateSound) ? candidateSound : 'none';
+  const intent = ALLOWED_INTENTS.has(candidateIntent) ? candidateIntent : 'none';
   content = content
     .replace(/\[EMOTION:\s*[a-z_]+\]/ig, '')
     .replace(/\[ACTION:\s*[a-z_]+\]/ig, '')
     .replace(/\[SOUND:\s*[a-z_]+\]/ig, '')
+    .replace(/\[INTENT:\s*[a-z_]+\]/ig, '')
     .trim();
-  return { thinking, content, emotion, action, sound };
+  return { thinking, content, emotion, action, sound, intent };
 }
 
 function persistChatHistory() {
@@ -367,8 +372,8 @@ async function sendChatMessage() {
     chatHistory.push({ role: 'assistant', content: reply });
     persistChatHistory();
     renderChatHistory();
-    const { content, emotion, action, sound } = parseReply(reply);
-    window.api.triggerPetAction({ type: 'speak', text: content, emotion, action, sound });
+    const { content, emotion, action, sound, intent } = parseReply(reply);
+    window.api.triggerPetAction({ type: 'speak', text: content, emotion, action, sound, intent });
   } catch (error) {
     document.getElementById('typing-bubble')?.remove();
     chatHistory.push({ role: 'system', content: `No pude responder: ${error.message}` });

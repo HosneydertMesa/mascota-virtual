@@ -114,6 +114,29 @@ test('el system prompt cambia segun la mascota (cat vs dog)', async () => {
   }
 });
 
+test('los system prompts mencionan los 6 intents validos (cat y dog)', async () => {
+  const captured = [];
+  const prevFetch = globalThis.fetch;
+  globalThis.fetch = async (_url, options) => {
+    captured.push(options.body);
+    return okResponse('ok');
+  };
+  try {
+    await sendMessageToMiniMax('test-key-1234567890', 'cat', [], 'a');
+    await sendMessageToMiniMax('test-key-1234567890', 'dog', [], 'a');
+  } finally {
+    globalThis.fetch = prevFetch;
+  }
+
+  const catBody = JSON.parse(captured[0]);
+  const dogBody = JSON.parse(captured[1]);
+  const intents = ['approach', 'retreat', 'play', 'sleep', 'wander', 'stay'];
+  for (const intent of intents) {
+    assert.match(catBody.messages[0].content, new RegExp(intent, 'i'), `cat prompt missing ${intent}`);
+    assert.match(dogBody.messages[0].content, new RegExp(intent, 'i'), `dog prompt missing ${intent}`);
+  }
+});
+
 test('sanea el history: descarta roles invalidos, no-strings, slice a 6 y trunca a 4000', async () => {
   let captured;
   await withMockFetch(okResponse('ok'), async () => {

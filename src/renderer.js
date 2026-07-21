@@ -13,6 +13,7 @@ let tailWagAmplitude = 1;
 let currentPetX = 0;
 let isQuickChatSending = false;
 let quickChatHistory = [];
+let nextEarTwitchAt = 0;
 
 const DRAG_THRESHOLD_PX = 7;
 const SLEEP_DELAY_MS = 45000;
@@ -35,6 +36,7 @@ const quickChatSend = document.getElementById('quick-chat-send');
 const ALLOWED_EMOTIONS = new Set(['happy', 'calm', 'sleepy', 'sad', 'excited']);
 const ALLOWED_ACTIONS = new Set(['jump', 'walk', 'sleep', 'wag', 'none']);
 const ALLOWED_SOUNDS = new Set(['meow', 'purr', 'bark', 'whine', 'sniff', 'none']);
+const ALLOWED_INTENTS = new Set(['approach', 'retreat', 'play', 'sleep', 'wander', 'stay', 'none']);
 
 function applyPetTheme() {
   document.body.dataset.pet = currentPet;
@@ -251,19 +253,23 @@ function parsePetReply(reply) {
   const emotionMatch = content.match(/\[EMOTION:\s*([a-z_]+)\]/i);
   const actionMatch = content.match(/\[ACTION:\s*([a-z_]+)\]/i);
   const soundMatch = content.match(/\[SOUND:\s*([a-z_]+)\]/i);
+  const intentMatch = content.match(/\[INTENT:\s*([a-z_]+)\]/i);
   const emotionCandidate = emotionMatch?.[1]?.toLowerCase();
   const actionCandidate = actionMatch?.[1]?.toLowerCase();
   const soundCandidate = soundMatch?.[1]?.toLowerCase();
+  const intentCandidate = intentMatch?.[1]?.toLowerCase();
   content = content
     .replace(/\[EMOTION:\s*[a-z_]+\]/ig, '')
     .replace(/\[ACTION:\s*[a-z_]+\]/ig, '')
     .replace(/\[SOUND:\s*[a-z_]+\]/ig, '')
+    .replace(/\[INTENT:\s*[a-z_]+\]/ig, '')
     .trim();
   return {
     content,
     emotion: ALLOWED_EMOTIONS.has(emotionCandidate) ? emotionCandidate : 'happy',
     action: ALLOWED_ACTIONS.has(actionCandidate) ? actionCandidate : 'none',
-    sound: ALLOWED_SOUNDS.has(soundCandidate) ? soundCandidate : 'none'
+    sound: ALLOWED_SOUNDS.has(soundCandidate) ? soundCandidate : 'none',
+    intent: ALLOWED_INTENTS.has(intentCandidate) ? intentCandidate : 'none'
   };
 }
 
@@ -451,8 +457,22 @@ window.api.onTriggerAutonomousTip(async () => {
   }
 });
 
+function maybeTwitchEar() {
+  if (currentVisualState === 'sleeping' || isDragging) return;
+  // ~0.25% por frame => ~1 twitch cada ~6.6s a 60fps
+  if (Math.random() > 0.0025) return;
+  const side = Math.random() < 0.5 ? 'left' : 'right';
+  const ear = petSvgWrapper.querySelector(`.pet-ear-${side}`);
+  if (!ear || ear.classList.contains('ear-twitching')) return;
+  ear.classList.add('ear-twitching');
+  // Forzar reflow para reiniciar la animacion si ya estaba aplicada
+  void ear.offsetWidth;
+  setTimeout(() => ear.classList.remove('ear-twitching'), 500);
+}
+
 function animateTail() {
   tailTime += tailWagSpeed;
+  maybeTwitchEar();
   const catTail = document.getElementById('cat-tail');
   const dogTail = document.getElementById('dog-tail');
 

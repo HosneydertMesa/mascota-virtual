@@ -1012,6 +1012,27 @@ input:disabled {
   to { transform: rotate(360deg); }
 }
 
+/* --- Ear Twitch (idle micro-animation) ---
+   Triggered by adding .ear-twitching to .pet-ear-left or .pet-ear-right.
+   Subtle rotation, runs once over 400ms. */
+@keyframes earTwitchLeft {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-6deg); }
+}
+@keyframes earTwitchRight {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(6deg); }
+}
+.pet-ear.ear-twitching {
+  animation-duration: 0.4s;
+  animation-timing-function: ease-in-out;
+}
+.pet-ear-left.ear-twitching { animation-name: earTwitchLeft; }
+.pet-ear-right.ear-twitching { animation-name: earTwitchRight; }
+/* No twitch mientras duerme o se arrastra */
+.sleeping .pet-ear,
+.drag-mode .pet-ear { animation: none !important; }
+
 /* --- Walking Animations --- */
 
 /* 1. Cat Walk (Smooth hip sway, low bounce, slinky glide) */

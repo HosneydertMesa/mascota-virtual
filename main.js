@@ -8,6 +8,7 @@ const {
   clamp,
   getPetProfile,
   normalizeEmotion,
+  normalizeIntent,
   normalizePetAction,
   normalizePetSound,
   normalizePetType,
@@ -411,14 +412,75 @@ function runGravityFall(win, startX, startY, targetDisplay) {
   timers.fall = setTimeout(tick, 0);
 }
 
-function executePetBehavior(action) {
-  const normalized = normalizePetAction(action);
-  if (normalized === 'walk') {
-    isSleeping = false;
-    chooseNewTarget('AI_WANDER');
-  } else if (normalized === 'sleep') {
+function executePetBehavior(sanitizedAction) {
+  const action = typeof sanitizedAction === 'string'
+    ? sanitizedAction
+    : normalizePetAction(sanitizedAction?.action);
+  const intent = normalizeIntent(sanitizedAction?.intent);
+
+  // sleep siempre gana (intent o action)
+  if (intent === 'sleep' || action === 'sleep') {
     isSleeping = true;
     stopMovement({ notify: false });
+    return;
+  }
+
+  // stay: parar sin dormir (util cuando el usuario quiere silencio)
+  if (intent === 'stay') {
+    isSleeping = false;
+    stopMovement({ notify: true, state: 'IDLE' });
+    return;
+  }
+
+  isSleeping = false;
+
+  // approach: cursor tracking activo
+  if (intent === 'approach') {
+    const tracking = getCursorTrackingState();
+    if (tracking.active && !tracking.close) {
+      startMovement(tracking.target, 'CURIOUS');
+    } else {
+      chooseNewTarget('AI_APPROACH');
+    }
+    return;
+  }
+
+  // retreat: opuesto al cursor
+  if (intent === 'retreat') {
+    const cursor = screen.getCursorScreenPoint();
+    const bounds = petWindow.getBounds();
+    const absolutePetCenter = bounds.x + currentX + PET_VISIBLE_SIZE.width / 2;
+    const cursorDelta = cursor.x - absolutePetCenter;
+    if (Math.abs(cursorDelta) > 0) {
+      const oppositeSign = -Math.sign(cursorDelta);
+      const area = screen.getDisplayNearestPoint(cursor).workArea;
+      const target = clamp(
+        oppositeSign === 1 ? area.width - MARGIN_SAFETY - PET_VISIBLE_SIZE.width - 18 : MARGIN_SAFETY + 18,
+        MARGIN_SAFETY + 18,
+        bounds.width - MARGIN_SAFETY - PET_VISIBLE_SIZE.width - 18
+      );
+      startMovement(target, 'AI_RETREAT');
+    } else {
+      chooseNewTarget('AI_RETREAT');
+    }
+    return;
+  }
+
+  // play: forzar movimiento energetico hacia el cursor
+  if (intent === 'play') {
+    const tracking = getCursorTrackingState();
+    if (tracking.active) {
+      startMovement(tracking.target, 'CURIOUS');
+    } else {
+      chooseNewTarget('AI_PLAY');
+    }
+    return;
+  }
+
+  // wander (o action=walk): paseo normal
+  if (intent === 'wander' || action === 'walk') {
+    chooseNewTarget('AI_WANDER');
+    return;
   }
 }
 
@@ -660,10 +722,11 @@ ipcMain.on('trigger-pet-action', (event, action) => {
     text: String(action.text || '').slice(0, 1000),
     emotion: normalizeEmotion(action.emotion),
     action: normalizePetAction(action.action),
-    sound: normalizePetSound(action.sound)
+    sound: normalizePetSound(action.sound),
+    intent: normalizeIntent(action.intent)
   };
   if (isDashboardSender(event)) safeSend(petWindow, 'pet-action', sanitized);
-  executePetBehavior(sanitized.action);
+  executePetBehavior(sanitized);
 });
 
 ipcMain.on('set-sleeping', (event, sleeping) => {
