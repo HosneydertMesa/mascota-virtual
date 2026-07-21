@@ -44,5 +44,6 @@ contextBridge.exposeInMainWorld('api', {
   onWindowModeBar: (callback) => subscribe('window-mode-bar', callback),
   onWindowModeDrag: (callback) => subscribe('window-mode-drag', callback),
   onUpdatePetPosition: (callback) => subscribe('update-pet-position', callback),
-  onTriggerAutonomousTip: (callback) => subscribe('trigger-autonomous-tip', callback)
+  onTriggerAutonomousTip: (callback) => subscribe('trigger-autonomous-tip', callback),
+  onSystemEvent: (callback) => subscribe('pet-system-event', callback)
 });
