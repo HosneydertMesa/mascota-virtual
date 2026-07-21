@@ -244,6 +244,10 @@ function startTimer() {
 }
 
 timerToggleBtn.addEventListener('click', () => {
+  togglePomodoroTimer();
+});
+
+function togglePomodoroTimer() {
   if (timerState === 'idle' || timerState === 'paused') {
     timerState = 'running';
     timerToggleBtn.querySelector('span').textContent = 'Pausar';
@@ -256,7 +260,10 @@ timerToggleBtn.addEventListener('click', () => {
     clearInterval(timerInterval);
     timerInterval = null;
   }
-});
+}
+
+// T4 — globalShortcut (Cmd/Ctrl+Shift+P) llega via IPC desde main.
+window.api.onPomodoroToggle(togglePomodoroTimer);
 
 timerResetBtn.addEventListener('click', () => {
   clearInterval(timerInterval);

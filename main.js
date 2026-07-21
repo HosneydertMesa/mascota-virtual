@@ -1,10 +1,11 @@
 'use strict';
 
-const { app, BrowserWindow, ipcMain, powerMonitor, safeStorage, screen } = require('electron');
+const { app, BrowserWindow, globalShortcut, ipcMain, powerMonitor, safeStorage, screen } = require('electron');
 const fs = require('fs');
 const path = require('path');
 const { getQuickTip, sendMessageToMiniMax } = require('./src/services/ai');
 const { createPowerMonitor } = require('./src/services/power-monitor');
+const { registerGlobalShortcuts } = require('./src/core/global-shortcuts');
 const {
   clamp,
   getPetProfile,
@@ -45,6 +46,7 @@ let lastPositionSent = Number.NaN;
 let lastMoveState = { state: null, direction: null };
 let dragStartPos = { x: 0, y: 0 };
 let dragStartMousePos = { x: 0, y: 0 };
+let globalShortcutsHandle = null;
 
 const timers = {
   movement: null,
@@ -806,9 +808,34 @@ ipcMain.handle('ai:quick-tip', async (event, payload) => {
 process.on('uncaughtException', error => logDebug(`UNCAUGHT EXCEPTION: ${serializeError(error)}`));
 process.on('unhandledRejection', reason => logDebug(`UNHANDLED REJECTION: ${serializeError(reason)}`));
 
-// PowerMonitor: reacciona a lock/unlock/suspend/resume del OS.
-// Se inicializa una vez (app.whenReady) y se libera en before-quit.
+// PowerMonitor (T3) y globalShortcut (T4) coexisten aquí. Cada uno se
+// inicializa una vez (app.whenReady) y se libera en before-quit.
 let powerMonitorHandle = null;
+
+// T4 — globalShortcut handlers. Viven en main porque necesitan acceso a
+// windows + IPC state. El modulo core/global-shortcuts solo se encarga del
+// "register / unregister" con manejo de errores.
+
+function handlePomodoroToggleShortcut() {
+  if (dashboardWindow && !dashboardWindow.isDestroyed()) {
+    safeSend(dashboardWindow, 'pomodoro-toggle');
+    if (typeof dashboardWindow.focus === 'function') dashboardWindow.focus();
+    return;
+  }
+  createDashboardWindow('pomodoro');
+}
+
+function handlePetSleepShortcut() {
+  if (!petWindow || petWindow.isDestroyed()) return;
+  isSleeping = true;
+  stopMovement({ notify: false });
+  safeSend(petWindow, 'pet-sleep');
+}
+
+function handleQuickCaptureShortcut() {
+  if (!petWindow || petWindow.isDestroyed()) return;
+  safeSend(petWindow, 'quick-capture-trigger');
+}
 
 app.whenReady().then(() => {
   createPetWindow();
@@ -817,6 +844,11 @@ app.whenReady().then(() => {
     setSleeping: value => setSleepingState(value, 'powermonitor'),
     notifyRenderer: payload => notifyPetSystemEvent(payload),
     logDebug
+  });
+  globalShortcutsHandle = registerGlobalShortcuts(globalShortcut, logDebug, {
+    onPomodoroToggle: handlePomodoroToggleShortcut,
+    onPetSleep: handlePetSleepShortcut,
+    onQuickCapture: handleQuickCaptureShortcut
   });
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createPetWindow();
@@ -833,6 +865,10 @@ app.on('before-quit', () => {
       logDebug(`POWERMONITOR DETACH ERROR: ${serializeError(error)}`);
     }
     powerMonitorHandle = null;
+  }
+  if (globalShortcutsHandle) {
+    globalShortcutsHandle.unregisterAll();
+    globalShortcutsHandle = null;
   }
 });
 

@@ -45,5 +45,10 @@ contextBridge.exposeInMainWorld('api', {
   onWindowModeDrag: (callback) => subscribe('window-mode-drag', callback),
   onUpdatePetPosition: (callback) => subscribe('update-pet-position', callback),
   onTriggerAutonomousTip: (callback) => subscribe('trigger-autonomous-tip', callback),
-  onSystemEvent: (callback) => subscribe('pet-system-event', callback)
+  onSystemEvent: (callback) => subscribe('pet-system-event', callback),
+
+  // T4 — globalShortcut IPC channels
+  onPomodoroToggle: (callback) => subscribe('pomodoro-toggle', callback),
+  onPetSleep: (callback) => subscribe('pet-sleep', callback),
+  onQuickCaptureTrigger: (callback) => subscribe('quick-capture-trigger', callback)
 });
