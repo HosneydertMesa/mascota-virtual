@@ -5,7 +5,7 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "check": "node --check main.js && node --check preload.js && node --check src/renderer.js && node --check src/dashboard-renderer.js && node --check src/quick-capture-renderer.js && node --check src/services/ai.js && node --check src/services/idle-monitor.js && node --check src/services/memory-extractor.js && node --check src/services/pet-audio.js && node --check src/services/logger.js && node --check src/services/memories-store.js && node --check src/services/quick-capture-store.js && node --check src/services/mood-store.js && node --check src/services/mood-tick.js && node --check src/services/power-monitor.js && node --check src/services/pet-name-store.js && node --check src/services/pomodoro-store.js && node --check src/services/daily-briefing-store.js && node --check src/core/global-shortcuts.js && node --check src/core/pet-behavior.js && node --check src/core/pet-memories.js && node --check src/core/pet-micro-presence.js && node --check src/core/pet-mood.js && node --check src/core/pet-mood-labels.js && node --check src/core/pet-motion.js && node --check src/core/pet-protocol.js && node --check src/core/context-awareness.js && node --check src/core/quick-capture.js && node --check src/core/weekly-report.js && node --check src/core/pomodoro-templates.js && node --check src/core/pomodoro-adaptive.js && node --check src/core/pomodoro-streak.js && node --check src/core/daily-briefing.js",
+    "check": "node --check main.js && node --check preload.js && node --check src/renderer.js && node --check src/dashboard-renderer.js && node --check src/quick-capture-renderer.js && node --check src/services/ai.js && node --check src/services/calendar-service.js && node --check src/services/idle-monitor.js && node --check src/services/memory-extractor.js && node --check src/services/pet-audio.js && node --check src/services/logger.js && node --check src/services/memories-store.js && node --check src/services/pet-config-store.js && node --check src/services/quick-capture-store.js && node --check src/services/mood-store.js && node --check src/services/mood-tick.js && node --check src/services/power-monitor.js && node --check src/services/pet-name-store.js && node --check src/services/pomodoro-store.js && node --check src/services/daily-briefing-store.js && node --check src/core/global-shortcuts.js && node --check src/core/pet-behavior.js && node --check src/core/pet-memories.js && node --check src/core/pet-micro-presence.js && node --check src/core/pet-mood.js && node --check src/core/pet-mood-labels.js && node --check src/core/pet-motion.js && node --check src/core/pet-protocol.js && node --check src/core/context-awareness.js && node --check src/core/quick-capture.js && node --check src/core/silent-mode.js && node --check src/core/weekly-report.js && node --check src/core/pomodoro-templates.js && node --check src/core/pomodoro-adaptive.js && node --check src/core/pomodoro-streak.js && node --check src/core/daily-briefing.js",
     "test": "node --test test/*.test.js",
     "sdlc": "node scripts/sdlc.js",
     "sdlc:status": "node scripts/sdlc.js status",
@@ -27,5 +27,8 @@
   "license": "MIT",
   "devDependencies": {
     "electron": "^43.1.0"
+  },
+  "dependencies": {
+    "node-ical": "^0.27.1"
   }
 }
