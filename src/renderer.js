@@ -480,6 +480,21 @@ window.api.onSystemEvent(data => {
   }
 });
 
+// I7 + I8 — daily briefing / evening summary. Muestra el texto como globo
+// de la mascota. Duracion extendida (8s) porque son frases mas largas que
+// los tips autonomos. Si el usuario estaba durmiendo, lo despierta primero.
+window.api.onMorningBriefing(data => {
+  if (!data || typeof data.text !== 'string' || data.text.length === 0) return;
+  if (typeof wakeUp === 'function') wakeUp();
+  showSpeech(data.text, 8000);
+});
+
+window.api.onEveningSummary(data => {
+  if (!data || typeof data.text !== 'string' || data.text.length === 0) return;
+  if (typeof wakeUp === 'function') wakeUp();
+  showSpeech(data.text, 8000);
+});
+
 function maybeTwitchEar() {
   if (currentVisualState === 'sleeping' || isDragging) return;
   // ~0.25% por frame => ~1 twitch cada ~6.6s a 60fps

@@ -66,5 +66,12 @@ contextBridge.exposeInMainWorld('api', {
   // T4 — globalShortcut IPC channels
   onPomodoroToggle: (callback) => subscribe('pomodoro-toggle', callback),
   onPetSleep: (callback) => subscribe('pet-sleep', callback),
-  onQuickCaptureTrigger: (callback) => subscribe('quick-capture-trigger', callback)
+  onQuickCaptureTrigger: (callback) => subscribe('quick-capture-trigger', callback),
+
+  // I7 + I8 — daily briefing / evening summary
+  onMorningBriefing: (callback) => subscribe('morning-briefing', callback),
+  onEveningSummary: (callback) => subscribe('evening-summary', callback),
+  briefingGetState: () => ipcRenderer.invoke('briefing:get-state'),
+  briefingSetEnabled: (enabled) => ipcRenderer.invoke('briefing:set-enabled', Boolean(enabled)),
+  briefingShowNow: (kind) => ipcRenderer.invoke('briefing:show-now', kind === 'evening' ? 'evening' : 'morning')
 });
