@@ -410,6 +410,51 @@ chatInput.addEventListener('keydown', event => {
   if (event.key === 'Enter') sendChatMessage();
 });
 
+/* === A4 — Typing rate monitor + Do Not Disturb === */
+
+const {
+  shouldEnterDoNotDisturb,
+  shouldExitDoNotDisturb,
+  computeTypingRate
+} = window.ContextAwareness;
+
+const keystrokes = []; // rolling buffer de {ts} eventos
+let isInDnd = false;
+let lastDndCheck = 0;
+const DND_CHECK_INTERVAL_MS = 10_000; // chequea cada 10s (no es caro)
+
+chatInput.addEventListener('input', () => {
+  // Track todos los keystrokes (incluyendo paste, deletion, etc).
+  // El calculo WPM es proporcional al numero de eventos, no al texto.
+  keystrokes.push({ ts: Date.now() });
+  // Trim del buffer para que no crezca indefinidamente (mantener 5 min de historial)
+  const cutoff = Date.now() - 5 * 60_000;
+  while (keystrokes.length > 0 && keystrokes[0].ts < cutoff) {
+    keystrokes.shift();
+  }
+  maybeCheckDnd();
+});
+
+function maybeCheckDnd() {
+  const now = Date.now();
+  if (now - lastDndCheck < DND_CHECK_INTERVAL_MS) return;
+  lastDndCheck = now;
+  const shouldBeInDnd = isInDnd
+    ? !shouldExitDoNotDisturb(keystrokes)
+    : shouldEnterDoNotDisturb(keystrokes);
+  if (shouldBeInDnd !== isInDnd) {
+    isInDnd = shouldBeInDnd;
+    window.api.setDoNotDisturb(isInDnd).catch(e => console.error('DND update failed:', e));
+  }
+}
+
+// Cleanup cuando la tab se cierra/cambia (best-effort)
+window.addEventListener('beforeunload', () => {
+  if (isInDnd) {
+    window.api.setDoNotDisturb(false).catch(() => {});
+  }
+});
+
 quickPromptButtons.forEach(button => {
   button.addEventListener('click', () => {
     if (isSending) return;

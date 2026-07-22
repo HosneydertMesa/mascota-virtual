@@ -49,6 +49,9 @@ contextBridge.exposeInMainWorld('api', {
   clearMemories: () => ipcRenderer.invoke('memories:clear'),
   setMemoryRedact: (enabled) => ipcRenderer.invoke('memories:set-redact', enabled),
 
+  // A4 — Do Not Disturb (typing rate monitor)
+  setDoNotDisturb: (isActive) => ipcRenderer.invoke('dnd:update', isActive),
+
   onSwitchTab: (callback) => subscribe('switch-tab', callback),
   onPetMoveState: (callback) => subscribe('pet-move-state', callback),
   onPetAction: (callback) => subscribe('pet-action', callback),

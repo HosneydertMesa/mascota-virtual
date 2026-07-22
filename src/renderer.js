@@ -472,6 +472,11 @@ window.api.onSystemEvent(data => {
       }
       scheduleSleep();
     }, 5000);
+  } else if (data.event === 'idle-break') {
+    // A3 — el usuario lleva X min sin actividad. Mostrar tip.
+    if (typeof data.text === 'string' && data.text.length > 0) {
+      showSpeech(data.text);
+    }
   }
 });
 

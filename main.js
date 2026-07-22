@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const { getQuickTip, sendMessageToMiniMax } = require('./src/services/ai');
 const { createPowerMonitor } = require('./src/services/power-monitor');
+const { createIdleMonitor } = require('./src/services/idle-monitor');
 const { registerGlobalShortcuts } = require('./src/core/global-shortcuts');
 const { executeBehavior, buildMainDeps } = require('./src/core/pet-behavior');
 const { loadPetName, savePetName } = require('./src/services/pet-name-store');
@@ -377,7 +378,7 @@ function scheduleRandomMovement(delay = 2500) {
 function startAutonomousCycle() {
   clearTimer('autonomous');
   timers.autonomous = setInterval(() => {
-    if (isSleeping || isDragging || timers.fall || !petWindow || petWindow.isDestroyed()) return;
+    if (isSleeping || isDragging || isDoNotDisturb || timers.fall || !petWindow || petWindow.isDestroyed()) return;
     if (Math.random() < 0.15) safeSend(petWindow, 'trigger-autonomous-tip');
   }, 270000);
 }
@@ -872,6 +873,19 @@ ipcMain.handle('memories:set-redact', (event, enabled) => {
   return result;
 });
 
+// A4 — IPC para que el dashboard setee el estado Do Not Disturb.
+// Se activa cuando el usuario esta typing rapido (>= 80 WPM por 2+ min),
+// se desactiva cuando baja (< 60 WPM por 30s).
+ipcMain.handle('dnd:update', (event, isActive) => {
+  if (!isDashboardSender(event)) throw new Error('Solicitud no autorizada.');
+  const wasActive = isDoNotDisturb;
+  isDoNotDisturb = Boolean(isActive);
+  if (wasActive !== isDoNotDisturb) {
+    logDebug(`DND: ${isDoNotDisturb ? 'ON' : 'OFF'}`);
+  }
+  return { isDoNotDisturb };
+});
+
 ipcMain.handle('ai:quick-tip', async (event, payload) => {
   if (!isKnownSender(event)) throw new Error('Solicitud no autorizada.');
   let apiKey = '';
@@ -891,6 +905,13 @@ process.on('unhandledRejection', reason => logDebug(`UNHANDLED REJECTION: ${seri
 // PowerMonitor (T3) y globalShortcut (T4) coexisten aquí. Cada uno se
 // inicializa una vez (app.whenReady) y se libera en before-quit.
 let powerMonitorHandle = null;
+
+// A3 — idle monitor (sugiere breaks al usuario cuando lleva X min idle).
+let idleMonitorHandle = null;
+
+// A4 — Do Not Disturb (suprime autonomous tips cuando el usuario esta
+// typing rapido). Se activa desde el dashboard via IPC `dnd:update`.
+let isDoNotDisturb = false;
 
 // T4 — globalShortcut handlers. Viven en main porque necesitan acceso a
 // windows + IPC state. El modulo core/global-shortcuts solo se encarga del
@@ -951,6 +972,17 @@ app.whenReady().then(() => {
     notifyRenderer: payload => notifyPetSystemEvent(payload),
     logDebug
   });
+  // A3 — idle monitor: detecta inactividad system-wide y sugiere breaks.
+  // Emite un evento al pet window con el texto del tip. El renderer
+  // (pet) lo muestra como speech bubble.
+  idleMonitorHandle = createIdleMonitor({
+    powerMonitor,
+    onBreakSuggest: ({ idleFormatted }) => {
+      const tip = `Llevas ${idleFormatted} sin actividad. ¿Un break?`;
+      notifyPetSystemEvent({ event: 'idle-break', source: 'idle-monitor', text: tip, ts: new Date().toISOString() });
+    },
+    logDebug
+  });
   globalShortcutsHandle = registerGlobalShortcuts(globalShortcut, logDebug, {
     onPomodoroToggle: handlePomodoroToggleShortcut,
     onPetSleep: handlePetSleepShortcut,
@@ -975,6 +1007,14 @@ app.on('before-quit', () => {
       logDebug(`POWERMONITOR DETACH ERROR: ${serializeError(error)}`);
     }
     powerMonitorHandle = null;
+  }
+  if (idleMonitorHandle) {
+    try {
+      idleMonitorHandle.detach();
+    } catch (error) {
+      logDebug(`IDLE MONITOR DETACH ERROR: ${serializeError(error)}`);
+    }
+    idleMonitorHandle = null;
   }
   if (globalShortcutsHandle) {
     globalShortcutsHandle.unregisterAll();
