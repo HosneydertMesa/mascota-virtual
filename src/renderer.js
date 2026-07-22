@@ -495,6 +495,34 @@ window.api.onEveningSummary(data => {
   showSpeech(data.text, 8000);
 });
 
+// T6 — electron-updater status (main → renderer). El main process emite
+// { kind: 'available' | 'downloaded', version: 'X.Y.Z' } cuando:
+//   - 'available':  se detecto un update y se esta bajando (autoDownload=true)
+//   - 'downloaded': el update esta listo y se instalara al cerrar la app
+// El mensaje user-facing lo formatea el modulo pure (window.AutoUpdater)
+// para mantener una sola fuente de verdad. Duracion extendida (10s) porque
+// el texto es informativo y queremos que el usuario alcance a leerlo.
+window.api.onUpdateStatus(data => {
+  if (!data || typeof data.kind !== 'string' || typeof data.version !== 'string') return;
+  // Defensivo: si el modulo pure no se cargo (raro, pero pasa si hubo
+  // un error de <script>), caer a un string hardcodeado.
+  let text = '';
+  if (typeof window.AutoUpdater === 'object' && typeof window.AutoUpdater.formatUpdateMessage === 'function') {
+    text = window.AutoUpdater.formatUpdateMessage({
+      currentVersion: '',
+      newVersion: data.version,
+      kind: data.kind
+    });
+  } else {
+    const v = data.version ? `v${data.version}` : '';
+    if (data.kind === 'downloaded') text = `Update ${v} listo. Se instala al cerrar la app.`;
+    else text = `Update ${v} downloading...`;
+  }
+  if (!text) return;
+  if (typeof wakeUp === 'function') wakeUp();
+  showSpeech(text, 10000);
+});
+
 function maybeTwitchEar() {
   if (currentVisualState === 'sleeping' || isDragging) return;
   // ~0.25% por frame => ~1 twitch cada ~6.6s a 60fps

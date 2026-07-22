@@ -91,5 +91,10 @@ contextBridge.exposeInMainWorld('api', {
   onEveningSummary: (callback) => subscribe('evening-summary', callback),
   briefingGetState: () => ipcRenderer.invoke('briefing:get-state'),
   briefingSetEnabled: (enabled) => ipcRenderer.invoke('briefing:set-enabled', Boolean(enabled)),
-  briefingShowNow: (kind) => ipcRenderer.invoke('briefing:show-now', kind === 'evening' ? 'evening' : 'morning')
+  briefingShowNow: (kind) => ipcRenderer.invoke('briefing:show-now', kind === 'evening' ? 'evening' : 'morning'),
+
+  // T6 — electron-updater status (main → renderer). El main process
+  // emite 'app:update-status' cuando hay un update disponible o
+  // descargado. El renderer lo recibe y muestra un speech bubble.
+  onUpdateStatus: (callback) => subscribe('app:update-status', callback)
 });
