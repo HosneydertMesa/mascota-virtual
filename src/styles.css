@@ -1240,3 +1240,64 @@ body.pupils-dilated .pet-pupil {
   color: var(--text-secondary, #888);
   margin: 4px 0 0 0;
 }
+
+/* Mood widget (Settings tab) — chip + 4 mini bars */
+.mood-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg-card, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.08));
+  border-radius: 10px;
+}
+.mood-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 13px;
+  width: fit-content;
+  transition: background 0.3s ease, color 0.3s ease;
+  user-select: none;
+}
+.mood-chip-emoji { font-size: 16px; line-height: 1; }
+.mood-chip.mood-state-calm   { background: #dbeafe; color: #1e40af; }
+.mood-chip.mood-state-happy  { background: #dcfce7; color: #166534; }
+.mood-chip.mood-state-sleepy { background: #ede9fe; color: #5b21b6; }
+.mood-chip.mood-state-sad    { background: #e5e7eb; color: #374151; }
+.mood-chip.mood-state-bored  { background: #ffedd5; color: #9a3412; }
+.mood-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 12px;
+}
+.mood-stat-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 11px;
+  margin-bottom: 3px;
+}
+.mood-stat-label { color: var(--text-secondary, #888); }
+.mood-stat-value { font-weight: 600; color: var(--text, #212529); font-variant-numeric: tabular-nums; }
+.mood-stat-bar {
+  height: 6px;
+  background: var(--bg-card-hover, rgba(0, 0, 0, 0.08));
+  border-radius: 3px;
+  overflow: hidden;
+}
+.mood-stat-bar-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--primary, #339af0);
+  border-radius: 3px;
+  transition: width 0.4s ease, background 0.3s ease;
+}
+.mood-stat-bar-fill[data-stat="hunger"]    { background: #f59e0b; }
+.mood-stat-bar-fill[data-stat="happiness"] { background: #ec4899; }
+.mood-stat-bar-fill[data-stat="curiosity"] { background: #8b5cf6; }
+.mood-stat-bar-fill[data-stat="energy"]    { background: #06b6d4; }

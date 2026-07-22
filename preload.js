@@ -40,6 +40,9 @@ contextBridge.exposeInMainWorld('api', {
   getPetName: () => ipcRenderer.invoke('pet-name:get'),
   setPetName: (name) => ipcRenderer.invoke('pet-name:set', name),
 
+  // A1 — mood system
+  getMood: () => ipcRenderer.invoke('mood:get'),
+
   onSwitchTab: (callback) => subscribe('switch-tab', callback),
   onPetMoveState: (callback) => subscribe('pet-move-state', callback),
   onPetAction: (callback) => subscribe('pet-action', callback),

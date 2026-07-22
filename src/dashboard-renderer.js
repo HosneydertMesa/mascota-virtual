@@ -38,6 +38,11 @@ const dogPreview = document.getElementById('dog-preview');
 const soundEnabledInput = document.getElementById('sound-enabled-input');
 const petNameInput = document.getElementById('pet-name-input');
 const petNameStatus = document.getElementById('pet-name-status');
+const moodChip = document.getElementById('mood-chip');
+const moodChipEmoji = document.getElementById('mood-chip-emoji');
+const moodChipText = document.getElementById('mood-chip-text');
+// MOOD_LABELS y MOOD_STATS vienen de window.PetMoodLabels (ver pet-mood-labels.js).
+// Compartido con los tests para que si se agrega un estado, el test avise.
 const chatPetAvatar = document.getElementById('chat-pet-avatar');
 const chatPetName = document.getElementById('chat-pet-name');
 const chatPetStatus = document.getElementById('chat-pet-status');
@@ -114,6 +119,10 @@ async function initSettings() {
   } catch (error) {
     petNameStatus.textContent = 'No se pudo cargar el nombre.';
   }
+
+  // A1 — mood widget: estado + 4 stats, refresco cada 5s
+  await refreshMoodWidget();
+  setInterval(refreshMoodWidget, 5000);
 
   catPreview.innerHTML = window.catSVG;
   dogPreview.innerHTML = window.dogSVG;
@@ -414,3 +423,47 @@ window.addEventListener('DOMContentLoaded', async () => {
   const defaultTab = window.location.hash.substring(1);
   selectTab(['pomodoro', 'chat', 'settings'].includes(defaultTab) ? defaultTab : 'pomodoro');
 });
+
+/**
+ * Refresca el widget de mood: estado + 4 stats.
+ * - Llama a window.api.getMood() (IPC -> main.js -> currentMood)
+ * - Usa window.PetMood.deriveState(mood) para derivar el estado
+ * - Actualiza el chip y las 4 barras
+ * Si el mood aún no está inicializado en main, sale silenciosamente.
+ */
+async function refreshMoodWidget() {
+  if (!moodChip) return;
+  let mood;
+  try {
+    mood = await window.api.getMood();
+  } catch (error) {
+    // IPC falla (ej: dashboard abierto antes que main init) — silencioso.
+    return;
+  }
+  if (!mood || typeof mood !== 'object') return;
+
+  const state = (window.PetMood && typeof window.PetMood.deriveState === 'function')
+    ? window.PetMood.deriveState(mood)
+    : 'calm';
+  const labels = window.PetMoodLabels.MOOD_LABELS;
+  const label = window.PetMoodLabels.getMoodLabel(currentPet, state);
+
+  moodChip.dataset.state = state;
+  moodChip.className = 'mood-chip mood-state-' + state;
+  if (moodChipEmoji) moodChipEmoji.textContent = label.emoji;
+  if (moodChipText) moodChipText.textContent = label.text;
+
+  for (const stat of window.PetMoodLabels.MOOD_STATS) {
+    const raw = mood[stat];
+    const value = (typeof raw === 'number' && !Number.isNaN(raw))
+      ? Math.max(0, Math.min(100, Math.round(raw)))
+      : 0;
+    const valueEl = document.getElementById('mood-stat-' + stat + '-value');
+    const barEl = document.getElementById('mood-stat-' + stat + '-bar');
+    if (valueEl) valueEl.textContent = String(value);
+    if (barEl) {
+      barEl.style.width = value + '%';
+      barEl.dataset.stat = stat;
+    }
+  }
+}

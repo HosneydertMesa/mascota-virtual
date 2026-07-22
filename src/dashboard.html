@@ -129,6 +129,47 @@
             <p class="settings-hint" id="pet-name-status">Cargando...</p>
           </div>
 
+          <div class="settings-group">
+            <label class="settings-label">Estado de ánimo</label>
+            <div class="mood-card">
+              <div id="mood-chip" class="mood-chip mood-state-calm" data-state="calm" role="status" aria-live="polite">
+                <span class="mood-chip-emoji" id="mood-chip-emoji" aria-hidden="true">😌</span>
+                <span class="mood-chip-text" id="mood-chip-text">Calmada</span>
+              </div>
+              <div class="mood-stats" id="mood-stats">
+                <div class="mood-stat">
+                  <div class="mood-stat-head">
+                    <span class="mood-stat-label">Energía</span>
+                    <span class="mood-stat-value" id="mood-stat-energy-value">--</span>
+                  </div>
+                  <div class="mood-stat-bar"><span id="mood-stat-energy-bar" class="mood-stat-bar-fill"></span></div>
+                </div>
+                <div class="mood-stat">
+                  <div class="mood-stat-head">
+                    <span class="mood-stat-label">Felicidad</span>
+                    <span class="mood-stat-value" id="mood-stat-happiness-value">--</span>
+                  </div>
+                  <div class="mood-stat-bar"><span id="mood-stat-happiness-bar" class="mood-stat-bar-fill"></span></div>
+                </div>
+                <div class="mood-stat">
+                  <div class="mood-stat-head">
+                    <span class="mood-stat-label">Curiosidad</span>
+                    <span class="mood-stat-value" id="mood-stat-curiosity-value">--</span>
+                  </div>
+                  <div class="mood-stat-bar"><span id="mood-stat-curiosity-bar" class="mood-stat-bar-fill"></span></div>
+                </div>
+                <div class="mood-stat">
+                  <div class="mood-stat-head">
+                    <span class="mood-stat-label">Hambre</span>
+                    <span class="mood-stat-value" id="mood-stat-hunger-value">--</span>
+                  </div>
+                  <div class="mood-stat-bar"><span id="mood-stat-hunger-bar" class="mood-stat-bar-fill"></span></div>
+                </div>
+              </div>
+            </div>
+            <p class="settings-hint">Las estadísticas decaen solas. Hablale a tu mascota o jugá con ella para mantenerlas arriba.</p>
+          </div>
+
           <div class="settings-group" style="margin-top: 10px;">
             <button id="save-settings-btn" class="btn btn-primary" style="width: 100%;">Guardar Ajustes</button>
           </div>
@@ -143,6 +184,8 @@
   <script src="assets/cat.js"></script>
   <script src="assets/dog.js"></script>
   <script src="core/pet-protocol.js"></script>
+  <script src="core/pet-mood.js"></script>
+  <script src="core/pet-mood-labels.js"></script>
   <script src="dashboard-renderer.js"></script>
 </body>
 </html>

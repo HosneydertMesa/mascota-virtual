@@ -222,7 +222,9 @@ function buildMoodContext(mood) {
   return lines.join(' ');
 }
 
-module.exports = {
+// UMD-lite: expone en module.exports (Node) o window.PetMood (browser).
+// Asi main.js puede require()'lo y el dashboard puede usar window.PetMood.
+const PetMood = {
   STAT_MIN,
   STAT_MAX,
   INITIAL_MOOD,
@@ -236,3 +238,9 @@ module.exports = {
   minutesSinceLastDecay,
   buildMoodContext
 };
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = PetMood;
+} else if (typeof window !== 'undefined') {
+  window.PetMood = PetMood;
+}
