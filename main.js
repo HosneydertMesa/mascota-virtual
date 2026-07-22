@@ -23,6 +23,18 @@ const {
 } = require('./src/services/memories-store');
 const { rankByRelevance, formatMemoriesForPrompt } = require('./src/core/pet-memories');
 const { extractMemoryFromMessage } = require('./src/services/memory-extractor');
+// Track B — I2 + W3 (quick capture + weekly report)
+const {
+  loadCaptures,
+  saveCaptures,
+  appendCapture,
+  getRecentCaptures,
+  clearCaptures: clearAllCaptures
+} = require('./src/services/quick-capture-store');
+const {
+  buildWeeklyReport,
+  formatReportAsMarkdown
+} = require('./src/core/weekly-report');
 const {
   clamp,
   getPetProfile,
@@ -886,6 +898,95 @@ ipcMain.handle('dnd:update', (event, isActive) => {
   return { isDoNotDisturb };
 });
 
+// === Track B — I2 (Quick Capture) + W3 (Weekly Report) ===
+
+let capturesStore = null;
+// pomodoro-store vive en el worktree de Track A. Dynamic require con try/catch
+// para que este worktree no rompa al cargar (devuelve null si no existe). El
+// merge final consolidara las dependencias. Para el reporte semanal usamos
+// sessions de pomodoro-store si esta disponible; si no, [].
+let pomodoroStoreModule = null;
+try {
+  pomodoroStoreModule = require('./src/services/pomodoro-store');
+} catch (_e) {
+  pomodoroStoreModule = null;
+  logDebug('POMODORO STORE: no disponible en este worktree (Track A no mergeado), usando fallback');
+}
+
+ipcMain.handle('quick-capture:save', (event, text) => {
+  if (!isKnownSender(event)) throw new Error('Solicitud no autorizada.');
+  if (!capturesStore) return { added: false, capture: null, reason: 'store_uninitialized' };
+  // El toggle global de PII viene del memoriesStore (mismo flag para todo).
+  // Default ON si memoriesStore no esta disponible (defensivo).
+  const redactPII = memoriesStore ? memoriesStore.redactPII === true : true;
+  const result = appendCapture(app.getPath('userData'), capturesStore, text, { redactPII });
+  if (result.added) {
+    try { saveCaptures(app.getPath('userData'), capturesStore); }
+    catch (e) { logDebug('CAPTURE SAVE: ' + e.message); }
+  }
+  return result;
+});
+
+ipcMain.handle('quick-capture:list', (event, limit) => {
+  if (!isKnownSender(event)) throw new Error('Solicitud no autorizada.');
+  if (!capturesStore) return [];
+  return getRecentCaptures(app.getPath('userData'), capturesStore, typeof limit === 'number' ? limit : 50);
+});
+
+ipcMain.handle('quick-capture:clear', event => {
+  if (!isDashboardSender(event)) throw new Error('Solicitud no autorizada.');
+  if (!capturesStore) return 0;
+  const count = clearAllCaptures(app.getPath('userData'), capturesStore);
+  try { saveCaptures(app.getPath('userData'), capturesStore); }
+  catch (e) { logDebug('CAPTURE CLEAR SAVE: ' + e.message); }
+  return count;
+});
+
+ipcMain.handle('weekly-report:get', (event, opts) => {
+  if (!isDashboardSender(event)) throw new Error('Solicitud no autorizada.');
+  // 1. Cargar sesiones de pomodoro (si pomodoro-store esta disponible).
+  let sessions = [];
+  let longestStreak = 0;
+  let currentStreak = 0;
+  if (pomodoroStoreModule) {
+    try {
+      const sessionsStore = pomodoroStoreModule.loadSessions(app.getPath('userData'));
+      sessions = Array.isArray(sessionsStore?.sessions) ? sessionsStore.sessions : [];
+    } catch (e) {
+      logDebug('POMODORO LOAD SESSIONS: ' + e.message);
+      sessions = [];
+    }
+    try {
+      const streak = pomodoroStoreModule.computeCurrentStreak(app.getPath('userData'), new Date());
+      currentStreak = typeof streak === 'number' ? streak : 0;
+      const longest = pomodoroStoreModule.computeLongestStreak(app.getPath('userData'));
+      longestStreak = typeof longest === 'number' ? longest : 0;
+    } catch (e) {
+      logDebug('POMODORO STREAK: ' + e.message);
+    }
+  }
+  // 2. Cargar capturas (si tenemos store).
+  let captures = [];
+  if (capturesStore) {
+    captures = Array.isArray(capturesStore.captures) ? capturesStore.captures : [];
+  }
+  // 3. Opciones del usuario.
+  const weekStart = opts && opts.weekStart === 'sunday' ? 'sunday' : 'monday';
+  const today = opts && opts.today ? new Date(opts.today) : new Date();
+  // 4. Build report + format markdown.
+  const report = buildWeeklyReport({
+    sessions,
+    captures,
+    streak: currentStreak,
+    longestStreak,
+    weekStart,
+    today,
+    petType: activePetType
+  });
+  const markdown = formatReportAsMarkdown(report);
+  return { report, markdown };
+});
+
 ipcMain.handle('ai:quick-tip', async (event, payload) => {
   if (!isKnownSender(event)) throw new Error('Solicitud no autorizada.');
   let apiKey = '';
@@ -956,6 +1057,14 @@ app.whenReady().then(() => {
   } catch (error) {
     logDebug('MEMORIES INIT ERROR: ' + error.message);
     memoriesStore = { version: 1, redactPII: true, memories: [] };
+  }
+  // I2 — quick captures: cargar store desde disco
+  try {
+    capturesStore = loadCaptures(app.getPath('userData'));
+    logDebug('CAPTURES INIT', { count: capturesStore.captures.length });
+  } catch (error) {
+    logDebug('CAPTURES INIT ERROR: ' + error.message);
+    capturesStore = { version: 1, captures: [] };
   }
   moodTickHandle = startMoodTick({
     getMood: () => currentMood,

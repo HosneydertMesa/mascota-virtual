@@ -1391,3 +1391,186 @@ body.pupils-dilated .pet-pupil {
   color: var(--text-secondary, #888);
   margin-top: 2px;
 }
+
+/* === Quick Capture Overlay (I2) === */
+/* El overlay tapa toda la ventana del pet. pointer-events auto solo en el box
+   para que el click "fuera del box" cierre el overlay sin romper el drag del pet. */
+.quick-capture-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.quick-capture-box {
+  background: var(--bg-dark, #1f1f1f);
+  color: var(--text-main, #f3f4f6);
+  padding: 18px 20px;
+  border-radius: 10px;
+  border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.18));
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.55);
+  max-width: 400px;
+  width: calc(100% - 40px);
+  position: relative;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#quick-capture-text {
+  width: 100%;
+  height: 80px;
+  resize: none;
+  font-family: ui-monospace, 'Consolas', 'Monaco', monospace;
+  font-size: 0.85rem;
+  padding: 8px 10px;
+  border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.18));
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-main, #f3f4f6);
+  outline: none;
+  user-select: text;
+  box-sizing: border-box;
+}
+
+#quick-capture-text:focus {
+  border-color: var(--primary, #d9480f);
+  box-shadow: 0 0 0 3px rgba(217, 72, 15, 0.18);
+}
+
+.quick-capture-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+  gap: 10px;
+}
+
+#quick-capture-counter {
+  font-size: 0.72rem;
+  color: var(--text-muted, #9ca3af);
+  font-variant-numeric: tabular-nums;
+}
+
+.quick-capture-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+#quick-capture-cancel,
+#quick-capture-save {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.18));
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition, all 0.3s ease);
+}
+
+#quick-capture-cancel {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted, #9ca3af);
+}
+
+#quick-capture-cancel:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-main, #f3f4f6);
+}
+
+#quick-capture-save {
+  background: var(--primary, #d9480f);
+  color: white;
+  border-color: var(--primary, #d9480f);
+}
+
+#quick-capture-save:hover {
+  background: var(--primary-deep, #a83408);
+  transform: translateY(-1px);
+}
+
+/* === Captures list (Dashboard) === */
+.captures-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 320px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.captures-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+
+.captures-item:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.captures-item-text {
+  flex: 1;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--text-main, #f3f4f6);
+  word-break: break-word;
+  user-select: text;
+}
+
+.captures-item-time {
+  font-size: 0.7rem;
+  color: var(--text-muted, #9ca3af);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.captures-empty {
+  padding: 18px 12px;
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--text-muted, #9ca3af);
+  font-style: italic;
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+/* === Weekly report (Dashboard) === */
+.weekly-report-output {
+  background: rgba(0, 0, 0, 0.18);
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.12));
+  font-family: ui-monospace, 'Consolas', 'Monaco', monospace;
+  font-size: 0.78rem;
+  white-space: pre-wrap;
+  line-height: 1.5;
+  color: var(--text-main, #f3f4f6);
+  max-height: 320px;
+  overflow-y: auto;
+  user-select: text;
+  margin-top: 10px;
+}
+
+.weekly-report-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
