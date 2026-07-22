@@ -45,6 +45,30 @@ const {
   normalizePetType,
   stepMotion
 } = require('./src/core/pet-motion');
+const {
+  loadConfig: loadPomodoroConfig,
+  saveConfig: savePomodoroConfig,
+  loadSessions: loadPomodoroSessions,
+  appendSession: appendPomodoroSession,
+  getStatsToday: getPomodoroStatsToday,
+  getStatsThisWeek: getPomodoroStatsThisWeek,
+  getCompletedDays: getPomodoroCompletedDays
+} = require('./src/services/pomodoro-store');
+const {
+  nextBreakKind,
+  DEFAULT_LONG_BREAK_EVERY,
+  DEFAULT_LONG_BREAK_MIN
+} = require('./src/core/pomodoro-adaptive');
+const {
+  computeStreak,
+  computeLongestStreak,
+  isStreakMilestone,
+  getStreakMilestoneMessage
+} = require('./src/core/pomodoro-streak');
+const {
+  getTemplate: getPomodoroTemplate,
+  validateTemplate: validatePomodoroTemplate
+} = require('./src/core/pomodoro-templates');
 
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 
@@ -901,17 +925,6 @@ ipcMain.handle('dnd:update', (event, isActive) => {
 // === Track B — I2 (Quick Capture) + W3 (Weekly Report) ===
 
 let capturesStore = null;
-// pomodoro-store vive en el worktree de Track A. Dynamic require con try/catch
-// para que este worktree no rompa al cargar (devuelve null si no existe). El
-// merge final consolidara las dependencias. Para el reporte semanal usamos
-// sessions de pomodoro-store si esta disponible; si no, [].
-let pomodoroStoreModule = null;
-try {
-  pomodoroStoreModule = require('./src/services/pomodoro-store');
-} catch (_e) {
-  pomodoroStoreModule = null;
-  logDebug('POMODORO STORE: no disponible en este worktree (Track A no mergeado), usando fallback');
-}
 
 ipcMain.handle('quick-capture:save', (event, text) => {
   if (!isKnownSender(event)) throw new Error('Solicitud no autorizada.');
@@ -925,6 +938,124 @@ ipcMain.handle('quick-capture:save', (event, text) => {
     catch (e) { logDebug('CAPTURE SAVE: ' + e.message); }
   }
   return result;
+});
+
+// Pomodoro (Track A — I1 + W4 + W5): config, sesiones, stats, adaptive breaks, streak milestone.
+// Toda la logica vive en src/core/ y src/services/. main.js solo wire-ea IPC.
+let pomodoroConfig = null;
+
+function ensurePomodoroConfigLoaded() {
+  if (pomodoroConfig) return pomodoroConfig;
+  try {
+    pomodoroConfig = loadPomodoroConfig({ userDataDir: app.getPath('userData') });
+  } catch (error) {
+    logDebug('POMODORO CONFIG INIT ERROR: ' + error.message);
+    pomodoroConfig = null;
+  }
+  return pomodoroConfig;
+}
+
+ipcMain.handle('pomodoro:get-config', event => {
+  if (!isKnownSender(event)) throw new Error('Solicitud no autorizada.');
+  const config = ensurePomodoroConfigLoaded();
+  return config;
+});
+
+ipcMain.handle('pomodoro:set-config', (event, candidate) => {
+  if (!isDashboardSender(event)) throw new Error('Solicitud no autorizada.');
+  const current = ensurePomodoroConfigLoaded();
+  const incoming = candidate && typeof candidate === 'object' ? candidate : {};
+  // Validar templateId contra el catalogo; custom usa los custom values
+  const templateId = typeof incoming.templateId === 'string' && incoming.templateId.length > 0
+    ? incoming.templateId
+    : current.templateId;
+  if (!getPomodoroTemplate(templateId)) {
+    throw new Error('Template de pomodoro invalido.');
+  }
+  // Validar custom values (si viene alguno, valida; si no, mantiene los actuales)
+  const validation = validatePomodoroTemplate({
+    customFocusMin: incoming.customFocusMin !== undefined ? incoming.customFocusMin : current.customFocusMin,
+    customBreakMin: incoming.customBreakMin !== undefined ? incoming.customBreakMin : current.customBreakMin,
+    customLongBreakMin: incoming.customLongBreakMin !== undefined ? incoming.customLongBreakMin : current.customLongBreakMin,
+    customLongBreakEvery: incoming.customLongBreakEvery !== undefined ? incoming.customLongBreakEvery : current.customLongBreakEvery
+  });
+  if (!validation.ok) {
+    throw new Error(validation.error);
+  }
+  const next = {
+    version: 1,
+    templateId,
+    customFocusMin: validation.value.customFocusMin !== undefined ? validation.value.customFocusMin : current.customFocusMin,
+    customBreakMin: validation.value.customBreakMin !== undefined ? validation.value.customBreakMin : current.customBreakMin,
+    customLongBreakMin: validation.value.customLongBreakMin !== undefined ? validation.value.customLongBreakMin : current.customLongBreakMin,
+    customLongBreakEvery: validation.value.customLongBreakEvery !== undefined ? validation.value.customLongBreakEvery : current.customLongBreakEvery
+  };
+  savePomodoroConfig({ userDataDir: app.getPath('userData') }, next);
+  pomodoroConfig = next;
+  logDebug('POMODORO CONFIG SAVED', { templateId });
+  return next;
+});
+
+/**
+ * Devuelve que tipo de break sigue segun el contador de focus blocks.
+ * El renderer consulta esto antes de iniciar un break para saber si
+ * debe ser long o short. Esto evita meter logica adaptiva en el renderer.
+ */
+ipcMain.handle('pomodoro:get-next-break-kind', (event, params) => {
+  if (!isKnownSender(event)) throw new Error('Solicitud no autorizada.');
+  const p = params && typeof params === 'object' ? params : {};
+  const kind = nextBreakKind({
+    focusBlocksCompleted: typeof p.focusBlocksCompleted === 'number' ? p.focusBlocksCompleted : 0,
+    lastBreakWasLong: Boolean(p.lastBreakWasLong),
+    longBreakEvery: typeof p.longBreakEvery === 'number' && p.longBreakEvery > 0 ? p.longBreakEvery : DEFAULT_LONG_BREAK_EVERY
+  });
+  // Tambien devolvemos la duracion sugerida segun el template actual
+  const config = ensurePomodoroConfigLoaded();
+  let durationMin = null;
+  if (kind === 'long') {
+    durationMin = config && typeof config.customLongBreakMin === 'number' ? config.customLongBreakMin : DEFAULT_LONG_BREAK_MIN;
+  } else {
+    durationMin = config && typeof config.customBreakMin === 'number' ? config.customBreakMin : 5;
+  }
+  return { kind, durationMin, durationSec: durationMin * 60 };
+});
+
+ipcMain.handle('pomodoro:register-session', (event, session) => {
+  if (!isDashboardSender(event)) throw new Error('Solicitud no autorizada.');
+  const s = session && typeof session === 'object' ? session : {};
+  const result = appendPomodoroSession({ userDataDir: app.getPath('userData') }, {
+    kind: s.kind,
+    durationSec: s.durationSec,
+    startedAt: s.startedAt,
+    endedAt: s.endedAt
+  });
+  if (!result.added) return result;
+  // Solo los focus blocks cuentan para la racha
+  if (s.kind === 'focus') {
+    try {
+      const completed = getPomodoroCompletedDays({ userDataDir: app.getPath('userData') }, new Date(s.endedAt || Date.now()), 100);
+      const streak = computeStreak(completed, new Date(s.endedAt || Date.now()));
+      logDebug('POMODORO STREAK', { streak });
+      if (isStreakMilestone(streak)) {
+        const message = getStreakMilestoneMessage(streak, activePetType);
+        logDebug('POMODORO STREAK MILESTONE', { days: streak, message });
+        // Emitir al petWindow (es donde se muestra el speech bubble)
+        safeSend(petWindow, 'streak-milestone', { days: streak, message });
+      }
+    } catch (error) {
+      logDebug('POMODORO STREAK ERROR: ' + error.message);
+    }
+  }
+  return result;
+});
+
+ipcMain.handle('pomodoro:get-stats', event => {
+  if (!isKnownSender(event)) throw new Error('Solicitud no autorizada.');
+  const deps = { userDataDir: app.getPath('userData') };
+  return {
+    today: getPomodoroStatsToday(deps),
+    week: getPomodoroStatsThisWeek(deps)
+  };
 });
 
 ipcMain.handle('quick-capture:list', (event, limit) => {
@@ -944,26 +1075,23 @@ ipcMain.handle('quick-capture:clear', event => {
 
 ipcMain.handle('weekly-report:get', (event, opts) => {
   if (!isDashboardSender(event)) throw new Error('Solicitud no autorizada.');
-  // 1. Cargar sesiones de pomodoro (si pomodoro-store esta disponible).
+  // 1. Cargar sesiones de pomodoro.
   let sessions = [];
   let longestStreak = 0;
   let currentStreak = 0;
-  if (pomodoroStoreModule) {
-    try {
-      const sessionsStore = pomodoroStoreModule.loadSessions(app.getPath('userData'));
-      sessions = Array.isArray(sessionsStore?.sessions) ? sessionsStore.sessions : [];
-    } catch (e) {
-      logDebug('POMODORO LOAD SESSIONS: ' + e.message);
-      sessions = [];
-    }
-    try {
-      const streak = pomodoroStoreModule.computeCurrentStreak(app.getPath('userData'), new Date());
-      currentStreak = typeof streak === 'number' ? streak : 0;
-      const longest = pomodoroStoreModule.computeLongestStreak(app.getPath('userData'));
-      longestStreak = typeof longest === 'number' ? longest : 0;
-    } catch (e) {
-      logDebug('POMODORO STREAK: ' + e.message);
-    }
+  try {
+    const sessionsStore = loadPomodoroSessions({ userDataDir: app.getPath('userData') });
+    sessions = Array.isArray(sessionsStore?.sessions) ? sessionsStore.sessions : [];
+  } catch (e) {
+    logDebug('POMODORO LOAD SESSIONS: ' + e.message);
+    sessions = [];
+  }
+  try {
+    const completed = getPomodoroCompletedDays({ userDataDir: app.getPath('userData') }, new Date(), 100);
+    currentStreak = computeStreak(completed, new Date());
+    longestStreak = computeLongestStreak(completed);
+  } catch (e) {
+    logDebug('POMODORO STREAK: ' + e.message);
   }
   // 2. Cargar capturas (si tenemos store).
   let captures = [];
@@ -1065,6 +1193,14 @@ app.whenReady().then(() => {
   } catch (error) {
     logDebug('CAPTURES INIT ERROR: ' + error.message);
     capturesStore = { version: 1, captures: [] };
+  }
+  // Track A — Pomodoro: cargar config desde disco (las sesiones se cargan
+  // lazy en cada call a loadSessions para evitar cargar 90 dias al startup)
+  try {
+    ensurePomodoroConfigLoaded();
+    logDebug('POMODORO CONFIG INIT', { templateId: pomodoroConfig?.templateId });
+  } catch (error) {
+    logDebug('POMODORO CONFIG INIT ERROR: ' + error.message);
   }
   moodTickHandle = startMoodTick({
     getMood: () => currentMood,
