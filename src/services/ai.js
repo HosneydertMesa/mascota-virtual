@@ -10,7 +10,7 @@ const REQUEST_TIMEOUT_MS = 30000;
  * @param {string} userMessage - The new user message.
  * @returns {Promise<string>} - The assistant's response.
  */
-async function sendMessageToMiniMax(apiKey, petType, history, userMessage, petName, moodContext) {
+async function sendMessageToMiniMax(apiKey, petType, history, userMessage, petName, moodContext, memoriesContext) {
   if (!apiKey) {
     throw new Error('API Key no configurada. Por favor, configúrala en Ajustes.');
   }
@@ -23,6 +23,12 @@ async function sendMessageToMiniMax(apiKey, petType, history, userMessage, petNa
   // moodContext es opcional; si esta, se agrega al system prompt
   const moodSection = (typeof moodContext === 'string' && moodContext.trim().length > 0)
     ? `\n\n${moodContext}\n`
+    : '';
+
+  // P3 — memoriesContext es opcional; si esta, se agrega al system prompt
+  // para que la IA "sepa" cosas del usuario entre sesiones.
+  const memoriesSection = (typeof memoriesContext === 'string' && memoriesContext.trim().length > 0)
+    ? `\n\n${memoriesContext}\n`
     : '';
 
   // Define system prompts based on pet personalities
@@ -63,7 +69,7 @@ Ejemplos validos (copia el formato exacto):
 INCORRECTO: "Hola! Como estas?" (sin JSON)
 INCORRECTO: "[EMOTION: happy] Hola" (formato viejo, ya no)
 
-Personaje: ${effectiveName}, gatita companiera de trabajo virtual. Tranquila, inteligente, sabia y carinosa. Tono relajado, reconfortante y carinoso. Si el usuario te puso un nombre distinto, ese es tu identidad.${moodSection}
+Personaje: ${effectiveName}, gatita companiera de trabajo virtual. Tranquila, inteligente, sabia y carinosa. Tono relajado, reconfortante y carinoso. Si el usuario te puso un nombre distinto, ese es tu identidad.${moodSection}${memoriesSection}
   `;
 
   const systemPromptDog = `
@@ -103,7 +109,7 @@ Ejemplos validos (copia el formato exacto):
 INCORRECTO: "Hola! Como estas?" (sin JSON)
 INCORRECTO: "[EMOTION: happy] Hola" (formato viejo, ya no)
 
-Personaje: ${effectiveName}, perrito companiero de trabajo virtual. Energetico, optimista, leal. Tono super amigable, activo y alegre. Si el usuario te puso un nombre distinto, ese es tu identidad.${moodSection}
+Personaje: ${effectiveName}, perrito companiero de trabajo virtual. Energetico, optimista, leal. Tono super amigable, activo y alegre. Si el usuario te puso un nombre distinto, ese es tu identidad.${moodSection}${memoriesSection}
   `;
 
   const systemPrompt = petType === 'cat' ? systemPromptCat : systemPromptDog;

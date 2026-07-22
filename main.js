@@ -13,6 +13,16 @@ const { loadMood, saveMood } = require('./src/services/mood-store');
 const { startMoodTick } = require('./src/services/mood-tick');
 const { applyInteraction, buildMoodContext } = require('./src/core/pet-mood');
 const {
+  loadMemories,
+  saveMemories,
+  addMemory,
+  removeMemory: removeMemoryFromStore,
+  clearAllMemories,
+  setRedactPII
+} = require('./src/services/memories-store');
+const { rankByRelevance, formatMemoriesForPrompt } = require('./src/core/pet-memories');
+const { extractMemoryFromMessage } = require('./src/services/memory-extractor');
+const {
   clamp,
   getPetProfile,
   normalizeEmotion,
@@ -47,6 +57,7 @@ let aiState = 'IDLE';
 let currentX = 0;
 let currentMood = null;
 let moodTickHandle = null;
+let memoriesStore = null;
 let currentTargetX = 0;
 let velocityX = 0;
 let lastMotionTime = 0;
@@ -766,20 +777,99 @@ ipcMain.handle('ai:send-message', async (event, payload) => {
     try { saveMood(app.getPath('userData'), currentMood); } catch (e) { logDebug('MOOD SAVE: ' + e.message); }
   }
   const moodContext = currentMood ? buildMoodContext(currentMood) : '';
-  return sendMessageToMiniMax(
+
+  // P3 — recuerdos persistentes: rankear por relevance contra el mensaje actual
+  // y pasar los top 5 al system prompt (si los hay).
+  let memoriesContext = '';
+  if (memoriesStore && Array.isArray(memoriesStore.memories) && memoriesStore.memories.length > 0) {
+    const relevant = rankByRelevance(memoriesStore.memories, userMessage, 5);
+    memoriesContext = formatMemoriesForPrompt(relevant);
+  }
+
+  const reply = await sendMessageToMiniMax(
     apiKey,
     petType,
     Array.isArray(payload?.history) ? payload.history : [],
     userMessage,
     petName,
-    moodContext
+    moodContext,
+    memoriesContext
   );
+
+  // P3 — extraer 0-1 recuerdos del mensaje del usuario (background, no bloquea el reply).
+  // Si la IA devuelve un recuerdo, agregamos al store (con dedup + PII redaction).
+  // Si falla (network, timeout, no hay memoria), silencioso.
+  extractAndStoreMemory(apiKey, userMessage, Array.isArray(payload?.history) ? payload.history : []).catch(e => {
+    logDebug('MEMORY EXTRACT ERROR: ' + e.message);
+  });
+
+  return reply;
 });
+
+/**
+ * Extrae un recuerdo del mensaje del usuario y lo guarda si es nuevo.
+ * Best-effort: cualquier falla (network, parser, no memorable) → silencioso.
+ * No bloquea: corre en background.
+ */
+async function extractAndStoreMemory(apiKey, userMessage, history) {
+  if (!memoriesStore) return;
+  if (!apiKey) return;
+  // recentContext: ultimos 1-2 mensajes para que el extractor entienda el contexto
+  const recentContext = history
+    .slice(-2)
+    .map(m => `${m.role === 'user' ? 'Usuario' : 'Mascota'}: ${typeof m.content === 'string' ? m.content.slice(0, 200) : ''}`)
+    .join('\n');
+  const extracted = await extractMemoryFromMessage(apiKey, userMessage, recentContext);
+  if (!extracted) return;
+  const result = addMemory(app.getPath('userData'), memoriesStore, { text: extracted.text });
+  if (result.added) {
+    try { saveMemories(app.getPath('userData'), memoriesStore); }
+    catch (e) { logDebug('MEMORY SAVE: ' + e.message); }
+    logDebug('MEMORY ADDED', { id: result.memory.id, text: result.memory.text.slice(0, 50) });
+  } else {
+    logDebug('MEMORY SKIP', { reason: result.reason });
+  }
+}
 
 // A1 — IPC para que el dashboard pueda ver el mood actual
 ipcMain.handle('mood:get', event => {
   if (!isKnownSender(event)) throw new Error('Solicitud no autorizada.');
   return currentMood || null;
+});
+
+// P3 — IPC para que el dashboard gestione los recuerdos persistentes
+ipcMain.handle('memories:list', event => {
+  if (!isKnownSender(event)) throw new Error('Solicitud no autorizada.');
+  return memoriesStore || null;
+});
+
+ipcMain.handle('memories:remove', (event, memoryId) => {
+  if (!isDashboardSender(event)) throw new Error('Solicitud no autorizada.');
+  if (!memoriesStore) return false;
+  const removed = removeMemoryFromStore(memoriesStore, memoryId);
+  if (removed) {
+    try { saveMemories(app.getPath('userData'), memoriesStore); }
+    catch (e) { logDebug('MEMORY REMOVE SAVE: ' + e.message); }
+  }
+  return removed;
+});
+
+ipcMain.handle('memories:clear', event => {
+  if (!isDashboardSender(event)) throw new Error('Solicitud no autorizada.');
+  if (!memoriesStore) return 0;
+  const count = clearAllMemories(memoriesStore);
+  try { saveMemories(app.getPath('userData'), memoriesStore); }
+  catch (e) { logDebug('MEMORY CLEAR SAVE: ' + e.message); }
+  return count;
+});
+
+ipcMain.handle('memories:set-redact', (event, enabled) => {
+  if (!isDashboardSender(event)) throw new Error('Solicitud no autorizada.');
+  if (!memoriesStore) return { changed: false, redactedCount: 0 };
+  const result = setRedactPII(memoriesStore, enabled === true);
+  try { saveMemories(app.getPath('userData'), memoriesStore); }
+  catch (e) { logDebug('MEMORY REDACT SAVE: ' + e.message); }
+  return result;
 });
 
 ipcMain.handle('ai:quick-tip', async (event, payload) => {
@@ -837,6 +927,14 @@ app.whenReady().then(() => {
   } catch (error) {
     logDebug('MOOD INIT ERROR: ' + error.message);
     currentMood = null;
+  }
+  // P3 — recuerdos persistentes: cargar store desde disco
+  try {
+    memoriesStore = loadMemories(app.getPath('userData'));
+    logDebug('MEMORIES INIT', { count: memoriesStore.memories.length, redactPII: memoriesStore.redactPII });
+  } catch (error) {
+    logDebug('MEMORIES INIT ERROR: ' + error.message);
+    memoriesStore = { version: 1, redactPII: true, memories: [] };
   }
   moodTickHandle = startMoodTick({
     getMood: () => currentMood,
