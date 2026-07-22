@@ -536,9 +536,20 @@ window.addEventListener('DOMContentLoaded', () => {
    En proxima iteracion se puede exponer via preload. */
 
 const PUPIL_MAX_RADIUS = 4;
-const YAWN_INTERVAL_MS = 5 * 60 * 1000; // 5 min
+const YAWN_INTERVAL_MS = 5 * 60 * 1000;       // 5 min — estado normal
+const YAWN_INTERVAL_TIRED_MS = 2 * 60 * 1000; // 2 min — energy < 25 (M4 mood-aware)
+const YAWN_ENERGY_TIRED_THRESHOLD = 25;
 let lastYawnAt = new Date();
 let lastInteractionAt = Date.now();
+
+// M4 — mood-aware yawn: si la mascota está cansada, bosteza más seguido.
+// Reimplementacion local de getYawnIntervalMs (ver src/core/pet-micro-presence.js).
+function getYawnIntervalMsLocal(mood) {
+  if (mood && typeof mood.energy === 'number' && mood.energy < YAWN_ENERGY_TIRED_THRESHOLD) {
+    return YAWN_INTERVAL_TIRED_MS;
+  }
+  return YAWN_INTERVAL_MS;
+}
 
 function shouldPupilDilateLocal() {
   const h = new Date().getHours();
@@ -603,7 +614,9 @@ function handlePupilTracking(event) {
   // Las coordenadas de la pupila estan en el sistema del SVG.
   // Por ahora usamos una aproximacion: cursor en pixeles de pantalla
   // contra el anchor del ojo (tambien en pixeles de pantalla via getBoundingClientRect).
-  const scale = wrapperRect.width / 130; // viewBox es 0 0 130 130
+  // viewBox real de cat/dog SVGs es 0 0 200 200 (ver src/assets/cat.js, dog.js).
+  const SVG_VIEWBOX = 200;
+  const scale = wrapperRect.width / SVG_VIEWBOX;
   const cursorSvg = {
     x: (event.clientX - wrapperRect.left) / Math.max(scale, 0.01),
     y: (event.clientY - wrapperRect.top) / Math.max(scale, 0.01)
@@ -617,11 +630,24 @@ function handlePupilTracking(event) {
   });
 }
 
-function checkYawn() {
+async function checkYawn() {
   const idleMs = Date.now() - lastInteractionAt;
-  if (idleMs < YAWN_INTERVAL_MS) return;
+
+  // M4 — mood-aware: el intervalo depende de la energy actual.
+  // Si la IPC falla (main aún no inicializó), caemos al default (5 min).
+  let intervalMs = YAWN_INTERVAL_MS;
+  try {
+    if (window.api && typeof window.api.getMood === 'function') {
+      const mood = await window.api.getMood();
+      intervalMs = getYawnIntervalMsLocal(mood);
+    }
+  } catch (_error) {
+    // IPC no disponible → default.
+  }
+
+  if (idleMs < intervalMs) return;
   const elapsed = Date.now() - lastYawnAt.getTime();
-  if (elapsed < YAWN_INTERVAL_MS) return;
+  if (elapsed < intervalMs) return;
   triggerYawn();
   lastYawnAt = new Date();
 }

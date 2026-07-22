@@ -95,10 +95,10 @@ const catIdleSVG = `
       <!-- Outer eye -->
       <circle cx="82" cy="72" r="7" fill="#1e1e24" />
       <circle cx="118" cy="72" r="7" fill="#1e1e24" />
-      <!-- Pupil highlights -->
-      <circle cx="80" cy="70" r="2.5" fill="#ffffff" />
+      <!-- Pet pupils (M2 eye tracking) - glint that follows the cursor -->
+      <circle class="pet-pupil" data-anchor-x="82" data-anchor-y="72" cx="82" cy="72" r="2.5" fill="#ffffff" />
       <circle cx="83" cy="74" r="0.9" fill="#ffffff" />
-      <circle cx="116" cy="70" r="2.5" fill="#ffffff" />
+      <circle class="pet-pupil" data-anchor-x="118" data-anchor-y="72" cx="118" cy="72" r="2.5" fill="#ffffff" />
       <circle cx="119" cy="74" r="0.9" fill="#ffffff" />
     </g>
 
@@ -178,7 +178,7 @@ const catWalkSVG = `
 
     <!-- Eye (Looking side/profile) -->
     <ellipse cx="42" cy="78" rx="4" ry="5.5" fill="#1e1e24" />
-    <circle cx="40.5" cy="76" r="1.6" fill="#ffffff" />
+    <circle class="pet-pupil" data-anchor-x="42" data-anchor-y="78" cx="42" cy="78" r="1.6" fill="#ffffff" />
 
     <!-- Whiskers -->
     <line x1="28" y1="84" x2="10" y2="82" stroke="#f1f3f5" stroke-width="1.8" stroke-linecap="round" />

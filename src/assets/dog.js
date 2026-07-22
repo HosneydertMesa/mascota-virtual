@@ -77,9 +77,9 @@ const dogIdleSVG = `
     <!-- Eyes (Blinking Group) -->
     <g class="anim-blink">
       <circle cx="80" cy="74" r="7.2" fill="#1e1e24" />
-      <circle cx="77.5" cy="71.5" r="2.5" fill="#ffffff" />
+      <circle class="pet-pupil" data-anchor-x="80" data-anchor-y="74" cx="80" cy="74" r="2.5" fill="#ffffff" />
       <circle cx="120" cy="74" r="7.2" fill="#1e1e24" />
-      <circle cx="117.5" cy="71.5" r="2.5" fill="#ffffff" />
+      <circle class="pet-pupil" data-anchor-x="120" data-anchor-y="74" cx="120" cy="74" r="2.5" fill="#ffffff" />
     </g>
 
     <!-- Muzzle / Nose area -->
@@ -161,7 +161,7 @@ const dogWalkSVG = `
 
     <!-- Eye (Looking side/profile) -->
     <ellipse cx="42" cy="76" rx="4" ry="5.5" fill="#1e1e24" />
-    <circle cx="40.5" cy="74" r="1.5" fill="#ffffff" />
+    <circle class="pet-pupil" data-anchor-x="42" data-anchor-y="76" cx="42" cy="76" r="1.5" fill="#ffffff" />
 
     <!-- Blush profile -->
     <ellipse cx="46" cy="84" rx="5" ry="2.5" fill="#ff8787" opacity="0.55" />
