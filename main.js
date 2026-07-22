@@ -80,6 +80,12 @@ const {
   getTemplate: getPomodoroTemplate,
   validateTemplate: validatePomodoroTemplate
 } = require('./src/core/pomodoro-templates');
+// Track A — T6 (electron-updater). Se carga lazy dentro de app.whenReady
+// para que main.js pueda ser parseado por `node --check` sin necesitar
+// electron-updater instalado en ese momento (los tests de pure modules
+// no importan main.js, pero otros scripts como `sdlc dev` corren check
+// contra main.js).
+let autoUpdater = null;
 
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 
@@ -1360,6 +1366,82 @@ app.whenReady().then(() => {
   });
   // I7 — morning briefing: 3s despues de que la ventana este lista.
   setTimeout(maybeShowMorningBriefing, 3000);
+
+  // T6 — electron-updater wire.
+  // Solo activo en builds empaquetados (app.isPackaged). En dev, el check
+  // seria contra el repo local, no contra GitHub Releases, y no tiene
+  // sentido. autoInstallOnAppQuit: el update se aplica al cerrar la app
+  // (sin prompt). allowDowngrade: false explicito (es el default, pero lo
+  // dejamos documentado para que un cambio futuro no baje la guardia).
+  try {
+    autoUpdater = require('electron-updater').autoUpdater;
+    if (autoUpdater) {
+      autoUpdater.autoDownload = true;
+      autoUpdater.autoInstallOnAppQuit = true;
+      autoUpdater.allowDowngrade = false;
+      // Logger custom: si llega a tirar errores, los loggeamos con el
+      // mismo canal que el resto de la app (mascota-debug.log).
+      autoUpdater.logger = {
+        info: (msg) => logDebug(`AUTO-UPDATE: ${typeof msg === 'string' ? msg : JSON.stringify(msg)}`),
+        warn: (msg) => logDebug(`AUTO-UPDATE WARN: ${typeof msg === 'string' ? msg : JSON.stringify(msg)}`),
+        error: (msg) => logDebug(`AUTO-UPDATE ERROR: ${typeof msg === 'string' ? msg : JSON.stringify(msg)}`),
+        debug: () => {} // silencio: el log se llena rapido
+      };
+
+      autoUpdater.on('update-available', (info) => {
+        logDebug(`AUTO-UPDATE AVAILABLE: version=${info?.version}`);
+        for (const win of BrowserWindow.getAllWindows()) {
+          if (!win.isDestroyed() && !win.webContents.isDestroyed()) {
+            safeSend(win, 'app:update-status', { kind: 'available', version: info?.version || '' });
+          }
+        }
+      });
+
+      autoUpdater.on('update-downloaded', (info) => {
+        logDebug(`AUTO-UPDATE DOWNLOADED: version=${info?.version}`);
+        for (const win of BrowserWindow.getAllWindows()) {
+          if (!win.isDestroyed() && !win.webContents.isDestroyed()) {
+            safeSend(win, 'app:update-status', { kind: 'downloaded', version: info?.version || '' });
+          }
+        }
+      });
+
+      autoUpdater.on('error', (err) => {
+        const message = err instanceof Error ? err.message : String(err);
+        logDebug(`AUTO-UPDATE ERROR: ${message}`);
+      });
+
+      // Solo chequea si la app esta empaquetada (electron-builder output).
+      // En `npm start` (dev), no hay feed configurado y el check rompe.
+      if (app.isPackaged) {
+        try {
+          autoUpdater.checkForUpdates().catch(err => {
+            logDebug(`AUTO-UPDATE CHECK ERROR: ${err?.message || err}`);
+          });
+        } catch (err) {
+          logDebug(`AUTO-UPDATE CHECK THROW: ${err?.message || err}`);
+        }
+        // Re-check cada 6h. .unref() para que el timer no bloquee el quit.
+        setInterval(() => {
+          try {
+            autoUpdater.checkForUpdates().catch(err => {
+              logDebug(`AUTO-UPDATE RE-CHECK ERROR: ${err?.message || err}`);
+            });
+          } catch (err) {
+            logDebug(`AUTO-UPDATE RE-CHECK THROW: ${err?.message || err}`);
+          }
+        }, 6 * 60 * 60 * 1000).unref();
+      } else {
+        logDebug('AUTO-UPDATE SKIP: app no empaquetada (dev mode)');
+      }
+    }
+  } catch (err) {
+    // electron-updater no esta disponible (ej: deps no instaladas).
+    // No es un error critico: la app sigue funcionando, solo no
+    // hay auto-update. Log para visibilidad.
+    logDebug(`AUTO-UPDATE INIT SKIP: ${err?.message || err}`);
+  }
+
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createPetWindow();
   });
