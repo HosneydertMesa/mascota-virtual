@@ -43,6 +43,12 @@ contextBridge.exposeInMainWorld('api', {
   // A1 — mood system
   getMood: () => ipcRenderer.invoke('mood:get'),
 
+  // P3 — memories persistentes
+  getMemories: () => ipcRenderer.invoke('memories:list'),
+  removeMemory: (id) => ipcRenderer.invoke('memories:remove', id),
+  clearMemories: () => ipcRenderer.invoke('memories:clear'),
+  setMemoryRedact: (enabled) => ipcRenderer.invoke('memories:set-redact', enabled),
+
   onSwitchTab: (callback) => subscribe('switch-tab', callback),
   onPetMoveState: (callback) => subscribe('pet-move-state', callback),
   onPetAction: (callback) => subscribe('pet-action', callback),

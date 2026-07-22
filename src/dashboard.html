@@ -29,6 +29,7 @@
         <button class="tab-btn active" data-tab="pomodoro">Pomodoro</button>
         <button class="tab-btn" data-tab="chat">Chatear</button>
         <button class="tab-btn" data-tab="settings">Ajustes</button>
+        <button class="tab-btn" data-tab="memories">Recuerdos</button>
       </div>
 
       <!-- TAB 1: POMODORO TIMER -->
@@ -177,6 +178,38 @@
         </div>
       </div>
 
+      <!-- TAB 4: MEMORIES (P3 recuerdos persistentes) -->
+      <div class="tab-panel" id="tab-memories">
+        <div class="settings-section">
+          <div class="settings-group">
+            <div class="memories-header">
+              <label class="settings-label">Recuerdos persistentes</label>
+              <span id="memories-count" class="memories-count">0/50</span>
+            </div>
+            <p class="settings-hint">Cosas que tu mascota aprendio sobre vos. Maximo 50. Se usan automaticamente para personalizar futuras conversaciones.</p>
+            <div id="memories-list" class="memories-list" aria-live="polite">
+              <div class="memories-empty">Aun no hay recuerdos. Hablale a tu mascota y los ira guardando automaticamente.</div>
+            </div>
+          </div>
+
+          <div class="settings-group memories-pii-row">
+            <div>
+              <label class="settings-label" for="memories-redact-input">Redactar PII (emails, telefonos, tarjetas)</label>
+              <span id="memories-redact-hint" class="settings-hint-inline">ON: los nuevos recuerdos se redactan antes de guardar. Al activarlo, los existentes tambien se redactan.</span>
+            </div>
+            <label class="switch-control">
+              <input id="memories-redact-input" type="checkbox" checked>
+              <span></span>
+            </label>
+          </div>
+
+          <div class="settings-group" style="margin-top: 10px;">
+            <button id="memories-clear-btn" class="btn btn-danger btn-compact" type="button">Borrar todos los recuerdos</button>
+          </div>
+
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -186,6 +219,7 @@
   <script src="core/pet-protocol.js"></script>
   <script src="core/pet-mood.js"></script>
   <script src="core/pet-mood-labels.js"></script>
+  <script src="core/pet-memories.js"></script>
   <script src="dashboard-renderer.js"></script>
 </body>
 </html>

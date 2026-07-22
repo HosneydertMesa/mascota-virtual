@@ -62,11 +62,12 @@ function setChatStatus(text, busy = false) {
 }
 
 function selectTab(tabId) {
-  if (!['pomodoro', 'chat', 'settings'].includes(tabId)) return;
+  if (!['pomodoro', 'chat', 'settings', 'memories'].includes(tabId)) return;
   tabButtons.forEach(button => button.classList.remove('active'));
   tabPanels.forEach(panel => panel.classList.remove('active'));
   document.querySelector(`.tab-btn[data-tab="${tabId}"]`)?.classList.add('active');
   document.getElementById(`tab-${tabId}`)?.classList.add('active');
+  if (tabId === 'memories') loadMemoriesList();
 }
 
 tabButtons.forEach(button => button.addEventListener('click', () => selectTab(button.dataset.tab)));
@@ -421,7 +422,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   await initSettings();
   updateTimerUI();
   const defaultTab = window.location.hash.substring(1);
-  selectTab(['pomodoro', 'chat', 'settings'].includes(defaultTab) ? defaultTab : 'pomodoro');
+  selectTab(['pomodoro', 'chat', 'settings', 'memories'].includes(defaultTab) ? defaultTab : 'pomodoro');
 });
 
 /**
@@ -466,4 +467,105 @@ async function refreshMoodWidget() {
       barEl.dataset.stat = stat;
     }
   }
+}
+
+/* === P3 — Recuerdos persistentes (tab Recuerdos) === */
+
+const memoriesListEl = document.getElementById('memories-list');
+const memoriesCountEl = document.getElementById('memories-count');
+const memoriesRedactInput = document.getElementById('memories-redact-input');
+const memoriesClearBtn = document.getElementById('memories-clear-btn');
+
+function formatMemoryDate(timestamp) {
+  if (typeof timestamp !== 'number') return '';
+  const d = new Date(timestamp);
+  return d.toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+async function loadMemoriesList() {
+  if (!memoriesListEl) return;
+  let store;
+  try {
+    store = await window.api.getMemories();
+  } catch (error) {
+    memoriesListEl.innerHTML = '<div class="memories-empty">No se pudieron cargar los recuerdos.</div>';
+    return;
+  }
+  if (!store || !Array.isArray(store.memories) || store.memories.length === 0) {
+    memoriesListEl.innerHTML = '<div class="memories-empty">Aun no hay recuerdos. Hablale a tu mascota y los ira guardando automaticamente.</div>';
+    memoriesCountEl.textContent = '0/50';
+    return;
+  }
+  // Sort por createdAt desc (mas reciente primero)
+  const sorted = [...store.memories].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  memoriesCountEl.textContent = `${sorted.length}/50`;
+  memoriesListEl.innerHTML = '';
+  for (const m of sorted) {
+    const item = document.createElement('div');
+    item.className = 'memory-item';
+    const text = document.createElement('div');
+    text.className = 'memory-item-text';
+    text.textContent = m.text;
+    const meta = document.createElement('div');
+    meta.className = 'memory-item-meta';
+    const dateSpan = document.createElement('span');
+    dateSpan.className = 'memory-item-date';
+    dateSpan.textContent = formatMemoryDate(m.createdAt);
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'memory-item-remove btn-icon';
+    removeBtn.setAttribute('aria-label', 'Borrar este recuerdo');
+    removeBtn.title = 'Borrar este recuerdo';
+    removeBtn.textContent = '×';
+    removeBtn.addEventListener('click', async () => {
+      if (!confirm('¿Borrar este recuerdo?')) return;
+      try {
+        await window.api.removeMemory(m.id);
+        await loadMemoriesList();
+      } catch (e) {
+        alert('No se pudo borrar: ' + e.message);
+      }
+    });
+    meta.append(dateSpan, removeBtn);
+    item.append(text, meta);
+    memoriesListEl.appendChild(item);
+  }
+  // Sincronizar el toggle con el valor del store
+  if (memoriesRedactInput) {
+    memoriesRedactInput.checked = store.redactPII !== false;
+  }
+}
+
+if (memoriesRedactInput) {
+  memoriesRedactInput.addEventListener('change', async () => {
+    const enabled = memoriesRedactInput.checked;
+    try {
+      const result = await window.api.setMemoryRedact(enabled);
+      if (result && result.changed && enabled && result.redactedCount > 0) {
+        // Mostrar feedback si se redactaron recuerdos existentes
+        const msg = `Se redactaron ${result.redactedCount} recuerdo(s) existentes.`;
+        const hint = document.getElementById('memories-redact-hint');
+        if (hint) {
+          hint.textContent = msg;
+          setTimeout(() => { hint.textContent = 'ON: los nuevos recuerdos se redactan antes de guardar. Al activarlo, los existentes tambien se redactan.'; }, 3000);
+        }
+      }
+      await loadMemoriesList();
+    } catch (e) {
+      alert('No se pudo cambiar: ' + e.message);
+    }
+  });
+}
+
+if (memoriesClearBtn) {
+  memoriesClearBtn.addEventListener('click', async () => {
+    if (!confirm('¿Borrar TODOS los recuerdos? Esta accion no se puede deshacer.')) return;
+    try {
+      const count = await window.api.clearMemories();
+      await loadMemoriesList();
+      if (count > 0) console.log(`Borrados ${count} recuerdos.`);
+    } catch (e) {
+      alert('No se pudo borrar: ' + e.message);
+    }
+  });
 }
