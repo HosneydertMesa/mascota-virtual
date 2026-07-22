@@ -42,6 +42,7 @@ const saveSettingsBtn = document.getElementById('save-settings-btn');
 const catPreview = document.getElementById('cat-preview');
 const dogPreview = document.getElementById('dog-preview');
 const soundEnabledInput = document.getElementById('sound-enabled-input');
+const briefingEnabledInput = document.getElementById('briefing-enabled-input');
 const petNameInput = document.getElementById('pet-name-input');
 const petNameStatus = document.getElementById('pet-name-status');
 const moodChip = document.getElementById('mood-chip');
@@ -303,6 +304,27 @@ async function initSettings() {
   // A1 — mood widget: estado + 4 stats, refresco cada 5s
   await refreshMoodWidget();
   setInterval(refreshMoodWidget, 5000);
+
+  // I7 + I8 — cargar estado del briefing diario (default ON si falla)
+  try {
+    const briefingState = await window.api.briefingGetState();
+    briefingEnabledInput.checked = briefingState?.enabled !== false;
+  } catch (error) {
+    console.error('No se pudo cargar el estado del briefing:', error);
+    briefingEnabledInput.checked = true;
+  }
+  briefingEnabledInput.addEventListener('change', async () => {
+    const enabled = briefingEnabledInput.checked;
+    briefingEnabledInput.disabled = true;
+    try {
+      await window.api.briefingSetEnabled(enabled);
+    } catch (error) {
+      console.error('No se pudo guardar el estado del briefing:', error);
+      briefingEnabledInput.checked = !enabled;
+    } finally {
+      briefingEnabledInput.disabled = false;
+    }
+  });
 
   catPreview.innerHTML = window.catSVG;
   dogPreview.innerHTML = window.dogSVG;

@@ -7,6 +7,7 @@ const {
   STREAK_MILESTONES,
   getLocalDateKey,
   computeStreak,
+  computeLongestStreak,
   isStreakMilestone,
   getStreakMilestoneMessage
 } = require('../src/core/pomodoro-streak');
@@ -267,4 +268,81 @@ test('integration: getLocalDateKey + computeStreak + isStreakMilestone', () => {
   const msg = getStreakMilestoneMessage(streak, 'cat');
   assert.ok(msg.includes('7'));
   assert.ok(msg.toLowerCase().includes('miau'));
+});
+
+test('computeLongestStreak: lista vacia → 0', () => {
+  assert.equal(computeLongestStreak([]), 0);
+  assert.equal(computeLongestStreak(null), 0);
+  assert.equal(computeLongestStreak(undefined), 0);
+  assert.equal(computeLongestStreak('not-array'), 0);
+});
+
+test('computeLongestStreak: todas focusCount=0 → 0', () => {
+  const days = [
+    { date: '2026-07-15', focusCount: 0 },
+    { date: '2026-07-16', focusCount: 0 }
+  ];
+  assert.equal(computeLongestStreak(days), 0);
+});
+
+test('computeLongestStreak: un solo dia con focus → 1', () => {
+  const days = [{ date: '2026-07-15', focusCount: 1 }];
+  assert.equal(computeLongestStreak(days), 1);
+});
+
+test('computeLongestStreak: 3 dias consecutivos → 3', () => {
+  const days = [
+    { date: '2026-07-15', focusCount: 1 },
+    { date: '2026-07-16', focusCount: 2 },
+    { date: '2026-07-17', focusCount: 1 }
+  ];
+  assert.equal(computeLongestStreak(days), 3);
+});
+
+test('computeLongestStreak: 2 rachas, devuelve la mas larga', () => {
+  const days = [
+    { date: '2026-07-10', focusCount: 1 },
+    { date: '2026-07-11', focusCount: 1 },
+    { date: '2026-07-15', focusCount: 1 },
+    { date: '2026-07-16', focusCount: 1 },
+    { date: '2026-07-17', focusCount: 1 },
+    { date: '2026-07-18', focusCount: 1 }
+  ];
+  // Racha 1: 2 dias (10-11), Racha 2: 4 dias (15-18). Mayor = 4.
+  assert.equal(computeLongestStreak(days), 4);
+});
+
+test('computeLongestStreak: dias desordenados los ordena', () => {
+  const days = [
+    { date: '2026-07-17', focusCount: 1 },
+    { date: '2026-07-15', focusCount: 1 },
+    { date: '2026-07-16', focusCount: 1 }
+  ];
+  assert.equal(computeLongestStreak(days), 3);
+});
+
+test('computeLongestStreak: foco no consecutivo (gap) corta la racha', () => {
+  const days = [
+    { date: '2026-07-10', focusCount: 1 },
+    { date: '2026-07-12', focusCount: 1 } // gap: 11
+  ];
+  assert.equal(computeLongestStreak(days), 1);
+});
+
+test('computeLongestStreak: ignora entries con focusCount <= 0', () => {
+  const days = [
+    { date: '2026-07-15', focusCount: 0 },
+    { date: '2026-07-16', focusCount: 1 }
+  ];
+  assert.equal(computeLongestStreak(days), 1);
+});
+
+test('computeLongestStreak: ignora entries invalidos', () => {
+  const days = [
+    null,
+    { focusCount: 1 },
+    { date: '2026-07-15' },
+    { date: '2026-07-15', focusCount: 1 }
+  ];
+  assert.equal(computeLongestStreak(days), 1);
 });

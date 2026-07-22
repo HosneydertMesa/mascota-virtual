@@ -84,5 +84,12 @@ contextBridge.exposeInMainWorld('api', {
   onQuickCaptureTrigger: (callback) => subscribe('quick-capture-trigger', callback),
 
   // Track A — Streak milestone (emitido por main al petWindow)
-  onStreakMilestone: (callback) => subscribe('streak-milestone', callback)
+  onStreakMilestone: (callback) => subscribe('streak-milestone', callback),
+
+  // I7 + I8 — daily briefing / evening summary
+  onMorningBriefing: (callback) => subscribe('morning-briefing', callback),
+  onEveningSummary: (callback) => subscribe('evening-summary', callback),
+  briefingGetState: () => ipcRenderer.invoke('briefing:get-state'),
+  briefingSetEnabled: (enabled) => ipcRenderer.invoke('briefing:set-enabled', Boolean(enabled)),
+  briefingShowNow: (kind) => ipcRenderer.invoke('briefing:show-now', kind === 'evening' ? 'evening' : 'morning')
 });

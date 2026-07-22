@@ -36,6 +36,17 @@ const {
   formatReportAsMarkdown
 } = require('./src/core/weekly-report');
 const {
+  buildMorningBriefing,
+  buildEveningSummary,
+  shouldShowBriefing,
+  getLocalDateKey
+} = require('./src/core/daily-briefing');
+const {
+  loadBriefingState,
+  markShown: markBriefingShown,
+  setEnabled: setBriefingEnabled
+} = require('./src/services/daily-briefing-store');
+const {
   clamp,
   getPetProfile,
   normalizeEmotion,
@@ -909,6 +920,34 @@ ipcMain.handle('memories:set-redact', (event, enabled) => {
   return result;
 });
 
+// I7 + I8 — IPC para que el dashboard consulte y configure el briefing diario.
+ipcMain.handle('briefing:get-state', event => {
+  if (!isKnownSender(event)) throw new Error('Solicitud no autorizada.');
+  const userData = app.getPath('userData');
+  return loadBriefingState(userData);
+});
+
+ipcMain.handle('briefing:set-enabled', (event, enabled) => {
+  if (!isDashboardSender(event)) throw new Error('Solicitud no autorizada.');
+  const userData = app.getPath('userData');
+  return setBriefingEnabled(userData, enabled === true);
+});
+
+ipcMain.handle('briefing:show-now', (event, kind) => {
+  if (!isDashboardSender(event)) throw new Error('Solicitud no autorizada.');
+  if (!petWindow || petWindow.isDestroyed()) return { shown: false, reason: 'pet-window-not-ready' };
+  const userData = app.getPath('userData');
+  const today = new Date();
+  const petName = loadPetName(userData) || null;
+  const safeKind = kind === 'evening' ? 'evening' : 'morning';
+  const text = safeKind === 'evening'
+    ? buildAutoEveningText(today, activePetType, petName)
+    : buildAutoMorningText(today, activePetType, petName);
+  const channel = safeKind === 'evening' ? 'evening-summary' : 'morning-briefing';
+  safeSend(petWindow, channel, { text, ts: today.toISOString(), manual: true });
+  return { shown: true, text };
+});
+
 // A4 — IPC para que el dashboard setee el estado Do Not Disturb.
 // Se activa cuando el usuario esta typing rapido (>= 80 WPM por 2+ min),
 // se desactiva cuando baja (< 60 WPM por 30s).
@@ -1167,6 +1206,92 @@ function handleQuickCaptureShortcut() {
   safeSend(petWindow, 'quick-capture-trigger');
 }
 
+// I7 + I8 — Daily briefing + evening summary.
+//
+// El trigger automatico (morning al abrir, evening al cerrar) usa un texto
+// simple que NO depende de pomodoro-store ni quick-capture-store. Esos
+// servicios los daran los tracks A y B en el merge final; el dashboard
+// puede construir briefings enriquecidos via el IPC `briefing:get-today`.
+
+function pickBriefingToneWord(petType, kind) {
+  const cat = {
+    morning: ['Miau', 'Ronroneo', 'Bigotes al viento', 'A cazar ideas'],
+    evening: ['Miau', 'Ronroneo de cierre', 'Camita lista', 'Buenas lunas']
+  };
+  const dog = {
+    morning: ['Guau', 'Cola en marcha', 'A pasear ideas', 'Patas listas'],
+    evening: ['Guau', 'Camita lista', 'Buenas lunas', 'Acurrucadito']
+  };
+  const pool = petType === 'dog' ? dog[kind] : cat[kind];
+  if (!pool || pool.length === 0) return '';
+  const idx = Math.floor(Math.random() * pool.length);
+  return pool[idx];
+}
+
+function buildAutoMorningText(today, petType, petName) {
+  const { buildMorningBriefing } = require('./src/core/daily-briefing');
+  const nameBit = petName ? `, ${petName}` : '';
+  const tone = pickBriefingToneWord(petType, 'morning');
+  const tail = tone ? ` ${tone}.` : '';
+  const baseGreeting = buildMorningBriefing({ today, petType, petName });
+  return `${baseGreeting}${tail}`;
+}
+
+function buildAutoEveningText(today, petType, petName) {
+  const { buildEveningSummary } = require('./src/core/daily-briefing');
+  const nameBit = petName ? `, ${petName}` : '';
+  const tone = pickBriefingToneWord(petType, 'evening');
+  const tail = tone ? ` ${tone}.` : '';
+  const baseSummary = buildEveningSummary({ today, petType, petName });
+  return `${baseSummary}${tail}`;
+}
+
+function maybeShowMorningBriefing() {
+  if (!petWindow || petWindow.isDestroyed()) return;
+  try {
+    const userData = app.getPath('userData');
+    const state = loadBriefingState(userData);
+    const today = new Date();
+    if (!shouldShowBriefing({
+      hour: today.getHours(),
+      lastShownDate: state.lastShownDate,
+      kind: 'morning',
+      today,
+      enabled: state.enabled
+    })) return;
+    const petName = loadPetName(userData) || null;
+    const text = buildAutoMorningText(today, activePetType, petName);
+    safeSend(petWindow, 'morning-briefing', { text, ts: today.toISOString() });
+    markBriefingShown(userData, today);
+    logDebug(`MORNING BRIEFING SHOWN: ${text.slice(0, 60)}...`);
+  } catch (error) {
+    logDebug(`MORNING BRIEFING ERROR: ${serializeError(error)}`);
+  }
+}
+
+function maybeShowEveningSummary() {
+  if (!petWindow || petWindow.isDestroyed()) return;
+  try {
+    const userData = app.getPath('userData');
+    const state = loadBriefingState(userData);
+    const today = new Date();
+    if (!shouldShowBriefing({
+      hour: today.getHours(),
+      lastShownDate: state.lastShownDate,
+      kind: 'evening',
+      today,
+      enabled: state.enabled
+    })) return;
+    const petName = loadPetName(userData) || null;
+    const text = buildAutoEveningText(today, activePetType, petName);
+    safeSend(petWindow, 'evening-summary', { text, ts: today.toISOString() });
+    markBriefingShown(userData, today);
+    logDebug(`EVENING SUMMARY SHOWN: ${text.slice(0, 60)}...`);
+  } catch (error) {
+    logDebug(`EVENING SUMMARY ERROR: ${serializeError(error)}`);
+  }
+}
+
 app.whenReady().then(() => {
   createPetWindow();
   initMainDeps();
@@ -1233,6 +1358,8 @@ app.whenReady().then(() => {
     onPetSleep: handlePetSleepShortcut,
     onQuickCapture: handleQuickCaptureShortcut
   });
+  // I7 — morning briefing: 3s despues de que la ventana este lista.
+  setTimeout(maybeShowMorningBriefing, 3000);
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createPetWindow();
   });
@@ -1240,6 +1367,9 @@ app.whenReady().then(() => {
 
 app.on('before-quit', () => {
   isQuitting = true;
+  // I8 — evening summary: antes de limpiar timers y cerrar.
+  try { maybeShowEveningSummary(); }
+  catch (error) { logDebug(`EVENING SUMMARY BEFORE-QUIT: ${serializeError(error)}`); }
   clearAllTimers();
   if (moodTickHandle) {
     moodTickHandle.stop();

@@ -141,6 +141,47 @@ function isStreakMilestone(days) {
 }
 
 /**
+ * Calcula la racha MAS LARGA historica en un set de completedDays.
+ * Util para reportes semanales ("mejor racha de la semana").
+ *
+ * Recorre los dias ordenados y cuenta la secuencia mas larga de dias
+ * consecutivos con focusCount > 0. No depende de "hoy" — devuelve la
+ * racha maxima que existio en el rango dado.
+ *
+ * @param {Array<{date: string, focusCount: number}>} completedDays
+ * @returns {number}
+ */
+function computeLongestStreak(completedDays) {
+  if (!Array.isArray(completedDays) || completedDays.length === 0) return 0;
+  const dates = completedDays
+    .filter(d => d && typeof d === 'object' && typeof d.date === 'string' && typeof d.focusCount === 'number' && d.focusCount > 0)
+    .map(d => d.date)
+    .sort();
+  if (dates.length === 0) return 0;
+  let longest = 1;
+  let current = 1;
+  for (let i = 1; i < dates.length; i++) {
+    const prev = dates[i - 1];
+    const curr = dates[i];
+    // prev + 1 dia deberia ser curr. Reusamos prevDateKey invertida:
+    // prevDateKey('2026-07-15') devuelve '2026-07-14' (resta 1). Para sumar
+    // 1, llamamos prevDateKey dos veces y luego comparamos con prev.
+    // Forma equivalente: curr === (prev - 2 + 1) === (prev - 1 + 1) === ...
+    // La forma simple: armar un Date desde prev y sumarle 1 dia.
+    const [py, pm, pd] = prev.split('-').map(Number);
+    const expectedNext = new Date(py, pm - 1, pd + 1, 12, 0, 0, 0);
+    const expectedKey = getLocalDateKey(expectedNext);
+    if (curr === expectedKey) {
+      current += 1;
+      if (current > longest) longest = current;
+    } else {
+      current = 1;
+    }
+  }
+  return longest;
+}
+
+/**
  * Mensaje motivacional segun petType y dias de racha.
  * Tono:
  *   - cat: elegante, observador, autonomo (usa "miau")
@@ -181,6 +222,7 @@ const PomodoroStreak = {
   STREAK_MILESTONES,
   getLocalDateKey,
   computeStreak,
+  computeLongestStreak,
   isStreakMilestone,
   getStreakMilestoneMessage
 };
