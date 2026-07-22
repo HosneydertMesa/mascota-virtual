@@ -128,33 +128,61 @@ function clean() {
     return obj;
   });
 
+  // Detectamos el branch default. La logica de `git symbolic-ref ... HEAD` puede
+  // devolver stale data (si en algun momento se checkout otra branch con `git
+  // checkout` y se reasigno el upstream), asi que validamos que sea main/master
+  // y sino caemos al branch actual.
+  //
+  // Tambien: `2>/dev/null` no existe en Windows (cmd usa `2>nul`), asi que
+  // usamos Node para silenciar el stderr via stdio en su lugar.
+  const SILENT = { stdio: ['ignore', 'pipe', 'ignore'] };
   let mainBranch;
   try {
-    mainBranch = run('git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null || git rev-parse --abbrev-ref HEAD', {
-      cwd: repoRoot
-    }).trim().replace(/^origin\//, '');
+    const symbolic = execSync('git symbolic-ref refs/remotes/origin/HEAD', { ...SILENT, cwd: repoRoot })
+      .toString()
+      .trim();
+    const match = symbolic.match(/refs\/remotes\/origin\/(main|master)$/);
+    if (match) {
+      mainBranch = match[1];
+    }
   } catch (_e) {
-    mainBranch = 'main';
+    // no upstream HEAD configurado — seguimos al fallback
   }
+  if (!mainBranch) {
+    try {
+      mainBranch = execSync('git rev-parse --abbrev-ref HEAD', { ...SILENT, cwd: repoRoot })
+        .toString()
+        .trim() || 'main';
+    } catch (_e) {
+      mainBranch = 'main';
+    }
+  }
+
+  // Listamos las branches mergeadas a main y las parseamos en Node
+  // (antes usabamos `| grep -w` que no existe en Windows).
+  const mergedList = run(`git branch --merged ${mainBranch}`, { cwd: repoRoot });
+  const mergedBranches = new Set(
+    mergedList
+      .split('\n')
+      .map(line => line.replace(/^\*?\s+/, '').trim())
+      .filter(Boolean)
+  );
 
   let removed = 0;
   for (const wt of worktrees) {
     if (wt.HEAD === '(detached)' || !wt.branch) continue;
     const branch = wt.branch.replace(/^refs\/heads\//, '');
     if (branch === mainBranch) continue;
-    try {
-      const merged = run(`git branch --merged ${mainBranch} | grep -w "${branch}" || echo NOT_MERGED`, {
-        cwd: repoRoot
-      }).trim();
-      if (merged === branch) {
-        console.log(`✓ ${branch} está mergeada a ${mainBranch} → removiendo worktree`);
+    if (mergedBranches.has(branch)) {
+      console.log(`✓ ${branch} está mergeada a ${mainBranch} → removiendo worktree`);
+      try {
         run(`git worktree remove --force "${wt.worktree}"`, { cwd: repoRoot });
         removed++;
-      } else {
-        console.log(`  ${branch} NO está mergeada → mantener`);
+      } catch (e) {
+        console.log(`  Error removiendo worktree de ${branch}: ${e.message}`);
       }
-    } catch (e) {
-      console.log(`  Error chequeando ${branch}: ${e.message}`);
+    } else {
+      console.log(`  ${branch} NO está mergeada → mantener`);
     }
   }
   console.log(`\n${removed} worktree(s) eliminado(s).`);
