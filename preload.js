@@ -91,5 +91,15 @@ contextBridge.exposeInMainWorld('api', {
   onEveningSummary: (callback) => subscribe('evening-summary', callback),
   briefingGetState: () => ipcRenderer.invoke('briefing:get-state'),
   briefingSetEnabled: (enabled) => ipcRenderer.invoke('briefing:set-enabled', Boolean(enabled)),
-  briefingShowNow: (kind) => ipcRenderer.invoke('briefing:show-now', kind === 'evening' ? 'evening' : 'morning')
+  briefingShowNow: (kind) => ipcRenderer.invoke('briefing:show-now', kind === 'evening' ? 'evening' : 'morning'),
+
+  // Track B — W1 silent mode + W2 calendar .ics
+  configGetSilentMode: () => ipcRenderer.invoke('config:get-silent-mode'),
+  configSetSilentMode: (enabled) => ipcRenderer.invoke('config:set-silent-mode', Boolean(enabled)),
+  configGetCalendarPath: () => ipcRenderer.invoke('config:get-calendar-path'),
+  configSetCalendarPath: (filePath) => ipcRenderer.invoke('config:set-calendar-path', filePath),
+  calendarGetNextEvents: (opts) => ipcRenderer.invoke('calendar:get-next-events', opts || {}),
+  calendarTestPath: (filePath) => ipcRenderer.invoke('calendar:test-path', filePath),
+  onSilentModeChanged: (callback) => subscribe('pet:silent-mode-changed', callback),
+  onRetreatChanged: (callback) => subscribe('pet:retreat-changed', callback)
 });

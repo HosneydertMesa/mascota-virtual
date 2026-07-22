@@ -191,6 +191,30 @@
             </label>
           </div>
 
+          <!-- Track B — W1 silent mode + W2 calendar .ics -->
+          <div class="settings-group sound-setting-row">
+            <div>
+              <label class="settings-label" for="silent-mode-input">Modo compania silenciosa</label>
+              <span>La mascota aparece visible pero no inicia chat, no reacciona a mood ni dispara tips/DND/briefing. Atajo: <kbd>Ctrl/Cmd+Shift+M</kbd>.</span>
+            </div>
+            <label class="switch-control">
+              <input id="silent-mode-input" type="checkbox">
+              <span></span>
+            </label>
+          </div>
+
+          <div class="settings-group">
+            <label class="settings-label" for="calendar-path-input">Ruta al archivo .ics</label>
+            <input type="text" id="calendar-path-input" class="settings-input" placeholder="C:\Users\vos\cal.ics" autocomplete="off">
+            <p class="settings-hint">Exporta tu calendario de Outlook / Apple Calendar / Google Calendar como .ics y pega la ruta. Cuando detecte una reunion en los proximos 5 min, la mascota entra en modo retiro (opacity reducida + speech bubble).</p>
+            <div style="display: flex; gap: 8px; margin-top: 6px;">
+              <button id="calendar-test-btn" class="btn btn-compact btn-secondary" type="button">Probar</button>
+              <button id="calendar-clear-btn" class="btn btn-compact btn-danger" type="button">Limpiar</button>
+            </div>
+            <div id="calendar-test-result" class="calendar-test-result" aria-live="polite"></div>
+            <div id="retreat-indicator" class="retreat-indicator" hidden></div>
+          </div>
+
           <div class="settings-group">
             <label class="settings-label" for="pet-name-input">Nombre de la mascota</label>
             <input type="text" id="pet-name-input" class="settings-input" placeholder="Luna / Max (o el que vos quieras)" maxlength="24" autocomplete="off">
@@ -311,6 +335,7 @@
   <script src="core/pomodoro-templates.js"></script>
   <script src="core/pomodoro-adaptive.js"></script>
   <script src="core/pomodoro-streak.js"></script>
+  <script src="core/silent-mode.js"></script>
   <script src="dashboard-renderer.js"></script>
 </body>
 </html>
