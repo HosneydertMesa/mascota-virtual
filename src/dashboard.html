@@ -4,6 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; media-src 'self'; object-src 'none'; base-uri 'none'">
+  <!--
+    CSP estricta (security audit MEDIUM-1, batch 4):
+    - default-src 'self'        → solo recursos del mismo origen
+    - script-src 'self'         → no inline scripts (los <script src=> van a /src/core/*.js)
+    - style-src 'self' + 'unsafe-inline'  → styles inline en dashboard (boton de timer, etc)
+    - img-src 'self' data:      → sprites locales + data URIs
+    - connect-src 'none'        → MAS estricto que el sugerido (T6 updates se hacen desde main process via IPC)
+    - media-src 'self'          → no remote media (los sonidos son sintetizados en runtime)
+    - object-src 'none'         → no Flash, no plugins
+    - base-uri 'none'           → no <base> tag hijacking
+
+    Si en el futuro hay que llamar a una API desde el renderer (ej: fetch directo),
+    cambiar 'connect-src' a "'self' https://api.example.com" (lista blanca explicita,
+    NO usar '*').
+  -->
   <title>Panel de Control - Mascota Virtual</title>
   <link rel="stylesheet" href="styles.css">
 </head>
