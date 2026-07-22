@@ -218,16 +218,19 @@ function tagDate(tag) {
 }
 
 function gateRelease() {
-  // Detección: hay un tag vX.Y.Z
-  const tags = shOut('git', ['tag', '-l', 'v*'], { allowFail: true });
-  const semverTags = tags.split('\n').filter(t => /^v\d+\.\d+\.\d+/.test(t));
+  // Detección: hay un tag vX.Y.Z. Ignoramos tags con sufijos intermedios
+  // (-track-a, -pre, etc) porque son work-in-progress, no releases.
+  const tags = shOut('git', ['tag', '-l', 'v*', '--sort=-v:refname'], { allowFail: true });
+  const semverTags = tags
+    .split('\n')
+    .filter(t => /^v\d+\.\d+\.\d+$/.test(t)); // exact match, no prerelease
   if (semverTags.length === 0) {
     return { passed: false, evidence: 'no hay tags vX.Y.Z' };
   }
   // Compara con la version del package.json
   let pkgVersion = '?';
   try { pkgVersion = readJson('package.json').version; } catch {}
-  const latestTag = semverTags[semverTags.length - 1];
+  const latestTag = semverTags[0];
   const matches = latestTag === `v${pkgVersion}`;
   return {
     passed: matches,
@@ -593,10 +596,11 @@ function cmdStrict() {
     failed = true;
   }
 
-  // 1. Detectar commits desde último tag
-  const tagsRaw = shOut('git', ['tag', '-l', 'v*'], { allowFail: true });
-  const semverTags = tagsRaw.split('\n').filter(t => /^v\d+\.\d+\.\d+/.test(t));
-  const lastTag = semverTags.length > 0 ? semverTags[semverTags.length - 1] : null;
+  // 1. Detectar commits desde último tag. Ignoramos tags con sufijo
+  // (-track-a, -pre, etc) porque son work-in-progress, no releases.
+  const tagsRaw = shOut('git', ['tag', '-l', 'v*', '--sort=-v:refname'], { allowFail: true });
+  const semverTags = tagsRaw.split('\n').filter(t => /^v\d+\.\d+\.\d+$/.test(t));
+  const lastTag = semverTags.length > 0 ? semverTags[0] : null;
 
   let commitsSince = [];
   if (lastTag) {
