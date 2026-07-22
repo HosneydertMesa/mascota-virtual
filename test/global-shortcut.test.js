@@ -47,51 +47,63 @@ function createCapturingLog() {
 
 // --- happy path ------------------------------------------------------------
 
-test('registra los 3 shortcuts definidos en SHORTCUT_DEFS', () => {
+test('registra los 4 shortcuts definidos en SHORTCUT_DEFS', () => {
   const gs = createMockGlobalShortcut();
   const log = createCapturingLog();
-  const calls = { pomodoro: 0, sleep: 0, quick: 0 };
+  const calls = { pomodoro: 0, sleep: 0, quick: 0, silent: 0 };
 
   const handle = registerGlobalShortcuts(gs, log.log, {
     onPomodoroToggle: () => calls.pomodoro++,
     onPetSleep: () => calls.sleep++,
-    onQuickCapture: () => calls.quick++
+    onQuickCapture: () => calls.quick++,
+    onSilentModeToggle: () => calls.silent++
   });
 
-  assert.equal(handle.registered.length, 3);
+  assert.equal(handle.registered.length, 4);
   assert.deepEqual(handle.registered, [
     'CommandOrControl+Shift+P',
     'CommandOrControl+Shift+S',
-    'CommandOrControl+Shift+Q'
+    'CommandOrControl+Shift+Q',
+    'CommandOrControl+Shift+M'
   ]);
-  assert.equal(gs._count(), 3);
+  assert.equal(gs._count(), 4);
 });
 
 test('activar el shortcut invoca el handler correspondiente', () => {
   const gs = createMockGlobalShortcut();
   const log = createCapturingLog();
-  const calls = { pomodoro: 0, sleep: 0, quick: 0 };
+  const calls = { pomodoro: 0, sleep: 0, quick: 0, silent: 0 };
 
   registerGlobalShortcuts(gs, log.log, {
     onPomodoroToggle: () => calls.pomodoro++,
     onPetSleep: () => calls.sleep++,
-    onQuickCapture: () => calls.quick++
+    onQuickCapture: () => calls.quick++,
+    onSilentModeToggle: () => calls.silent++
   });
 
   gs._trigger('CommandOrControl+Shift+P');
   assert.equal(calls.pomodoro, 1);
   assert.equal(calls.sleep, 0);
   assert.equal(calls.quick, 0);
+  assert.equal(calls.silent, 0);
 
   gs._trigger('CommandOrControl+Shift+S');
   assert.equal(calls.pomodoro, 1);
   assert.equal(calls.sleep, 1);
   assert.equal(calls.quick, 0);
+  assert.equal(calls.silent, 0);
 
   gs._trigger('CommandOrControl+Shift+Q');
   assert.equal(calls.pomodoro, 1);
   assert.equal(calls.sleep, 1);
   assert.equal(calls.quick, 1);
+  assert.equal(calls.silent, 0);
+
+  gs._trigger('CommandOrControl+Shift+M');
+  assert.equal(calls.pomodoro, 1);
+  assert.equal(calls.sleep, 1);
+  assert.equal(calls.quick, 1);
+  assert.equal(calls.silent, 1);
 });
 
 test('unregisterAll limpia todos los shortcuts registrados', () => {
@@ -100,10 +112,11 @@ test('unregisterAll limpia todos los shortcuts registrados', () => {
   const handle = registerGlobalShortcuts(gs, log.log, {
     onPomodoroToggle: () => {},
     onPetSleep: () => {},
-    onQuickCapture: () => {}
+    onQuickCapture: () => {},
+    onSilentModeToggle: () => {}
   });
 
-  assert.equal(gs._count(), 3);
+  assert.equal(gs._count(), 4);
   handle.unregisterAll();
   assert.equal(gs._count(), 0);
   // Idempotente: segunda llamada no rompe
@@ -129,13 +142,14 @@ test('si globalShortcut.register devuelve false, log warning y no incluye en reg
   const handle = registerGlobalShortcuts(gs, log.log, {
     onPomodoroToggle: () => {},
     onPetSleep: () => {},
-    onQuickCapture: () => {}
+    onQuickCapture: () => {},
+    onSilentModeToggle: () => {}
   });
 
-  assert.equal(handle.registered.length, 2);
+  assert.equal(handle.registered.length, 3);
   assert.ok(!handle.registered.includes('CommandOrControl+Shift+S'));
   assert.ok(log.match(/GLOBAL SHORTCUT UNAVAILABLE.*pet-sleep/));
-  assert.ok(log.match(/2\/3/));
+  assert.ok(log.match(/3\/4/));
 });
 
 test('si globalShortcut.register lanza una excepcion, no crashea', () => {
@@ -154,10 +168,11 @@ test('si globalShortcut.register lanza una excepcion, no crashea', () => {
   const handle = registerGlobalShortcuts(gs, log.log, {
     onPomodoroToggle: () => {},
     onPetSleep: () => {},
-    onQuickCapture: () => {}
+    onQuickCapture: () => {},
+    onSilentModeToggle: () => {}
   });
 
-  assert.equal(handle.registered.length, 2);
+  assert.equal(handle.registered.length, 3);
   assert.ok(log.match(/GLOBAL SHORTCUT REGISTER EXCEPTION.*quick-capture/));
 });
 
@@ -211,18 +226,19 @@ test('handlers faltantes se loguean como SKIP y no rompen los demas', () => {
   const log = createCapturingLog();
   const handle = registerGlobalShortcuts(gs, log.log, {
     onPomodoroToggle: () => {},
-    onPetSleep: () => {}
+    onPetSleep: () => {},
+    onSilentModeToggle: () => {}
     // onQuickCapture omitido a proposito
   });
-  assert.equal(handle.registered.length, 2);
+  assert.equal(handle.registered.length, 3);
   assert.ok(!handle.registered.includes('CommandOrControl+Shift+Q'));
   assert.ok(log.match(/SKIP.*quick-capture/));
 });
 
 // --- SHORTCUT_DEFS sanity --------------------------------------------------
 
-test('SHORTCUT_DEFS tiene exactamente 3 entries con accelerator, label, handlerKey', () => {
-  assert.equal(SHORTCUT_DEFS.length, 3);
+test('SHORTCUT_DEFS tiene exactamente 4 entries con accelerator, label, handlerKey', () => {
+  assert.equal(SHORTCUT_DEFS.length, 4);
   for (const def of SHORTCUT_DEFS) {
     assert.equal(typeof def.accelerator, 'string');
     assert.equal(typeof def.label, 'string');

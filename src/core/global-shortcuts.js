@@ -14,7 +14,8 @@
 const SHORTCUT_DEFS = [
   { accelerator: 'CommandOrControl+Shift+P', label: 'pomodoro-toggle', handlerKey: 'onPomodoroToggle' },
   { accelerator: 'CommandOrControl+Shift+S', label: 'pet-sleep', handlerKey: 'onPetSleep' },
-  { accelerator: 'CommandOrControl+Shift+Q', label: 'quick-capture', handlerKey: 'onQuickCapture' }
+  { accelerator: 'CommandOrControl+Shift+Q', label: 'quick-capture', handlerKey: 'onQuickCapture' },
+  { accelerator: 'CommandOrControl+Shift+M', label: 'silent-mode-toggle', handlerKey: 'onSilentModeToggle' }
 ];
 
 function registerGlobalShortcuts(globalShortcut, logDebug, handlers) {

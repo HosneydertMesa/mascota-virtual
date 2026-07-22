@@ -287,6 +287,93 @@ function showSpeech(text, duration = 6000) {
   }, duration);
 }
 
+/* === Track B — W1 silent mode + W2 retreat visuals === */
+
+let currentSilentMode = false;
+let currentRetreatActive = false;
+let currentRetreatSummary = '';
+let currentRetreatUntil = '';
+
+function applyPetSilentVisuals() {
+  currentSilentMode = true;
+  document.body.classList.add('pet--silent');
+  // Si hay un retreat activo, ese toma precedencia (es visual-only too,
+  // pero con speech bubble). Si no, el silent mode solo baja opacity.
+  if (!currentRetreatActive) {
+    petContainer.style.opacity = '0.7';
+    petContainer.style.filter = 'saturate(0.6)';
+  }
+}
+
+function clearPetSilentVisuals() {
+  currentSilentMode = false;
+  document.body.classList.remove('pet--silent');
+  if (!currentRetreatActive) {
+    petContainer.style.opacity = '';
+    petContainer.style.filter = '';
+  }
+}
+
+function applyPetRetreatVisuals(summary, until) {
+  currentRetreatActive = true;
+  currentRetreatSummary = summary || 'Reunion';
+  currentRetreatUntil = until || '';
+  document.body.classList.add('pet--retreat');
+  // El retreat SIEMPRE baja opacity/scale. La visual es mas fuerte que el
+  // silent mode (es la reunion activa, queremos que la mascota se "esconda").
+  petContainer.style.opacity = '0.5';
+  petContainer.style.transform = 'scale(0.7)';
+  // Speech bubble con el nombre del evento
+  if (summary) {
+    const untilText = until ? formatRetreatUntil(until) : '';
+    const msg = untilText
+      ? `🗓️ ${summary} hasta las ${untilText}`
+      : `🗓️ ${summary}`;
+    showSpeech(msg, 8000);
+  }
+}
+
+function clearPetRetreatVisuals() {
+  currentRetreatActive = false;
+  currentRetreatSummary = '';
+  currentRetreatUntil = '';
+  document.body.classList.remove('pet--retreat');
+  // Restaurar opacity/transform segun el silent mode flag
+  if (currentSilentMode) {
+    petContainer.style.opacity = '0.7';
+    petContainer.style.filter = 'saturate(0.6)';
+    petContainer.style.transform = '';
+  } else {
+    petContainer.style.opacity = '';
+    petContainer.style.filter = '';
+    petContainer.style.transform = '';
+  }
+}
+
+function formatRetreatUntil(iso) {
+  try {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return '';
+    const h = String(d.getHours()).padStart(2, '0');
+    const m = String(d.getMinutes()).padStart(2, '0');
+    return `${h}:${m}`;
+  } catch (_e) {
+    return '';
+  }
+}
+
+// W1 — escuchar cambios de silent mode (broadcast desde main).
+window.petAPI?.onSilentModeChanged?.(({ silentMode }) => {
+  if (silentMode) applyPetSilentVisuals();
+  else clearPetSilentVisuals();
+});
+
+// W2 — escuchar cambios de retreat (broadcast desde main, cada 30s eval).
+window.petAPI?.onRetreatChanged?.(({ active, summary, until }) => {
+  if (active) applyPetRetreatVisuals(summary, until);
+  else clearPetRetreatVisuals();
+});
+
 window.api.onPetMoveState(data => {
   if (!data || typeof data.state !== 'string') return;
   if (data.state === 'walking') {
@@ -430,6 +517,10 @@ window.api.onUpdatePetPosition(data => {
 
 window.api.onTriggerAutonomousTip(async () => {
   if (currentVisualState === 'sleeping') return;
+  // Track B — W1: si silent mode (o retreat) esta activo, no disparamos
+  // autonomous tips. La mascota esta en modo "compania silenciosa" —
+  // solo visible, sin hablar.
+  if (currentSilentMode || currentRetreatActive) return;
   try {
     const tip = await window.api.aiQuickTip({ petType: currentPet, context: 'work_tip' });
     if (tip) {

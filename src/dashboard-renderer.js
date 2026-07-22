@@ -45,6 +45,13 @@ const soundEnabledInput = document.getElementById('sound-enabled-input');
 const briefingEnabledInput = document.getElementById('briefing-enabled-input');
 const petNameInput = document.getElementById('pet-name-input');
 const petNameStatus = document.getElementById('pet-name-status');
+// Track B — W1 + W2 dashboard controls
+const silentModeInput = document.getElementById('silent-mode-input');
+const calendarPathInput = document.getElementById('calendar-path-input');
+const calendarTestBtn = document.getElementById('calendar-test-btn');
+const calendarClearBtn = document.getElementById('calendar-clear-btn');
+const calendarTestResult = document.getElementById('calendar-test-result');
+const retreatIndicator = document.getElementById('retreat-indicator');
 const moodChip = document.getElementById('mood-chip');
 const moodChipEmoji = document.getElementById('mood-chip-emoji');
 const moodChipText = document.getElementById('mood-chip-text');
@@ -323,6 +330,112 @@ async function initSettings() {
       briefingEnabledInput.checked = !enabled;
     } finally {
       briefingEnabledInput.disabled = false;
+    }
+  });
+
+  // Track B — W1 silent mode: cargar el flag actual, wire el toggle.
+  try {
+    const silentEnabled = await window.api.configGetSilentMode();
+    silentModeInput.checked = silentEnabled === true;
+  } catch (error) {
+    console.error('No se pudo cargar el estado de silent mode:', error);
+    silentModeInput.checked = false;
+  }
+  silentModeInput.addEventListener('change', async () => {
+    const enabled = silentModeInput.checked;
+    silentModeInput.disabled = true;
+    try {
+      await window.api.configSetSilentMode(enabled);
+    } catch (error) {
+      console.error('No se pudo guardar silent mode:', error);
+      silentModeInput.checked = !enabled;
+      alert('No se pudo cambiar el modo: ' + (error?.message || error));
+    } finally {
+      silentModeInput.disabled = false;
+    }
+  });
+
+  // Track B — W2 calendar: cargar el path actual, wire test + clear.
+  try {
+    const calPath = await window.api.configGetCalendarPath();
+    calendarPathInput.value = calPath || '';
+  } catch (error) {
+    console.error('No se pudo cargar el path del calendario:', error);
+  }
+  // Persistir el path al perder foco o presionar Enter (no en cada keystroke).
+  let calendarPathSaveTimer = null;
+  async function saveCalendarPath() {
+    const value = calendarPathInput.value.trim();
+    const normalized = value.length > 0 ? value : null;
+    calendarTestBtn.disabled = true;
+    calendarClearBtn.disabled = true;
+    try {
+      await window.api.configSetCalendarPath(normalized);
+    } catch (error) {
+      console.error('No se pudo guardar el path del calendario:', error);
+      alert('No se pudo guardar el path: ' + (error?.message || error));
+    } finally {
+      calendarTestBtn.disabled = false;
+      calendarClearBtn.disabled = false;
+    }
+  }
+  calendarPathInput.addEventListener('change', saveCalendarPath);
+  calendarPathInput.addEventListener('blur', saveCalendarPath);
+  calendarPathInput.addEventListener('keydown', event => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      saveCalendarPath();
+    }
+  });
+  calendarTestBtn.addEventListener('click', async () => {
+    const filePath = calendarPathInput.value.trim();
+    if (!filePath) {
+      renderCalendarTestError('Ingresa una ruta primero.');
+      return;
+    }
+    calendarTestBtn.disabled = true;
+    try {
+      const result = await window.api.calendarTestPath(filePath);
+      if (result && result.ok) {
+        renderCalendarTestSuccess(result.count, result.events);
+      } else {
+        renderCalendarTestError(result?.error || 'Error desconocido.');
+      }
+    } catch (error) {
+      renderCalendarTestError(error?.message || 'No se pudo probar el path.');
+    } finally {
+      calendarTestBtn.disabled = false;
+    }
+  });
+  calendarClearBtn.addEventListener('click', async () => {
+    calendarPathInput.value = '';
+    try {
+      await window.api.configSetCalendarPath(null);
+      renderCalendarTestClear();
+    } catch (error) {
+      console.error('No se pudo limpiar el path:', error);
+    }
+  });
+
+  // Subscribe al cambio de silent mode (de otras fuentes: atajo global).
+  window.api.onSilentModeChanged(({ silentMode }) => {
+    if (silentModeInput.checked !== silentMode) {
+      silentModeInput.checked = silentMode === true;
+    }
+  });
+
+  // Subscribe al cambio de retreat (W2). Muestra un indicador con el
+  // nombre del evento cuando esta activo.
+  window.api.onRetreatChanged(({ active, summary, until }) => {
+    if (active && summary) {
+      const untilText = formatRetreatTime(until);
+      retreatIndicator.textContent = untilText
+        ? `En reunion "${summary}" hasta las ${untilText}`
+        : `En reunion "${summary}"`;
+      retreatIndicator.hidden = false;
+    } else {
+      retreatIndicator.hidden = true;
+      retreatIndicator.textContent = '';
     }
   });
 
@@ -1007,4 +1120,57 @@ if (weeklyReportCopyBtn) {
       console.error('Copy failed:', e);
     }
   });
+}
+
+/* === Track B — W1 silent + W2 calendar helpers (dashboard) === */
+
+function formatRetreatTime(iso) {
+  if (typeof iso !== 'string' || !iso) return '';
+  try {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return '';
+    const h = String(d.getHours()).padStart(2, '0');
+    const m = String(d.getMinutes()).padStart(2, '0');
+    return `${h}:${m}`;
+  } catch (_e) {
+    return '';
+  }
+}
+
+function renderCalendarTestError(message) {
+  if (!calendarTestResult) return;
+  // textContent para no generar XSS
+  calendarTestResult.className = 'calendar-test-result error';
+  calendarTestResult.textContent = `❌ ${message}`;
+}
+
+function renderCalendarTestSuccess(count, events) {
+  if (!calendarTestResult) return;
+  calendarTestResult.className = 'calendar-test-result';
+  // Limpia cualquier contenido previo
+  calendarTestResult.textContent = '';
+  const header = document.createElement('div');
+  header.textContent = `✅ ${count} evento${count === 1 ? '' : 's'} encontrado${count === 1 ? '' : 's'}.`;
+  calendarTestResult.appendChild(header);
+  if (Array.isArray(events) && events.length > 0) {
+    const list = document.createElement('ul');
+    for (const ev of events) {
+      const li = document.createElement('li');
+      const start = formatRetreatTime(ev.start);
+      const end = formatRetreatTime(ev.end);
+      const summary = (ev.summary || '(sin titulo)');
+      // textContent para evitar XSS
+      li.textContent = start && end
+        ? `${start}–${end} · ${summary}`
+        : summary;
+      list.appendChild(li);
+    }
+    calendarTestResult.appendChild(list);
+  }
+}
+
+function renderCalendarTestClear() {
+  if (!calendarTestResult) return;
+  calendarTestResult.className = 'calendar-test-result';
+  calendarTestResult.textContent = 'Sin calendario configurado. W2 inerte.';
 }

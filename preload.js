@@ -96,5 +96,15 @@ contextBridge.exposeInMainWorld('api', {
   // T6 — electron-updater status (main → renderer). El main process
   // emite 'app:update-status' cuando hay un update disponible o
   // descargado. El renderer lo recibe y muestra un speech bubble.
-  onUpdateStatus: (callback) => subscribe('app:update-status', callback)
+  onUpdateStatus: (callback) => subscribe('app:update-status', callback),
+
+  // Track B — W1 silent mode + W2 calendar .ics
+  configGetSilentMode: () => ipcRenderer.invoke('config:get-silent-mode'),
+  configSetSilentMode: (enabled) => ipcRenderer.invoke('config:set-silent-mode', Boolean(enabled)),
+  configGetCalendarPath: () => ipcRenderer.invoke('config:get-calendar-path'),
+  configSetCalendarPath: (filePath) => ipcRenderer.invoke('config:set-calendar-path', filePath),
+  calendarGetNextEvents: (opts) => ipcRenderer.invoke('calendar:get-next-events', opts || {}),
+  calendarTestPath: (filePath) => ipcRenderer.invoke('calendar:test-path', filePath),
+  onSilentModeChanged: (callback) => subscribe('pet:silent-mode-changed', callback),
+  onRetreatChanged: (callback) => subscribe('pet:retreat-changed', callback)
 });
