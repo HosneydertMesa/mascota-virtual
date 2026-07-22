@@ -305,11 +305,24 @@ async function initSettings() {
   } catch (e) {
     console.error('No se pudo cargar config de pomodoro:', e);
   }
-  await refreshStats();
+  // HOTFIX v2.0.1 — wrap refreshStats y refreshMoodWidget en try/catch.
+  // Bug v2.0.0: si alguna tiraba (e.g. window.PetMoodLabels undefined por
+  // race condition de scripts), el resto de initSettings (silent mode,
+  // calendar, briefing, pet name) nunca corría. Resultado: solo pomodoro
+  // parecía funcionar en Settings. Reportado por el user 2026-07-22.
+  try {
+    await refreshStats();
+  } catch (e) {
+    console.error('refreshStats fallo en init:', e);
+  }
   setInterval(refreshStats, 60_000); // refresca stats cada 60s mientras el dashboard esta abierto
 
   // A1 — mood widget: estado + 4 stats, refresco cada 5s
-  await refreshMoodWidget();
+  try {
+    await refreshMoodWidget();
+  } catch (e) {
+    console.error('refreshMoodWidget fallo en init:', e);
+  }
   setInterval(refreshMoodWidget, 5000);
 
   // I7 + I8 — cargar estado del briefing diario (default ON si falla)
@@ -859,10 +872,14 @@ async function refreshMoodWidget() {
   }
   if (!mood || typeof mood !== 'object') return;
 
-  const state = (window.PetMood && typeof window.PetMood.deriveState === 'function')
-    ? window.PetMood.deriveState(mood)
-    : 'calm';
-  const labels = window.PetMoodLabels.MOOD_LABELS;
+  // HOTFIX v2.0.1 — si las dependencias de UI no estan cargadas (por
+  // cualquier razon: race de scripts, CSP, fallo de red), usar defaults
+  // en vez de tirar. Bug v2.0.0: si tiraba aca, mataba el resto de
+  // initSettings (silent mode, calendar, briefing nunca se cargaban).
+  if (!window.PetMood || typeof window.PetMood.deriveState !== 'function') return;
+  if (!window.PetMoodLabels || typeof window.PetMoodLabels.MOOD_LABELS !== 'object') return;
+  if (typeof window.PetMoodLabels.getMoodLabel !== 'function') return;
+  const state = window.PetMood.deriveState(mood);
   const label = window.PetMoodLabels.getMoodLabel(currentPet, state);
 
   moodChip.dataset.state = state;
