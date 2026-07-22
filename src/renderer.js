@@ -33,6 +33,24 @@ const quickChatReply = document.getElementById('quick-chat-reply');
 const quickChatInput = document.getElementById('quick-chat-input');
 const quickChatSend = document.getElementById('quick-chat-send');
 
+// T5 perf — cache de elementos que se acceden en hot paths (rAF + mousemove).
+// Inicializados a null; se llenan en cachePetElements() después de que cat.js /
+// dog.js inyectan los SVGs (el render hot path usa estas refs y evita
+// getElementById / querySelectorAll cada frame).
+let catTailEl = null;
+let dogTailEl = null;
+let earLeftEl = null;
+let earRightEl = null;
+let pupilEls = [];
+
+function cachePetElements() {
+  catTailEl = document.getElementById('cat-tail');
+  dogTailEl = document.getElementById('dog-tail');
+  earLeftEl = petSvgWrapper ? petSvgWrapper.querySelector('.pet-ear-left') : null;
+  earRightEl = petSvgWrapper ? petSvgWrapper.querySelector('.pet-ear-right') : null;
+  pupilEls = petSvgWrapper ? Array.from(petSvgWrapper.querySelectorAll('.pet-pupil')) : [];
+}
+
 // Allow-lists y parser de respuestas de la IA viven en PetProtocol (src/core/pet-protocol.js).
 // Carga via <script> antes de este archivo (ver index.html).
 
@@ -89,6 +107,9 @@ function loadMascotSVG(petType, state) {
       ? window.dogWalkSVG
       : state === 'sleeping' ? window.dogSleepSVG : window.dogIdleSVG;
   }
+  // T5 perf — innerHTML arriba destruyó los nodos cacheados.
+  // Re-cachear después de cada cambio de SVG.
+  cachePetElements();
 }
 
 function setVisualState(state, direction = null, force = false) {
@@ -619,7 +640,7 @@ function maybeTwitchEar() {
   // ~0.25% por frame => ~1 twitch cada ~6.6s a 60fps
   if (Math.random() > 0.0025) return;
   const side = Math.random() < 0.5 ? 'left' : 'right';
-  const ear = petSvgWrapper.querySelector(`.pet-ear-${side}`);
+  const ear = side === 'left' ? earLeftEl : earRightEl;
   if (!ear || ear.classList.contains('ear-twitching')) return;
   ear.classList.add('ear-twitching');
   // Forzar reflow para reiniciar la animacion si ya estaba aplicada
@@ -630,8 +651,10 @@ function maybeTwitchEar() {
 function animateTail() {
   tailTime += tailWagSpeed;
   maybeTwitchEar();
-  const catTail = document.getElementById('cat-tail');
-  const dogTail = document.getElementById('dog-tail');
+  // T5 perf — usar refs cacheadas (init en cachePetElements) en vez de
+  // getElementById cada frame (60Hz × 2 lookups = 120 lookups/s).
+  const catTail = catTailEl;
+  const dogTail = dogTailEl;
 
   if (catTail) {
     const w1 = Math.sin(tailTime) * 12 * tailWagAmplitude;
@@ -660,6 +683,9 @@ window.addEventListener('DOMContentLoaded', () => {
   setupInteraction();
   initSettings();
   initMicroPresence();
+  // T5 perf — cache de elementos DESPUÉS de que cat.js / dog.js inyectaron los
+  // SVGs (initMicroPresence los crea via swapPetSvg según currentPet).
+  cachePetElements();
   requestAnimationFrame(animateTail);
   setTimeout(() => {
     triggerHappyBounce();
@@ -745,7 +771,9 @@ function initPupilPositions() {
 
 function handlePupilTracking(event) {
   lastInteractionAt = Date.now();
-  const pupils = document.querySelectorAll('.pet-pupil');
+  // T5 perf — usar pupils cacheadas (init en cachePetElements) en vez de
+  // querySelectorAll en cada mousemove (puede ser 100+/s en pantallas 60Hz).
+  const pupils = pupilEls;
   if (pupils.length === 0) return;
   const wrapper = petSvgWrapper;
   if (!wrapper) return;
@@ -760,13 +788,14 @@ function handlePupilTracking(event) {
     x: (event.clientX - wrapperRect.left) / Math.max(scale, 0.01),
     y: (event.clientY - wrapperRect.top) / Math.max(scale, 0.01)
   };
-  pupils.forEach(pupil => {
+  for (let i = 0; i < pupils.length; i++) {
+    const pupil = pupils[i];
     const anchorX = parseFloat(pupil.getAttribute('data-anchor-x') || '0');
     const anchorY = parseFloat(pupil.getAttribute('data-anchor-y') || '0');
     const newPos = computePupilPositionLocal({ x: anchorX, y: anchorY }, cursorSvg);
     pupil.setAttribute('cx', newPos.x.toFixed(2));
     pupil.setAttribute('cy', newPos.y.toFixed(2));
-  });
+  }
 }
 
 async function checkYawn() {
