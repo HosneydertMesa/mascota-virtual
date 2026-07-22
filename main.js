@@ -80,6 +80,18 @@ const {
   getTemplate: getPomodoroTemplate,
   validateTemplate: validatePomodoroTemplate
 } = require('./src/core/pomodoro-templates');
+// Track B — W1 silent mode + W2 calendar .ics
+const {
+  isSilentModeActive: isSilentModeActivePure,
+  applySilentModeToContext,
+  getPetVisualState
+} = require('./src/core/silent-mode');
+const calendarService = require('./src/services/calendar-service');
+const {
+  loadPetConfig,
+  setSilentMode: setSilentModeInStore,
+  setCalendarIcsPath: setCalendarIcsPathInStore
+} = require('./src/services/pet-config-store');
 
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 
@@ -114,6 +126,19 @@ let lastMoveState = { state: null, direction: null };
 let dragStartPos = { x: 0, y: 0 };
 let dragStartMousePos = { x: 0, y: 0 };
 let globalShortcutsHandle = null;
+
+// Track B — W1 silent mode + W2 calendar .ics (state en main process).
+// petConfig se carga en app.whenReady() desde <userData>/pet-config.json.
+let petConfig = null;
+// Timestamp (ms) hasta el cual la mascota está en retreat. 0 = sin retreat.
+let retreatUntil = 0;
+// Eventos cacheados del .ics (W2). Se re-parsean cuando el usuario edita
+// el .ics o cambia la config. Vacío = W2 inerte.
+let currentEvents = [];
+// Watcher sobre el .ics. Se reemplaza al cambiar el path.
+let calendarWatcherHandle = { close: () => {} };
+// Last broadcast de retreat (para evitar spam en el setInterval de 30s).
+let lastRetreatBroadcast = { active: false, summary: null, until: 0 };
 
 const timers = {
   movement: null,
@@ -190,6 +215,19 @@ function isDashboardSender(event) {
 
 function isKnownSender(event) {
   return isPetSender(event) || isDashboardSender(event);
+}
+
+// Track B — broadcast a TODAS las ventanas conocidas (pet + dashboard).
+// Usado para que cambios de silent mode / retreat lleguen a ambos renderers.
+function broadcastToAllWindows(channel, payload) {
+  let count = 0;
+  if (petWindow && !petWindow.isDestroyed()) {
+    if (safeSend(petWindow, channel, payload)) count++;
+  }
+  if (dashboardWindow && !dashboardWindow.isDestroyed()) {
+    if (safeSend(dashboardWindow, channel, payload)) count++;
+  }
+  return count;
 }
 
 function getSecureSettingsPath() {
@@ -961,6 +999,123 @@ ipcMain.handle('dnd:update', (event, isActive) => {
   return { isDoNotDisturb };
 });
 
+// === Track B — W1 (Silent Mode) + W2 (Calendar .ics) ===
+
+// W1 — get/set del flag de silent mode. El renderer (dashboard) usa
+// estos IPCs para mostrar y togglear el switch en Settings.
+ipcMain.handle('config:get-silent-mode', (event) => {
+  if (!isKnownSender(event)) throw new Error('Solicitud no autorizada.');
+  return Boolean(petConfig && petConfig.silentMode === true);
+});
+
+ipcMain.handle('config:set-silent-mode', (event, enabled) => {
+  if (!isDashboardSender(event)) throw new Error('Solicitud no autorizada.');
+  const next = enabled === true;
+  try {
+    petConfig = setSilentModeInStore(app.getPath('userData'), next);
+  } catch (error) {
+    logDebug('SET SILENT MODE ERROR: ' + error.message);
+    throw error;
+  }
+  broadcastToAllWindows('pet:silent-mode-changed', { silentMode: next });
+  // Si activamos silent, forzar re-evaluacion de retreat (saldra del retreat).
+  if (next) evaluateRetreatState();
+  return { ok: true, silentMode: next };
+});
+
+// W2 — get/set del path al .ics. El dashboard usa esto para mostrar el
+// input y permitir "Probar" (parsea y muestra los proximos eventos).
+ipcMain.handle('config:get-calendar-path', (event) => {
+  if (!isKnownSender(event)) throw new Error('Solicitud no autorizada.');
+  if (!petConfig) return null;
+  return petConfig.calendarIcsPath || null;
+});
+
+ipcMain.handle('config:set-calendar-path', (event, filePath) => {
+  if (!isDashboardSender(event)) throw new Error('Solicitud no autorizada.');
+  // Validacion estricta: null o string. Rechaza cualquier otro tipo
+  // para evitar que algo raro llegue al store.
+  if (filePath !== null && filePath !== undefined && typeof filePath !== 'string') {
+    throw new Error('Path invalido.');
+  }
+  // Coercion a null si es string vacio (clear path).
+  const normalized = (typeof filePath === 'string' && filePath.length > 0) ? filePath : null;
+  // Path traversal: rechazar '..' como segmento para evitar que el path
+  // escape de <userData>. (No usamos path.join con userData aca, pero
+  // el fs.watch sobre el path lo haria; defense in depth.)
+  if (normalized !== null && normalized.includes('..')) {
+    throw new Error('Path traversal no permitido.');
+  }
+  try {
+    petConfig = setCalendarIcsPathInStore(app.getPath('userData'), normalized);
+  } catch (error) {
+    logDebug('SET CALENDAR PATH ERROR: ' + error.message);
+    throw error;
+  }
+  // Re-inicializar el watcher con el nuevo path (o limpiar si es null).
+  initCalendarWatcher();
+  // Re-evaluar retreat inmediatamente
+  evaluateRetreatState();
+  return { ok: true, calendarIcsPath: normalized };
+});
+
+// W2 — devuelve los proximos N eventos en una ventana de tiempo (default
+// 60 min). Usado por el dashboard para mostrar el preview de "Probar".
+ipcMain.handle('calendar:get-next-events', (event, opts) => {
+  if (!isDashboardSender(event)) throw new Error('Solicitud no autorizada.');
+  if (!currentEvents.length) return [];
+  const safeOpts = opts && typeof opts === 'object' ? opts : {};
+  const lookahead = typeof safeOpts.lookaheadMin === 'number' && safeOpts.lookaheadMin > 0
+    ? safeOpts.lookaheadMin
+    : 60;
+  const limit = typeof safeOpts.limit === 'number' && safeOpts.limit > 0
+    ? Math.min(20, Math.floor(safeOpts.limit))
+    : 5;
+  const now = new Date();
+  const horizon = new Date(now.getTime() + lookahead * 60 * 1000);
+  const nowMs = now.getTime();
+  const horizonMs = horizon.getTime();
+  return currentEvents
+    .filter(ev => ev.start instanceof Date)
+    .filter(ev => {
+      const t = ev.start.getTime();
+      return t >= nowMs && t <= horizonMs;
+    })
+    .sort((a, b) => a.start.getTime() - b.start.getTime())
+    .slice(0, limit)
+    .map(ev => ({
+      start: ev.start.toISOString(),
+      end: ev.end.toISOString(),
+      summary: ev.summary
+    }));
+});
+
+// W2 — parsea un .ics en un path arbitrario (sin guardarlo en config).
+// Usado por el boton "Probar" del dashboard para preview sin compromiso.
+ipcMain.handle('calendar:test-path', (event, filePath) => {
+  if (!isDashboardSender(event)) throw new Error('Solicitud no autorizada.');
+  if (typeof filePath !== 'string' || !filePath) {
+    return { ok: false, error: 'Path invalido.' };
+  }
+  if (filePath.includes('..')) {
+    return { ok: false, error: 'Path traversal no permitido.' };
+  }
+  try {
+    const events = calendarService.parseIcsFile(filePath);
+    return {
+      ok: true,
+      count: events.length,
+      events: events.slice(0, 3).map(ev => ({
+        start: ev.start.toISOString(),
+        end: ev.end.toISOString(),
+        summary: ev.summary
+      }))
+    };
+  } catch (error) {
+    return { ok: false, error: error.message };
+  }
+});
+
 // === Track B — I2 (Quick Capture) + W3 (Weekly Report) ===
 
 let capturesStore = null;
@@ -1206,6 +1361,22 @@ function handleQuickCaptureShortcut() {
   safeSend(petWindow, 'quick-capture-trigger');
 }
 
+// Track B — W1: toggle de silent mode desde el global shortcut.
+// Invierte el flag actual y broadcast a todas las ventanas.
+function handleSilentModeToggleShortcut() {
+  if (!petConfig) return;
+  const next = !petConfig.silentMode;
+  try {
+    petConfig = setSilentModeInStore(app.getPath('userData'), next);
+    broadcastToAllWindows('pet:silent-mode-changed', { silentMode: next });
+    logDebug(`SILENT MODE TOGGLE: ${next}`);
+    // Si acabamos de activar, forzar re-evaluacion de retreat.
+    if (next) evaluateRetreatState();
+  } catch (error) {
+    logDebug('SILENT MODE TOGGLE ERROR: ' + error.message);
+  }
+}
+
 // I7 + I8 — Daily briefing + evening summary.
 //
 // El trigger automatico (morning al abrir, evening al cerrar) usa un texto
@@ -1248,6 +1419,15 @@ function buildAutoEveningText(today, petType, petName) {
 
 function maybeShowMorningBriefing() {
   if (!petWindow || petWindow.isDestroyed()) return;
+  // Track B — W1: respeta silent mode. Si esta activa, el briefing se
+  // skipea (el mood no cambia, la visual solo se reduce, no se inicia chat).
+  if (petConfig && isSilentModeActivePure({
+    silentMode: petConfig.silentMode,
+    retreatUntil,
+    now: Date.now()
+  })) {
+    return;
+  }
   try {
     const userData = app.getPath('userData');
     const state = loadBriefingState(userData);
@@ -1271,6 +1451,14 @@ function maybeShowMorningBriefing() {
 
 function maybeShowEveningSummary() {
   if (!petWindow || petWindow.isDestroyed()) return;
+  // Track B — W1: respeta silent mode.
+  if (petConfig && isSilentModeActivePure({
+    silentMode: petConfig.silentMode,
+    retreatUntil,
+    now: Date.now()
+  })) {
+    return;
+  }
   try {
     const userData = app.getPath('userData');
     const state = loadBriefingState(userData);
@@ -1292,9 +1480,122 @@ function maybeShowEveningSummary() {
   }
 }
 
+// Track B — W2 calendar: re-inicializa el watcher y re-parsea el .ics.
+// Llamada cuando el usuario cambia el path o al startup. Si no hay path,
+// limpia todo (W2 inerte, no rompe nada).
+function initCalendarWatcher() {
+  if (calendarWatcherHandle && typeof calendarWatcherHandle.close === 'function') {
+    try { calendarWatcherHandle.close(); } catch (_e) { /* swallow */ }
+  }
+  calendarWatcherHandle = { close: () => {} };
+  currentEvents = [];
+  if (!petConfig || !petConfig.calendarIcsPath) return;
+  const icsPath = petConfig.calendarIcsPath;
+  try {
+    currentEvents = calendarService.parseIcsFile(icsPath);
+    logDebug(`CALENDAR INIT: ${currentEvents.length} events from ${icsPath}`);
+  } catch (error) {
+    logDebug('CALENDAR INIT ERROR', { error: error.message, path: icsPath });
+    return;
+  }
+  calendarWatcherHandle = calendarService.watchIcsFile(icsPath, () => {
+    try {
+      const reloaded = calendarService.parseIcsFile(icsPath);
+      currentEvents = reloaded;
+      logDebug(`CALENDAR RELOADED: ${reloaded.length} events`);
+      // Re-evaluar retreat inmediatamente
+      evaluateRetreatState();
+    } catch (error) {
+      logDebug('CALENDAR RELOAD ERROR', { error: error.message });
+    }
+  });
+}
+
+// Track B — W2 retreat scheduler: cada 30s revisa si hay reunion activa
+// o empezando en los proximos 5 min. Broadcast al petWindow para que
+// aplique la visual de retreat.
+function evaluateRetreatState() {
+  if (!petConfig) return;
+  const now = new Date();
+  // Si silentMode está activo, retreat es no-op (la silent mode manda).
+  if (petConfig.silentMode) {
+    if (lastRetreatBroadcast.active) {
+      lastRetreatBroadcast = { active: false, summary: null, until: 0 };
+      retreatUntil = 0;
+      broadcastToAllWindows('pet:retreat-changed', { active: false });
+    }
+    return;
+  }
+  if (!currentEvents.length) {
+    if (lastRetreatBroadcast.active) {
+      lastRetreatBroadcast = { active: false, summary: null, until: 0 };
+      retreatUntil = 0;
+      broadcastToAllWindows('pet:retreat-changed', { active: false });
+    }
+    return;
+  }
+  const active = calendarService.getActiveEvent(currentEvents, now);
+  if (active) {
+    const newUntil = active.end.getTime();
+    if (lastRetreatBroadcast.until !== newUntil || !lastRetreatBroadcast.active) {
+      lastRetreatBroadcast = { active: true, summary: active.summary, until: newUntil };
+      retreatUntil = newUntil;
+      broadcastToAllWindows('pet:retreat-changed', {
+        active: true,
+        summary: active.summary,
+        until: active.end.toISOString()
+      });
+      logDebug(`RETREAT ON: ${active.summary} until ${active.end.toISOString()}`);
+    }
+    return;
+  }
+  const upcoming = calendarService.getNextEvent(currentEvents, now, 5);
+  if (upcoming) {
+    const newUntil = upcoming.end.getTime();
+    if (lastRetreatBroadcast.until !== newUntil || !lastRetreatBroadcast.active) {
+      lastRetreatBroadcast = { active: true, summary: upcoming.summary, until: newUntil };
+      retreatUntil = newUntil;
+      broadcastToAllWindows('pet:retreat-changed', {
+        active: true,
+        summary: upcoming.summary,
+        until: upcoming.end.toISOString()
+      });
+      logDebug(`RETREAT SOON: ${upcoming.summary} starts at ${upcoming.start.toISOString()}`);
+    }
+    return;
+  }
+  // Sin evento activo ni proximo → desactivar retreat.
+  if (lastRetreatBroadcast.active) {
+    lastRetreatBroadcast = { active: false, summary: null, until: 0 };
+    retreatUntil = 0;
+    broadcastToAllWindows('pet:retreat-changed', { active: false });
+    logDebug('RETREAT OFF');
+  }
+}
+
+// Track B — W1: helpers para chequear silent mode desde el resto del main.
+function isPetSilentNow() {
+  if (!petConfig) return false;
+  return isSilentModeActivePure({
+    silentMode: petConfig.silentMode,
+    retreatUntil,
+    now: Date.now()
+  });
+}
+
 app.whenReady().then(() => {
   createPetWindow();
   initMainDeps();
+  // Track B — W1 + W2: cargar pet-config (silentMode + calendarIcsPath)
+  // y arrancar el calendar watcher + retreat scheduler.
+  try {
+    petConfig = loadPetConfig(app.getPath('userData'));
+    logDebug('PET CONFIG INIT', { silentMode: petConfig.silentMode, hasCalendar: Boolean(petConfig.calendarIcsPath) });
+  } catch (error) {
+    logDebug('PET CONFIG INIT ERROR: ' + error.message);
+    petConfig = { version: 1, silentMode: false, calendarIcsPath: null };
+  }
+  initCalendarWatcher();
   // A1 — mood system: cargar mood desde disco + iniciar tick periodico
   try {
     currentMood = loadMood(app.getPath('userData'));
@@ -1330,6 +1631,13 @@ app.whenReady().then(() => {
   moodTickHandle = startMoodTick({
     getMood: () => currentMood,
     setMood: (m) => {
+      // Track B — W1: si silent mode activa, NO guardar el decay del mood.
+      // El mood value persiste en disco; al desactivar silent, sigue donde
+      // quedo. (Esto evita que la mascota "muera" de hambre mientras el
+      // usuario trabaja en focus mode.)
+      if (isPetSilentNow()) {
+        return;
+      }
       currentMood = m;
       try { saveMood(app.getPath('userData'), m); } catch (e) { logDebug('MOOD TICK SAVE: ' + e.message); }
     },
@@ -1348,6 +1656,8 @@ app.whenReady().then(() => {
   idleMonitorHandle = createIdleMonitor({
     powerMonitor,
     onBreakSuggest: ({ idleFormatted }) => {
+      // Track B — W1: no sugerir break si silent mode esta activa.
+      if (isPetSilentNow()) return;
       const tip = `Llevas ${idleFormatted} sin actividad. ¿Un break?`;
       notifyPetSystemEvent({ event: 'idle-break', source: 'idle-monitor', text: tip, ts: new Date().toISOString() });
     },
@@ -1356,8 +1666,16 @@ app.whenReady().then(() => {
   globalShortcutsHandle = registerGlobalShortcuts(globalShortcut, logDebug, {
     onPomodoroToggle: handlePomodoroToggleShortcut,
     onPetSleep: handlePetSleepShortcut,
-    onQuickCapture: handleQuickCaptureShortcut
+    onQuickCapture: handleQuickCaptureShortcut,
+    onSilentModeToggle: handleSilentModeToggleShortcut
   });
+  // Track B — W2: retreat scheduler (30s) — evalua eventos activos o
+  // proximos y broadcast al petWindow. .unref() para no bloquear el quit.
+  const retreatTimer = setInterval(evaluateRetreatState, 30 * 1000);
+  if (typeof retreatTimer.unref === 'function') retreatTimer.unref();
+  // Track B — W2: evalua inmediatamente (no esperamos 30s para el primer
+  // check, asi un evento que ya empezo dispara retreat al abrir la app).
+  setTimeout(evaluateRetreatState, 2000);
   // I7 — morning briefing: 3s despues de que la ventana este lista.
   setTimeout(maybeShowMorningBriefing, 3000);
   app.on('activate', () => {
@@ -1390,6 +1708,11 @@ app.on('before-quit', () => {
       logDebug(`IDLE MONITOR DETACH ERROR: ${serializeError(error)}`);
     }
     idleMonitorHandle = null;
+  }
+  // Track B — W2: cerrar el file watcher del .ics
+  if (calendarWatcherHandle && typeof calendarWatcherHandle.close === 'function') {
+    try { calendarWatcherHandle.close(); } catch (e) { logDebug('CALENDAR WATCHER CLOSE: ' + e.message); }
+    calendarWatcherHandle = { close: () => {} };
   }
   if (globalShortcutsHandle) {
     globalShortcutsHandle.unregisterAll();
