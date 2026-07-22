@@ -70,6 +70,26 @@ function shouldYawn(lastYawnAt, idleMs, intervalMs = 300000) {
   return elapsed >= intervalMs && idleMs >= intervalMs;
 }
 
+// M4 — mood-aware yawn: si la mascota está cansada (energy < 25) bosteza
+// más seguido (cada 2 min en vez de cada 5).
+const YAWN_INTERVAL_DEFAULT_MS = 5 * 60 * 1000;   // 5 min — estado normal
+const YAWN_INTERVAL_TIRED_MS = 2 * 60 * 1000;     // 2 min — energy < 25
+const YAWN_ENERGY_TIRED_THRESHOLD = 25;
+
+/**
+ * Determina el intervalo entre bostezos segun el mood.
+ * Si mood es null/invalido o la energy está por encima del umbral, usa el default.
+ *
+ * @param {object|null} mood - { energy, happiness, curiosity, hunger, ... }
+ * @returns {number} intervalo en ms
+ */
+function getYawnIntervalMs(mood) {
+  if (mood && typeof mood.energy === 'number' && mood.energy < YAWN_ENERGY_TIRED_THRESHOLD) {
+    return YAWN_INTERVAL_TIRED_MS;
+  }
+  return YAWN_INTERVAL_DEFAULT_MS;
+}
+
 /**
  * Retorna el nombre de la mascota. Si no hay nombre guardado, usa el default segun el tipo.
  *
@@ -104,6 +124,10 @@ module.exports = {
   computePupilPosition,
   shouldPupilDilate,
   shouldYawn,
+  getYawnIntervalMs,
   getPetName,
-  validatePetName
+  validatePetName,
+  YAWN_INTERVAL_DEFAULT_MS,
+  YAWN_INTERVAL_TIRED_MS,
+  YAWN_ENERGY_TIRED_THRESHOLD
 };
