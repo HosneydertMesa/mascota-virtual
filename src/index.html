@@ -59,11 +59,26 @@
     </div>
   </div>
 
+  <!-- Quick Capture Overlay (I2) — flotante sobre la mascota -->
+  <div id="quick-capture-overlay" class="quick-capture-overlay" hidden>
+    <div class="quick-capture-box">
+      <textarea id="quick-capture-text" maxlength="200" placeholder="Anota una idea rápida... (Enter para guardar, Esc para cancelar)"></textarea>
+      <div class="quick-capture-footer">
+        <span id="quick-capture-counter">0/200</span>
+        <div class="quick-capture-buttons">
+          <button id="quick-capture-cancel" type="button">Cancelar</button>
+          <button id="quick-capture-save" type="button">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Scripts: Mascot Assets & Main Renderer Orchestrator -->
   <script src="assets/cat.js"></script>
   <script src="assets/dog.js"></script>
   <script src="core/pet-protocol.js"></script>
   <script src="services/pet-audio.js"></script>
   <script src="renderer.js"></script>
+  <script src="quick-capture-renderer.js"></script>
 </body>
 </html>

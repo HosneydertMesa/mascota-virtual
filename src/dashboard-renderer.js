@@ -62,12 +62,13 @@ function setChatStatus(text, busy = false) {
 }
 
 function selectTab(tabId) {
-  if (!['pomodoro', 'chat', 'settings', 'memories'].includes(tabId)) return;
+  if (!['pomodoro', 'chat', 'settings', 'memories', 'captures'].includes(tabId)) return;
   tabButtons.forEach(button => button.classList.remove('active'));
   tabPanels.forEach(panel => panel.classList.remove('active'));
   document.querySelector(`.tab-btn[data-tab="${tabId}"]`)?.classList.add('active');
   document.getElementById(`tab-${tabId}`)?.classList.add('active');
   if (tabId === 'memories') loadMemoriesList();
+  else if (tabId === 'captures') loadCapturesList();
 }
 
 tabButtons.forEach(button => button.addEventListener('click', () => selectTab(button.dataset.tab)));
@@ -467,7 +468,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   await initSettings();
   updateTimerUI();
   const defaultTab = window.location.hash.substring(1);
-  selectTab(['pomodoro', 'chat', 'settings', 'memories'].includes(defaultTab) ? defaultTab : 'pomodoro');
+  selectTab(['pomodoro', 'chat', 'settings', 'memories', 'captures'].includes(defaultTab) ? defaultTab : 'pomodoro');
 });
 
 /**
@@ -611,6 +612,142 @@ if (memoriesClearBtn) {
       if (count > 0) console.log(`Borrados ${count} recuerdos.`);
     } catch (e) {
       alert('No se pudo borrar: ' + e.message);
+    }
+  });
+}
+
+/* === I2 — Capturas rapidas (tab Capturas) === */
+
+const capturesListEl = document.getElementById('captures-list');
+const capturesCountEl = document.getElementById('captures-count');
+const clearCapturesBtn = document.getElementById('clear-captures-btn');
+const weeklyReportBtn = document.getElementById('weekly-report-btn');
+const weeklyReportOutput = document.getElementById('weekly-report-output');
+const weeklyReportActions = document.getElementById('weekly-report-actions');
+const weeklyReportCopyBtn = document.getElementById('weekly-report-copy-btn');
+
+function formatCaptureTimestamp(ts) {
+  if (typeof ts !== 'number') return '';
+  const now = Date.now();
+  const diffSec = Math.floor((now - ts) / 1000);
+  if (diffSec < 60) return 'ahora';
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `hace ${diffMin}m`;
+  const diffHour = Math.floor(diffMin / 60);
+  if (diffHour < 24) return `hace ${diffHour}h`;
+  const diffDay = Math.floor(diffHour / 24);
+  if (diffDay < 7) return `hace ${diffDay}d`;
+  const d = new Date(ts);
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  return `${day}/${month}`;
+}
+
+function truncateForPreview(text, maxChars) {
+  if (typeof text !== 'string') return '';
+  const n = typeof maxChars === 'number' && maxChars > 1 ? Math.floor(maxChars) : 60;
+  if (text.length <= n) return text;
+  return text.slice(0, n - 1) + '…';
+}
+
+async function loadCapturesList() {
+  if (!capturesListEl) return;
+  let list;
+  try {
+    list = await window.api.quickCaptureList();
+  } catch (error) {
+    capturesListEl.innerHTML = '<li class="captures-empty">No se pudieron cargar las capturas.</li>';
+    return;
+  }
+  if (!Array.isArray(list) || list.length === 0) {
+    capturesListEl.innerHTML = '<li class="captures-empty">Aun no hay capturas. Apreta Ctrl/Cmd+Shift+Q sobre la mascota para agregar una.</li>';
+    if (capturesCountEl) capturesCountEl.textContent = '0/100';
+    return;
+  }
+  if (capturesCountEl) capturesCountEl.textContent = `${list.length}/100`;
+  // Limpiar (usando textContent para no generar XSS via innerHTML)
+  capturesListEl.textContent = '';
+  for (const c of list) {
+    const li = document.createElement('li');
+    li.className = 'captures-item';
+    const text = document.createElement('span');
+    text.className = 'captures-item-text';
+    text.textContent = truncateForPreview(c.text || '', 120);
+    const time = document.createElement('span');
+    time.className = 'captures-item-time';
+    time.textContent = formatCaptureTimestamp(c.createdAt);
+    li.append(text, time);
+    capturesListEl.appendChild(li);
+  }
+}
+
+if (clearCapturesBtn) {
+  clearCapturesBtn.addEventListener('click', async () => {
+    if (!confirm('¿Borrar TODAS las capturas? Esta accion no se puede deshacer.')) return;
+    clearCapturesBtn.disabled = true;
+    try {
+      const count = await window.api.quickCaptureClear();
+      await loadCapturesList();
+      if (count > 0) console.log(`Borradas ${count} capturas.`);
+    } catch (e) {
+      alert('No se pudo borrar: ' + e.message);
+    } finally {
+      clearCapturesBtn.disabled = false;
+    }
+  });
+}
+
+/* === W3 — Reporte semanal (boton en tab Pomodoro) === */
+
+async function generateWeeklyReport() {
+  if (!weeklyReportBtn || !weeklyReportOutput) return;
+  weeklyReportBtn.disabled = true;
+  try {
+    const result = await window.api.weeklyReportGet({});
+    if (result && typeof result.markdown === 'string') {
+      weeklyReportOutput.textContent = result.markdown;
+      weeklyReportOutput.hidden = false;
+      if (weeklyReportActions) weeklyReportActions.hidden = false;
+      // Guardamos el markdown en dataset para el copy button
+      weeklyReportOutput.dataset.markdown = result.markdown;
+    } else {
+      weeklyReportOutput.textContent = 'No se pudo generar el reporte.';
+      weeklyReportOutput.hidden = false;
+      if (weeklyReportActions) weeklyReportActions.hidden = true;
+    }
+  } catch (e) {
+    weeklyReportOutput.textContent = `Error: ${e.message}`;
+    weeklyReportOutput.hidden = false;
+    if (weeklyReportActions) weeklyReportActions.hidden = true;
+  } finally {
+    weeklyReportBtn.disabled = false;
+  }
+}
+
+if (weeklyReportBtn) {
+  weeklyReportBtn.addEventListener('click', generateWeeklyReport);
+}
+
+if (weeklyReportCopyBtn) {
+  weeklyReportCopyBtn.addEventListener('click', async () => {
+    const md = weeklyReportOutput && weeklyReportOutput.dataset ? weeklyReportOutput.dataset.markdown : '';
+    if (!md) return;
+    try {
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        await navigator.clipboard.writeText(md);
+        const original = weeklyReportCopyBtn.textContent;
+        weeklyReportCopyBtn.textContent = '¡Copiado!';
+        setTimeout(() => { weeklyReportCopyBtn.textContent = original; }, 1500);
+      } else {
+        // Fallback: select text in the pre
+        const range = document.createRange();
+        range.selectNodeContents(weeklyReportOutput);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+    } catch (e) {
+      console.error('Copy failed:', e);
     }
   });
 }

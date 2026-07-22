@@ -52,6 +52,14 @@ contextBridge.exposeInMainWorld('api', {
   // A4 — Do Not Disturb (typing rate monitor)
   setDoNotDisturb: (isActive) => ipcRenderer.invoke('dnd:update', isActive),
 
+  // I2 — Quick capture (overlay Cmd/Ctrl+Shift+Q)
+  quickCaptureSave: (text) => ipcRenderer.invoke('quick-capture:save', text),
+  quickCaptureList: () => ipcRenderer.invoke('quick-capture:list'),
+  quickCaptureClear: () => ipcRenderer.invoke('quick-capture:clear'),
+
+  // W3 — Weekly report
+  weeklyReportGet: (opts) => ipcRenderer.invoke('weekly-report:get', opts || {}),
+
   onSwitchTab: (callback) => subscribe('switch-tab', callback),
   onPetMoveState: (callback) => subscribe('pet-move-state', callback),
   onPetAction: (callback) => subscribe('pet-action', callback),

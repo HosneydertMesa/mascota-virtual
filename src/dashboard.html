@@ -30,6 +30,7 @@
         <button class="tab-btn" data-tab="chat">Chatear</button>
         <button class="tab-btn" data-tab="settings">Ajustes</button>
         <button class="tab-btn" data-tab="memories">Recuerdos</button>
+        <button class="tab-btn" data-tab="captures">Capturas</button>
       </div>
 
       <!-- TAB 1: POMODORO TIMER -->
@@ -55,6 +56,17 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
               <span>Reiniciar</span>
             </button>
+          </div>
+
+          <div class="weekly-report-section" style="width: 100%; margin-top: 18px;">
+            <button id="weekly-report-btn" class="btn btn-secondary" style="width: 100%;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3z"></path><path d="M3 9h18M9 21V9"></path></svg>
+              <span>Generar reporte semanal</span>
+            </button>
+            <pre id="weekly-report-output" class="weekly-report-output" hidden></pre>
+            <div id="weekly-report-actions" class="weekly-report-actions" hidden>
+              <button id="weekly-report-copy-btn" class="btn btn-compact" type="button">Copiar al portapapeles</button>
+            </div>
           </div>
         </div>
       </div>
@@ -207,6 +219,26 @@
             <button id="memories-clear-btn" class="btn btn-danger btn-compact" type="button">Borrar todos los recuerdos</button>
           </div>
 
+        </div>
+      </div>
+
+      <!-- TAB 5: CAPTURES (I2 quick capture) -->
+      <div class="tab-panel" id="tab-captures">
+        <div class="settings-section">
+          <div class="settings-group">
+            <div class="memories-header">
+              <label class="settings-label">Capturas rapidas</label>
+              <span id="captures-count" class="memories-count">0/100</span>
+            </div>
+            <p class="settings-hint">Ideas que capturaste con Ctrl/Cmd+Shift+Q sobre la mascota. Maximo 100. PII redactada si el toggle esta ON en Recuerdos.</p>
+            <ul id="captures-list" class="captures-list" aria-live="polite">
+              <li class="captures-empty">Aun no hay capturas. Apreta Ctrl/Cmd+Shift+Q sobre la mascota para agregar una.</li>
+            </ul>
+          </div>
+
+          <div class="settings-group" style="margin-top: 10px;">
+            <button id="clear-captures-btn" class="btn btn-danger btn-compact" type="button">Borrar todas las capturas</button>
+          </div>
         </div>
       </div>
 
