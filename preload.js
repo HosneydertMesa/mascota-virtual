@@ -52,6 +52,13 @@ contextBridge.exposeInMainWorld('api', {
   // A4 — Do Not Disturb (typing rate monitor)
   setDoNotDisturb: (isActive) => ipcRenderer.invoke('dnd:update', isActive),
 
+  // Track A — Pomodoro (config + sesiones + stats + adaptive + streak)
+  pomodoroGetConfig: () => ipcRenderer.invoke('pomodoro:get-config'),
+  pomodoroSetConfig: (config) => ipcRenderer.invoke('pomodoro:set-config', config),
+  pomodoroRegisterSession: (session) => ipcRenderer.invoke('pomodoro:register-session', session),
+  pomodoroGetStats: () => ipcRenderer.invoke('pomodoro:get-stats'),
+  pomodoroGetNextBreakKind: (params) => ipcRenderer.invoke('pomodoro:get-next-break-kind', params),
+
   onSwitchTab: (callback) => subscribe('switch-tab', callback),
   onPetMoveState: (callback) => subscribe('pet-move-state', callback),
   onPetAction: (callback) => subscribe('pet-action', callback),
@@ -66,5 +73,8 @@ contextBridge.exposeInMainWorld('api', {
   // T4 — globalShortcut IPC channels
   onPomodoroToggle: (callback) => subscribe('pomodoro-toggle', callback),
   onPetSleep: (callback) => subscribe('pet-sleep', callback),
-  onQuickCaptureTrigger: (callback) => subscribe('quick-capture-trigger', callback)
+  onQuickCaptureTrigger: (callback) => subscribe('quick-capture-trigger', callback),
+
+  // Track A — Streak milestone (emitido por main al petWindow)
+  onStreakMilestone: (callback) => subscribe('streak-milestone', callback)
 });

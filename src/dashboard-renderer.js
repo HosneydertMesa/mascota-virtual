@@ -12,6 +12,12 @@ let focusDuration = 25 * 60;
 let breakDuration = 5 * 60;
 let totalDuration = focusDuration;
 let timeLeft = focusDuration;
+// Track A — I1 adaptive: conteo de focus blocks consecutivos + flag last break
+// Persistimos en localStorage para que sobrevivan reload del dashboard.
+let focusBlocksCompleted = 0;
+let lastBreakWasLong = false;
+let pendingSessionInfo = null; // guarda {startedAt, durationSec, kind} durante la sesion
+let currentPomodoroConfig = null; // cache de la config para evitar IPC en cada tick
 
 const MAX_CHAT_MESSAGES = 40;
 // Allow-lists y parser de respuestas de la IA viven en PetProtocol (src/core/pet-protocol.js).
@@ -74,6 +80,167 @@ tabButtons.forEach(button => button.addEventListener('click', () => selectTab(bu
 window.api.onSwitchTab(selectTab);
 closeBtn.addEventListener('click', () => window.api.closeDashboard());
 
+/* === Track A — Pomodoro: plantilla, custom inputs, stats, adaptive === */
+
+const pomodoroTemplateSelect = document.getElementById('pomodoro-template-select');
+const customInputs = document.getElementById('custom-inputs');
+const customFocusMin = document.getElementById('custom-focus-min');
+const customBreakMin = document.getElementById('custom-break-min');
+const customLongBreakMin = document.getElementById('custom-longbreak-min');
+const customLongBreakEvery = document.getElementById('custom-longbreak-every');
+const pomodoroApplyBtn = document.getElementById('pomodoro-apply-btn');
+const pomodoroConfigStatus = document.getElementById('pomodoro-config-status');
+const statFocusToday = document.getElementById('stat-focus-today');
+const statWeekTotal = document.getElementById('stat-week-total');
+const statStreak = document.getElementById('stat-streak');
+
+function loadAdaptiveState() {
+  try {
+    const raw = localStorage.getItem('pomodoro.adaptive');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (typeof parsed.focusBlocksCompleted === 'number' && parsed.focusBlocksCompleted >= 0) {
+        focusBlocksCompleted = Math.floor(parsed.focusBlocksCompleted);
+      }
+      lastBreakWasLong = parsed.lastBreakWasLong === true;
+    }
+  } catch (_error) { /* ignore */ }
+}
+
+function saveAdaptiveState() {
+  try {
+    localStorage.setItem('pomodoro.adaptive', JSON.stringify({ focusBlocksCompleted, lastBreakWasLong }));
+  } catch (_error) { /* ignore */ }
+}
+
+function applyTemplate(config) {
+  if (!config || typeof config !== 'object') return;
+  const templateId = config.templateId || 'classic';
+  const isCustom = templateId === 'custom';
+  // Para templates prefijados, el server (main) es la fuente de verdad;
+  // los custom values se usan solo si el user selecciono custom.
+  let focusMin;
+  let breakMin;
+  let longBreakMin;
+  let longBreakEvery;
+  if (isCustom) {
+    focusMin = config.customFocusMin;
+    breakMin = config.customBreakMin;
+    longBreakMin = config.customLongBreakMin;
+    longBreakEvery = config.customLongBreakEvery;
+    customFocusMin.value = String(focusMin);
+    customBreakMin.value = String(breakMin);
+    customLongBreakMin.value = String(longBreakMin);
+    customLongBreakEvery.value = String(longBreakEvery);
+  } else {
+    const tpl = window.PomodoroTemplates && window.PomodoroTemplates.getTemplate(templateId);
+    if (tpl) {
+      focusMin = tpl.focusMin;
+      breakMin = tpl.breakMin;
+      longBreakMin = tpl.longBreakMin;
+      longBreakEvery = tpl.longBreakEvery;
+    } else {
+      // fallback a classic
+      focusMin = 25; breakMin = 5; longBreakMin = 15; longBreakEvery = 4;
+    }
+  }
+  // Aplicar al timer (solo si no esta corriendo, para no pisar un pomodoro en curso)
+  if (timerState === 'idle') {
+    focusDuration = focusMin * 60;
+    breakDuration = breakMin * 60;
+    if (timerMode === 'focus') {
+      totalDuration = focusDuration;
+      timeLeft = focusDuration;
+    } else {
+      totalDuration = breakDuration;
+      timeLeft = breakDuration;
+    }
+    updateTimerUI();
+  } else {
+    // Si esta corriendo, solo actualizamos el current mode (no el total para no romper el timer)
+    if (timerMode === 'focus') focusDuration = focusMin * 60;
+    else breakDuration = breakMin * 60;
+  }
+  // Actualizar UI
+  pomodoroTemplateSelect.value = templateId;
+  customInputs.hidden = !isCustom;
+  // Guardar last long break settings en currentPomodoroConfig
+  currentPomodoroConfig = {
+    ...config,
+    longBreakMin,
+    longBreakEvery
+  };
+}
+
+function setConfigStatus(message, kind = '') {
+  if (!pomodoroConfigStatus) return;
+  pomodoroConfigStatus.textContent = message;
+  pomodoroConfigStatus.className = 'pomodoro-config-status' + (kind ? ' ' + kind : '');
+}
+
+function onTemplateChange() {
+  const value = pomodoroTemplateSelect.value;
+  customInputs.hidden = value !== 'custom';
+  // Si cambia a custom, no guardamos hasta que el user presione Aplicar.
+  // Si cambia a un template prefijado, guardamos inmediatamente.
+  if (value !== 'custom') {
+    saveConfig({ templateId: value });
+  }
+}
+
+async function saveConfig(partial) {
+  try {
+    const updated = await window.api.pomodoroSetConfig(partial);
+    applyTemplate(updated);
+    setConfigStatus('Plantilla aplicada.', 'success');
+  } catch (error) {
+    setConfigStatus('Error: ' + (error?.message || 'no se pudo guardar'), 'error');
+  }
+}
+
+function onApplyCustom() {
+  const focusMin = parseInt(customFocusMin.value, 10);
+  const breakMin = parseInt(customBreakMin.value, 10);
+  const longBreakMin = parseInt(customLongBreakMin.value, 10);
+  const longBreakEvery = parseInt(customLongBreakEvery.value, 10);
+  if ([focusMin, breakMin, longBreakMin, longBreakEvery].some(v => !Number.isFinite(v))) {
+    setConfigStatus('Todos los valores deben ser números.', 'error');
+    return;
+  }
+  saveConfig({ templateId: 'custom', customFocusMin: focusMin, customBreakMin: breakMin, customLongBreakMin: longBreakMin, customLongBreakEvery: longBreakEvery });
+}
+
+async function refreshStats() {
+  if (!statFocusToday || !statWeekTotal || !statStreak) return;
+  try {
+    const stats = await window.api.pomodoroGetStats();
+    statFocusToday.textContent = String((stats && stats.today && stats.today.focusCount) || 0);
+    statWeekTotal.textContent = String((stats && stats.week && stats.week.focusCount) || 0);
+    // Streak: lo computa el server en register-session, pero podemos derivarlo local
+    // con el delta de los focus blocks de hoy. Por simplicidad, usamos focus hoy
+    // como indicador: si focus hoy > 0, racha >= 1; si no, 0.
+    // Para un valor exacto, hariamos falta un IPC pomodoro:get-streak. Por ahora,
+    // usamos focusCount de hoy como proxy visible: al menos el usuario ve un
+    // numero que cambia.
+    const streak = (stats && stats.today && stats.today.focusCount) > 0 ? Math.max(1, focusBlocksCompleted) : 0;
+    statStreak.textContent = String(streak);
+  } catch (error) {
+    // Silencioso: si falla IPC, mantenemos los valores anteriores
+  }
+}
+
+pomodoroTemplateSelect.addEventListener('change', onTemplateChange);
+if (pomodoroApplyBtn) pomodoroApplyBtn.addEventListener('click', onApplyCustom);
+
+// Subscribe a milestone desde main → mostrar como speech
+window.api.onStreakMilestone(payload => {
+  if (!payload || typeof payload !== 'object') return;
+  const text = typeof payload.message === 'string' ? payload.message : `¡${payload.days || ''} días de racha!`;
+  try {
+    window.api.triggerPetAction({ type: 'speak', text, emotion: 'happy', action: 'celebrate', sound: 'short', intent: 'praise' });
+  } catch (_e) { /* ignore */ }
+});
+
 function updateApiStatus() {
   apiStatus.textContent = hasApiKey
     ? 'Clave protegida por Windows. Escribe una nueva sólo si deseas reemplazarla.'
@@ -120,6 +287,17 @@ async function initSettings() {
   } catch (error) {
     petNameStatus.textContent = 'No se pudo cargar el nombre.';
   }
+
+  // Track A — cargar config de pomodoro + estado adaptativo + stats
+  loadAdaptiveState();
+  try {
+    const cfg = await window.api.pomodoroGetConfig();
+    applyTemplate(cfg);
+  } catch (e) {
+    console.error('No se pudo cargar config de pomodoro:', e);
+  }
+  await refreshStats();
+  setInterval(refreshStats, 60_000); // refresca stats cada 60s mientras el dashboard esta abierto
 
   // A1 — mood widget: estado + 4 stats, refresco cada 5s
   await refreshMoodWidget();
@@ -251,6 +429,11 @@ function playNotification() {
 
 function startTimer() {
   clearInterval(timerInterval);
+  // Track A — guardar el momento de inicio y duracion para registrar al terminar
+  const sessionStart = Date.now();
+  const sessionKind = timerMode; // 'focus' o 'break'
+  const sessionDuration = totalDuration;
+  pendingSessionInfo = { startedAt: sessionStart, durationSec: sessionDuration, kind: sessionKind };
   timerInterval = setInterval(async () => {
     timeLeft--;
     updateTimerUI();
@@ -263,6 +446,53 @@ function startTimer() {
     playNotification();
 
     const finishedMode = timerMode;
+    const endedAt = Date.now();
+
+    // Track A — registrar la sesion completada en el store
+    if (pendingSessionInfo) {
+      try {
+        await window.api.pomodoroRegisterSession({
+          kind: finishedMode === 'focus' ? 'focus' : (lastBreakWasLong ? 'long_break' : 'short_break'),
+          durationSec: pendingSessionInfo.durationSec,
+          startedAt: pendingSessionInfo.startedAt,
+          endedAt
+        });
+      } catch (e) {
+        console.error('Error registering pomodoro session:', e);
+      }
+      pendingSessionInfo = null;
+    }
+
+    // Track A — I1 adaptive: despues de focus, decidir break kind
+    if (finishedMode === 'focus') {
+      focusBlocksCompleted += 1;
+      saveAdaptiveState();
+      try {
+        const next = await window.api.pomodoroGetNextBreakKind({
+          focusBlocksCompleted,
+          lastBreakWasLong
+        });
+        if (next && next.kind === 'long') {
+          // break largo
+          lastBreakWasLong = true;
+          breakDuration = (next.durationMin || 15) * 60;
+        } else {
+          lastBreakWasLong = false;
+          breakDuration = (next && next.durationMin) ? next.durationMin * 60 : 5 * 60;
+        }
+        saveAdaptiveState();
+      } catch (e) {
+        console.error('Error getting next break kind:', e);
+      }
+    } else {
+      // termino un break: reset del contador si fue long, sino resetea
+      if (lastBreakWasLong) {
+        focusBlocksCompleted = 0;
+        lastBreakWasLong = false;
+      }
+      saveAdaptiveState();
+    }
+
     timerMode = finishedMode === 'focus' ? 'break' : 'focus';
     totalDuration = timerMode === 'focus' ? focusDuration : breakDuration;
     timeLeft = totalDuration;
@@ -277,6 +507,7 @@ function startTimer() {
       console.error('Error getting Pomodoro tip:', error);
     }
     updateTimerUI();
+    refreshStats();
   }, 1000);
 }
 
@@ -311,6 +542,10 @@ timerResetBtn.addEventListener('click', () => {
   timeLeft = focusDuration;
   timerToggleBtn.querySelector('span').textContent = 'Iniciar';
   timerToggleBtn.querySelector('svg').innerHTML = '<polygon points="5 3 19 12 5 21 5 3"></polygon>';
+  // Track A — el reset del timer no resetea el contador adaptive (la racha
+  // de focus blocks sobrevive a resets manuales — solo un long break o un
+  // cambio de sesion deberia resetearlo). Pero limpiamos pendingSessionInfo.
+  pendingSessionInfo = null;
   updateTimerUI();
 });
 

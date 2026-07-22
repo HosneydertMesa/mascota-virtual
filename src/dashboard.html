@@ -56,6 +56,50 @@
               <span>Reiniciar</span>
             </button>
           </div>
+
+          <!-- Track A — W4 Plantillas + I1 adaptive + W5 streak -->
+          <div class="pomodoro-config">
+            <label class="pomodoro-config-label" for="pomodoro-template-select">Plantilla</label>
+            <select id="pomodoro-template-select" class="template-select" aria-label="Plantilla de Pomodoro">
+              <option value="classic">Classic (25/5)</option>
+              <option value="long-focus">Long focus (50/10)</option>
+              <option value="deep-work">Deep work (90/20)</option>
+              <option value="custom">Custom</option>
+            </select>
+            <div id="custom-inputs" class="custom-inputs" hidden>
+              <label class="custom-input-label">Focus (min)
+                <input type="number" id="custom-focus-min" class="settings-input compact" min="5" max="120" value="25">
+              </label>
+              <label class="custom-input-label">Break (min)
+                <input type="number" id="custom-break-min" class="settings-input compact" min="1" max="30" value="5">
+              </label>
+              <label class="custom-input-label">Long break (min)
+                <input type="number" id="custom-longbreak-min" class="settings-input compact" min="5" max="60" value="15">
+              </label>
+              <label class="custom-input-label">Long cada
+                <input type="number" id="custom-longbreak-every" class="settings-input compact" min="2" max="10" value="4">
+              </label>
+              <button id="pomodoro-apply-btn" class="btn btn-primary btn-compact" type="button">Aplicar</button>
+              <p id="pomodoro-config-status" class="pomodoro-config-status"></p>
+            </div>
+          </div>
+
+          <div class="pomodoro-stats" aria-live="polite">
+            <span class="pomodoro-stat">
+              <span class="pomodoro-stat-num" id="stat-focus-today">0</span>
+              <span class="pomodoro-stat-label">focus hoy</span>
+            </span>
+            <span class="pomodoro-stat-sep">·</span>
+            <span class="pomodoro-stat">
+              <span class="pomodoro-stat-num" id="stat-week-total">0</span>
+              <span class="pomodoro-stat-label">esta semana</span>
+            </span>
+            <span class="pomodoro-stat-sep">·</span>
+            <span class="pomodoro-stat">
+              <span class="pomodoro-stat-num" id="stat-streak">0</span>
+              <span class="pomodoro-stat-label">días de racha</span>
+            </span>
+          </div>
         </div>
       </div>
 
@@ -221,6 +265,9 @@
   <script src="core/pet-mood-labels.js"></script>
   <script src="core/pet-memories.js"></script>
   <script src="core/context-awareness.js"></script>
+  <script src="core/pomodoro-templates.js"></script>
+  <script src="core/pomodoro-adaptive.js"></script>
+  <script src="core/pomodoro-streak.js"></script>
   <script src="dashboard-renderer.js"></script>
 </body>
 </html>

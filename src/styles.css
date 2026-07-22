@@ -1391,3 +1391,99 @@ body.pupils-dilated .pet-pupil {
   color: var(--text-secondary, #888);
   margin-top: 2px;
 }
+
+/* === Track A — Pomodoro: plantilla + custom inputs + stats === */
+.pomodoro-config {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 0 4px 0;
+  border-top: 1px solid var(--border-glass, rgba(255,255,255,0.06));
+  margin-top: 6px;
+}
+.pomodoro-config-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-secondary, #888);
+  font-weight: 600;
+}
+.template-select {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-glass, rgba(255,255,255,0.08));
+  background: var(--bg-card, rgba(255,255,255,0.04));
+  color: var(--text-main, #fff);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.template-select:focus {
+  outline: 2px solid var(--primary, #6366f1);
+  outline-offset: 1px;
+}
+.custom-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 8px 0 0 0;
+}
+.custom-input-label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.7rem;
+  color: var(--text-secondary, #888);
+  gap: 4px;
+}
+.settings-input.compact {
+  padding: 6px 8px;
+  font-size: 0.85rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-glass, rgba(255,255,255,0.08));
+  background: var(--bg-card, rgba(255,255,255,0.04));
+  color: var(--text-main, #fff);
+}
+#pomodoro-apply-btn {
+  grid-column: 1 / -1;
+  margin-top: 4px;
+}
+.pomodoro-config-status {
+  grid-column: 1 / -1;
+  font-size: 0.7rem;
+  color: var(--text-secondary, #888);
+  margin: 0;
+  min-height: 1em;
+}
+.pomodoro-config-status.error {
+  color: #dc2626;
+}
+.pomodoro-config-status.success {
+  color: #16a34a;
+}
+.pomodoro-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 0 0 0;
+  margin-top: 6px;
+  font-size: 0.78rem;
+  color: var(--text-secondary, #888);
+  border-top: 1px solid var(--border-glass, rgba(255,255,255,0.06));
+}
+.pomodoro-stat {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.pomodoro-stat-num {
+  font-weight: 700;
+  color: var(--primary, #6366f1);
+  font-variant-numeric: tabular-nums;
+}
+.pomodoro-stat-sep {
+  opacity: 0.5;
+}
