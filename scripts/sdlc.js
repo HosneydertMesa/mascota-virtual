@@ -199,11 +199,46 @@ function gateQa(opts = {}) {
       };
     }
   }
+
+  // Validacion de contenido: el sign-off debe tener evidencia de runtime.
+  // Esto cierra el loophole del v2.0.0 release donde el QA decia
+  // 'QA manual del .exe deferred to user' sin probar nada.
+  const REQUIRED_SECTIONS = [
+    /\bverdict\b[\s:]*\**APPROVED/i,               // Verdict explicito (acepta "Verdict: APPROVED" o "**Verdict**: **APPROVED**")
+    /(smoke test|runtime evidence|manual evidence|tests? corridos?|npm start|test:|integration:|pruebas? (corrid|ejecutad))/i  // Alguna forma de evidencia
+  ];
+  const FORBIDDEN_PATTERNS = [
+    /\b(deferred|postpuesto|pendiente para el user|user manual|qa manual|sin probar|manos vacias)\b/i  // Manos vacias
+  ];
+  const rejections = [];
+  for (const f of signoffs) {
+    let content;
+    try {
+      content = fs.readFileSync(path.join(getRoot(), 'docs', 'qa', f), 'utf8');
+    } catch { continue; }
+    const missingSections = REQUIRED_SECTIONS.filter(re => !re.test(content));
+    if (missingSections.length > 0) {
+      rejections.push(`${f}: falta evidencia (verdict APPROVED + smoke test/runtime evidence). Lo que tiene NO califica como QA.`);
+      continue;
+    }
+    const forbidden = FORBIDDEN_PATTERNS.filter(re => re.test(content));
+    if (forbidden.length > 0) {
+      rejections.push(`${f}: contiene 'deferred/manual/sin probar' — el sign-off tiene que tener evidencia REAL, no derivados.`);
+      continue;
+    }
+  }
+  if (rejections.length > 0) {
+    return {
+      passed: false,
+      evidence: `${signoffs.length - rejections.length}/${signoffs.length} sign-offs OK; ${rejections.length} rechazados por falta de evidencia:\n  - ${rejections.join('\n  - ')}`
+    };
+  }
+
   return {
     passed: signoffs.length > 0,
     evidence: signoffs.length > 0
-      ? `${signoffs.length} sign-off(s)${opts.since ? ` (desde ${new Date(opts.since).toISOString().slice(0, 10)})` : ''}: ${signoffs.slice(0, 3).join(', ')}`
-      : 'docs/qa/ existe pero sin sign-offs'
+      ? `${signoffs.length} sign-off(s) con evidencia de runtime${opts.since ? ` (desde ${new Date(opts.since).toISOString().slice(0, 10)})` : ''}: ${signoffs.slice(0, 3).join(', ')}`
+      : 'docs/qa/ existe pero sin sign-offs con evidencia'
   };
 }
 
