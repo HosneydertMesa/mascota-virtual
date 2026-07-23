@@ -14,7 +14,18 @@
  *   - src/services/idle-monitor.js — main process (usa powerMonitor)
  *   - src/dashboard-renderer.js — mide keystrokes en chat input
  *   - main.js — wire: tick de idle, broadcast events
+ *
+ * HOTFIX v2.0.2: envuelto en IIFE para que las funciones NO queden en el
+ * scope global del browser. Bug v2.0.0/v2.0.1: top-level function declarations
+ * (`function shouldEnterDoNotDisturb`) colisionaban con el `const {
+ * shouldEnterDoNotDisturb } = window.ContextAwareness;` de dashboard-renderer.js.
+ * En strict mode, eso es SyntaxError. Ahora todas las funciones son privadas
+ * del IIFE y la API se expone via `window.ContextAwareness` (sin leaking).
  */
+
+// UMD-lite: expone en module.exports (Node) o window.ContextAwareness (browser).
+// IIFE wrapper para que las funciones NO contaminen el scope global.
+(function (root) {
 
 const DEFAULT_IDLE_THRESHOLD_SECONDS = 600;  // 10 min
 const DEFAULT_BREAK_COOLDOWN_MS = 5 * 60 * 1000;  // 5 min entre tips
@@ -137,7 +148,6 @@ function formatIdleTime(seconds) {
   return remMin > 0 ? `${hours} h ${remMin} min` : `${hours} h`;
 }
 
-// UMD-lite: expone en module.exports (Node) o window.ContextAwareness (browser).
 const ContextAwareness = {
   DEFAULT_IDLE_THRESHOLD_SECONDS,
   DEFAULT_BREAK_COOLDOWN_MS,
@@ -156,6 +166,8 @@ const ContextAwareness = {
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = ContextAwareness;
-} else if (typeof window !== 'undefined') {
-  window.ContextAwareness = ContextAwareness;
+} else {
+  root.ContextAwareness = ContextAwareness;
 }
+
+})(typeof window !== 'undefined' ? window : globalThis);
