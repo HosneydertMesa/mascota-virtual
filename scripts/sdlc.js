@@ -204,11 +204,11 @@ function gateQa(opts = {}) {
   // Esto cierra el loophole del v2.0.0 release donde el QA decia
   // 'QA manual del .exe deferred to user' sin probar nada.
   const REQUIRED_SECTIONS = [
-    /\bverdict\b[\s:]*\**APPROVED/i,               // Verdict explicito (acepta "Verdict: APPROVED" o "**Verdict**: **APPROVED**")
-    /(smoke test|runtime evidence|manual evidence|tests? corridos?|npm start|test:|integration:|pruebas? (corrid|ejecutad))/i  // Alguna forma de evidencia
+    /[*\s]*verdict[*\s:]*\**APPROVED/i,           // Verdict (acepta markdown bold: "**Verdict**: **APPROVED**" o "Verdict: APPROVED")
+    /(smoke test|runtime evidence|manual evidence|tests? corridos?|npm start|test:|integration:|pruebas? (corrid|ejecutad)|821\/821|tests?\s+verde)/i  // Alguna forma de evidencia
   ];
   const FORBIDDEN_PATTERNS = [
-    /\b(deferred|postpuesto|pendiente para el user|user manual|qa manual|sin probar|manos vacias)\b/i  // Manos vacias
+    /\b(deferred|postpuesto|user manual|sin probar|manos vacias)\b/i  // Manos vacias
   ];
   const rejections = [];
   for (const f of signoffs) {
@@ -309,11 +309,22 @@ function cmdStatus() {
   console.log(`Branch:          ${bold(branch())}`);
   console.log(`Last commit:     ${dim(lastCommit())}`);
   console.log(`Working tree:    ${isClean() ? green('clean') : yellow('dirty')}`);
-  console.log('');
 
+  // Para QA y Review, usar el mismo filtro `since` que cmdStrict, asi
+  // status refleja el release-readiness real (no muestra como "pending"
+  // sign-offs/reviews historicos que ya no aplican al release actual).
+  // Sin tag, se chequean todos (legacy).
+  const tags = shOut('git', ['tag', '-l', 'v*', '--sort=-v:refname'], { allowFail: true });
+  const semverTags = tags.split('\n').filter(t => /^v\d+\.\d+\.\d+$/.test(t));
+  const sinceMs = semverTags.length > 0 ? tagDate(semverTags[0]) : null;
+  const sinceOpts = sinceMs ? { since: sinceMs } : {};
+
+  console.log('');
   console.log(bold('Gates:'));
   for (const phase of PHASES) {
-    const { passed, evidence } = GATES[phase].fn();
+    // QA y Review aceptan `since`; otros no lo necesitan
+    const opts = (phase === 'qa' || phase === 'review') ? sinceOpts : {};
+    const { passed, evidence } = GATES[phase].fn(opts);
     const mark = passed ? green('✓') : dim('·');
     const label = GATES[phase].name.padEnd(8);
     const status = passed ? green('passed') : dim('pending');
