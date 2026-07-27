@@ -8,8 +8,31 @@ let sleepTimeout = null;
 let dragCandidate = null;
 let isDragging = false;
 let tailTime = 0;
+// M4 — mood affecting motion (gradual lerp).
+// _target = valor deseado (lo que el mood quiere). _current = valor actual
+// (lo que el rAF loop usa). En cada frame, _current lerppea hacia _target
+// a razon de TAIL_LERP_FACTOR por frame (5% = ~200-300ms transicion).
 let tailWagSpeed = 0.04;
 let tailWagAmplitude = 1;
+let tailWagSpeedTarget = 0.04;
+let tailWagAmplitudeTarget = 1;
+const TAIL_LERP_FACTOR = 0.05;
+const TAIL_LERP_EPSILON = 0.0005;
+
+function lerpTailTargets() {
+  const speedDelta = tailWagSpeedTarget - tailWagSpeed;
+  if (Math.abs(speedDelta) > TAIL_LERP_EPSILON) {
+    tailWagSpeed += speedDelta * TAIL_LERP_FACTOR;
+  } else {
+    tailWagSpeed = tailWagSpeedTarget;
+  }
+  const ampDelta = tailWagAmplitudeTarget - tailWagAmplitude;
+  if (Math.abs(ampDelta) > TAIL_LERP_EPSILON) {
+    tailWagAmplitude += ampDelta * TAIL_LERP_FACTOR;
+  } else {
+    tailWagAmplitude = tailWagAmplitudeTarget;
+  }
+}
 let currentPetX = 0;
 let isQuickChatSending = false;
 let quickChatHistory = [];
@@ -516,13 +539,13 @@ window.api.onPetMoveState(data => {
   if (data.state === 'walking') {
     wakeUp();
     setVisualState('walking', data.direction);
-    tailWagSpeed = currentPet === 'cat' ? 0.06 : 0.12;
-    tailWagAmplitude = 1.1;
+    tailWagSpeedTarget = currentPet === 'cat' ? 0.06 : 0.12;
+    tailWagAmplitudeTarget = 1.1;
   } else if (data.state === 'playing') {
     wakeUp();
     setVisualState('idle');
-    tailWagSpeed = currentPet === 'cat' ? 0.08 : 0.16;
-    tailWagAmplitude = 1.3;
+    tailWagSpeedTarget = currentPet === 'cat' ? 0.08 : 0.16;
+    tailWagAmplitudeTarget = 1.3;
     if (Math.random() < 0.025) {
       triggerHappyBounce();
       const messages = currentPet === 'cat'
@@ -533,8 +556,8 @@ window.api.onPetMoveState(data => {
   } else if (currentVisualState !== 'sleeping') {
     setVisualState('idle');
     scheduleSleep();
-    tailWagSpeed = currentPet === 'cat' ? 0.04 : 0.06;
-    tailWagAmplitude = 1;
+    tailWagSpeedTarget = currentPet === 'cat' ? 0.04 : 0.06;
+    tailWagAmplitudeTarget = 1;
   }
 });
 
@@ -565,14 +588,14 @@ function handlePetAction(data) {
 
   if (data.emotion === 'excited') {
     triggerHappyBounce();
-    tailWagSpeed = currentPet === 'cat' ? 0.1 : 0.2;
-    tailWagAmplitude = 1.4;
+    tailWagSpeedTarget = currentPet === 'cat' ? 0.1 : 0.2;
+    tailWagAmplitudeTarget = 1.4;
   } else if (data.emotion === 'calm') {
-    tailWagSpeed = currentPet === 'cat' ? 0.02 : 0.04;
-    tailWagAmplitude = 0.7;
+    tailWagSpeedTarget = currentPet === 'cat' ? 0.02 : 0.04;
+    tailWagAmplitudeTarget = 0.7;
   } else if (data.emotion === 'sad') {
-    tailWagSpeed = 0.008;
-    tailWagAmplitude = 0.3;
+    tailWagSpeedTarget = 0.008;
+    tailWagAmplitudeTarget = 0.3;
   } else if (data.emotion === 'sleepy') {
     goToSleep();
   }
@@ -580,8 +603,8 @@ function handlePetAction(data) {
   if (data.action === 'jump') triggerHappyBounce();
   else if (data.action === 'sleep') goToSleep();
   else if (data.action === 'wag') {
-    tailWagSpeed = currentPet === 'cat' ? 0.09 : 0.19;
-    tailWagAmplitude = 1.35;
+    tailWagSpeedTarget = currentPet === 'cat' ? 0.09 : 0.19;
+    tailWagAmplitudeTarget = 1.35;
   } else if (data.action === 'sit') {
     // M2 — sentada: cambia visual state. El state persiste hasta otro evento.
     setVisualState('sitting', null, true);
@@ -774,6 +797,9 @@ function maybeTwitchEar() {
 function animateTail(now) {
   // M3 — look-at-cursor (re-aplicar cada frame para sobrevivir SVG swaps)
   updateHeadRotation();
+
+  // M4 — mood affecting motion (lerp tail wag hacia los targets)
+  lerpTailTargets();
 
   tailTime += tailWagSpeed;
   maybeTwitchEar();
