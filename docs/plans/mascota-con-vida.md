@@ -11,34 +11,47 @@
 
 ## 1. Goal
 
-Convertir la mascota de escritorio de **"SVG estático con swap"** a **"mascota que se siente viva"**:
-- más estados visuales (walk multi-frame, sit, lay, stretch)
-- micro-animaciones (parpadeo, twitch, look-at-cursor)
-- personalidad en el movimiento (mood affecting motion, squash & stretch)
+Mejorar la mascota de escritorio agregando **más vida y personalidad**:
+- walk cycle multi-frame (en vez del único frame profile actual)
+- nuevos states visuales (sit, lay, stretch)
+- look-at-cursor con cabeza rotando (hoy solo los ojos siguen)
+- mood affecting motion gradual (lerp, no binario)
+- squash & stretch pulido en walk
 
-**Constraint duro:** 100% compatible con el código actual (perf, pet-protocol allow-lists, IA M3, quick chat, dashboard).
+**Constraint duro:** 100% compatible con el código actual (perf, pet-protocol allow-lists, IA M3, quick chat, dashboard). NO vamos a regenerar los SVGs existentes — son buenos. Solo AGREGAMOS los que faltan.
 
 ## 2. Scope
 
-### In scope
-- **Assets nuevos**: SVGs multi-frame para cat y dog
-  - `idle` (2 frames: idle + idle-blink)
-  - `walking` (4 frames × 2 direcciones)
-  - `sleeping` (2 frames: sleep + sleep-deep)
-  - `sitting` (2 frames: sit + sit-blink)
-  - `laying` (2 frames: lay + lay-breathe)
-  - `stretching` (1 frame, animación vía CSS)
-- **Micro-animaciones en rAF loop**:
-  - Parpadeo cada 3-5s (seed random para no parecer robótico)
-  - Look-at-cursor: pupilas siguen al cursor cuando está cerca (< 200px)
-  - Twitch de orejas cada 8-15s
-- **Squash & stretch**: scale Y en step del walk cycle
-- **Mood affecting motion**:
-  - `sad` → velocidad 0.6x, tail wag 0.3x, body slump
-  - `excited` → velocidad 1.2x, tail wag 1.5x, bouncy
-  - `calm` → velocidad 0.8x, tail wag 0.7x
-  - `sleepy` → speed 0.5x y a los 30s → sleep state
-- **Nuevos states en pet-protocol**: `sit`, `lay`, `stretch` (allow-list extendida)
+### Contexto importante (post-discovery)
+
+**Lo que YA EXISTE y NO hay que rehacer:**
+- 3 SVGs por mascota: `idle`, `walk`, `sleep` (en `src/assets/cat.js` y `dog.js`)
+- Eye tracking en pupilas (`pet-pupil` con `data-anchor-x/y`)
+- Blink animation (`anim-blink` group)
+- Ear twitch (`pet-ear-left/right` con `transform-origin`)
+- Breath animation (`anim-breath` group)
+- CSS keyframes para `zzz` (sleeping particles), `happy-bounce`, `landing-bounce`
+- rAF loop con tail wag procedural
+- zzz container en `index.html`
+
+**Lo que FALTA y SÍ hay que hacer:**
+- **Walk cycle multi-frame** (4 frames en profile, manteniendo el look actual)
+- **Nuevos states visuales**: sit, lay, stretch (en profile para cat, en side para dog)
+- **Multi-frame renderer**: cycle through walk frames a ~6fps
+- **Smooth state transitions**: cross-fade entre states (no swap directo)
+- **Look-at-cursor cabeza**: wrap head group, rotate leve hacia el cursor
+- **Mood affecting motion gradual**: lerp en tail wag speed, velocity, etc.
+- **Squash & stretch**: scale Y en walk step
+- **pet-protocol extendido**: agregar `sit`, `lay`, `stretch` a ALLOWED_ACTIONS
+
+### In scope (M1-M6)
+
+- **M1**: Multi-frame walk (4 frames × 2 mascotas) + nuevos states (sit, lay, stretch × 2 mascotas) = 14 SVGs nuevos
+- **M2**: Multi-frame renderer + smooth state transitions
+- **M3**: Look-at-cursor con cabeza rotando
+- **M4**: Mood affecting motion gradual (lerp)
+- **M5**: Squash & stretch en walk + polish
+- **M6**: Tests + docs + changelog
 
 ### Out of scope (futuras versiones)
 - **Fase 3**: Modelo local (`node-llama-cpp` + Qwen2.5-1.5B Q4)
@@ -46,39 +59,34 @@ Convertir la mascota de escritorio de **"SVG estático con swap"** a **"mascota 
 - Cambios en dashboard, quick chat, settings, sonidos
 - Cambios en arquitectura de IA (sigue M3-only)
 - Sprites PNG / pixel art — seguimos con SVG vectorial
+- Refactor de los SVGs actuales (están bien como están)
 
 ## 3. Architecture
 
 ### 3.1 Asset system
 
-**Location:** `src/assets/pet-svgs/`
+**No vamos a crear un directorio nuevo.** Los SVGs se agregan al final de `src/assets/cat.js` y `src/assets/dog.js` (siguiendo el patrón actual de `const catIdleSVG = ...`). Esto evita tocar el sistema de load (`<script src="assets/cat.js">`) y mantiene CSP intacto.
 
-```
-src/assets/pet-svgs/
-├── cat/
-│   ├── cat-idle-1.svg
-│   ├── cat-idle-2.svg          # blink
-│   ├── cat-walk-1.svg ... 4
-│   ├── cat-sleep-1.svg
-│   ├── cat-sleep-2.svg
-│   ├── cat-sit-1.svg
-│   ├── cat-sit-2.svg
-│   ├── cat-lay-1.svg
-│   ├── cat-lay-2.svg
-│   └── cat-stretch.svg
-└── dog/
-    └── (mismo set, 15 archivos)
-```
+**SVGs nuevos a agregar (14 total):**
+- `catWalk1SVG`, `catWalk2SVG`, `catWalk3SVG`, `catWalk4SVG` (4 frames walk cycle, profile)
+- `catSitSVG`, `catSitBlinkSVG` (sit + sit-blink)
+- `catLaySVG`, `catLayBreatheSVG` (lay + lay-breathe)
+- `catStretchSVG` (1 frame, animación vía CSS)
+- Idem para dog (4 + 4 + 1 = 9 nuevos)
+- **Total: 18 SVGs nuevos** (4 walk + 4 sit/lay/stretch + sus 2 frames c/u)
 
 **Loading pattern:**
-- `index.html` los inyecta via `<script>` que expone `window.petAssets.cat.walk = [svg1, svg2, svg3, svg4]`
-- Mantener compat: `window.catIdleSVG` se mantiene como alias del primer frame
-- Hot path cache: el renderer cachea refs a los nodos críticos (tail, eyes, ears) en `cachePetElements()`
+- Mismo patrón actual: `const catWalk1SVG = \`...\`;`
+- Renderer los expone via `window.catWalk1SVG` etc.
+- Multi-frame array: `window.catWalkFrames = [catWalk1SVG, catWalk2SVG, catWalk3SVG, catWalk4SVG]`
 
 **Asset generation strategy:**
-- Usar M3 vía `llm-call` skill para iterar prompts de SVG generation
-- O usar SVG art hand-coded si M3 no da el nivel de detalle necesario
-- Validar cada asset con un test de render visual antes de mergear
+- **Hand-coded** — basándome en los SVGs actuales como referencia (mismo viewBox 200x200, mismas gradients, mismos colores)
+- Mantener consistencia con la paleta actual:
+  - Cat: skin `#ffd8a8` → `#ff922b`, ear `#ffdeeb` → `#faa2c1`, stripes `#d9480f`
+  - Dog: skin `#ffd43b` → `#e67e22`, patches `#d35400` → `#a04000`, collar `#e74c3c` → `#c0392b`
+- Validar visualmente: el user abre la app y me da feedback
+- **M3 NO usado**: el provider requiere auth que no está configurada (`authMode: managed-login`, `apiKey: sk-xxx` placeholder). Hago todo hand-coded.
 
 ### 3.2 Animation system (NEW)
 
@@ -198,14 +206,19 @@ ALLOWED_INTENTS = new Set([
 
 | M | Deliverable | Est. effort | Gate |
 |---|-------------|-------------|------|
-| M1 | Asset generation (15 SVGs × 2 pets = 30 archivos) | 2-3 iteraciones con M3 | Visual review |
-| M2 | Multi-frame renderer (frame cycling, state machine) | 1 día | DEV pass |
-| M3 | Micro-animations (blink, twitch, look-at-cursor) | 1 día | DEV + manual QA |
-| M4 | Squash & stretch + new states (sit, lay, stretch) | 1 día | DEV + visual review |
-| M5 | Mood affecting motion | 0.5 día | DEV + manual QA |
-| M6 | Polish, perf benchmark, docs, changelog | 0.5 día | All gates |
+| M1 | 18 SVGs nuevos: 4 walk + 4 sit/lay/stretch × 2 pets + pet-protocol update | 2 días | Visual review por user |
+| M2 | Multi-frame renderer: cycle walk frames a ~6fps + cross-fade entre states | 0.5 día | DEV pass + visual |
+| M3 | Look-at-cursor con cabeza rotando levemente hacia el cursor | 0.5 día | DEV + manual QA |
+| M4 | Mood affecting motion gradual (lerp en tail wag + velocity) | 0.5 día | DEV + manual QA |
+| M5 | Squash & stretch en walk + polish de landing bounce | 0.5 día | DEV + perf benchmark |
+| M6 | Tests (state machine, perf), changelog, AGENTS.md update | 0.5 día | All gates |
 
 **Total est.:** 4-5 días de trabajo (con iteraciones de review)
+
+**Pacing recomendado:**
+- M1 es el más grande (visual). Iteramos con vos: primero los 4 walk frames de cat, después sigo con el resto si te gusta.
+- M2-M5 son código, no se ven tan rápido, los hago en bloque.
+- M6 al final.
 
 ## 7. Dependencies
 
