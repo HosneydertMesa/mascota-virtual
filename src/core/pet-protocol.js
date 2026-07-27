@@ -7,12 +7,16 @@
   // y testeable desde Node via module.exports.
 
   const ALLOWED_EMOTIONS = new Set(['happy', 'calm', 'sleepy', 'sad', 'excited']);
-  const ALLOWED_ACTIONS = new Set(['jump', 'walk', 'sleep', 'wag', 'none']);
+  // Acciones visuales. v2.1.0 (M1) agregó sit/lay/stretch (pose estática).
+  // v2.0.x tenía solo jump/walk/sleep/wag/none.
+  const ALLOWED_ACTIONS = new Set(['jump', 'walk', 'sleep', 'wag', 'sit', 'lay', 'stretch', 'none']);
   const ALLOWED_SOUNDS = {
     cat: new Set(['meow', 'purr', 'none']),
     dog: new Set(['bark', 'whine', 'sniff', 'none'])
   };
-  const ALLOWED_INTENTS = new Set(['approach', 'retreat', 'play', 'sleep', 'wander', 'stay', 'none']);
+  // Intenciones. v2.1.0 agregó rest_* (el modelo puede pedir específicamente
+  // una pose de descanso en lugar de "sleep" genérico).
+  const ALLOWED_INTENTS = new Set(['approach', 'retreat', 'play', 'sleep', 'wander', 'stay', 'rest_sit', 'rest_lay', 'rest_stretch', 'none']);
 
   function allowedSoundsFor(petType) {
     return ALLOWED_SOUNDS[petType] || new Set(['none']);
