@@ -284,7 +284,21 @@ const catSleepSVG = `
 // Squash/stretch aplicado en el body ellipse.
 // ============================================================
 
-// Frame 1 — Contact: pata front-left extendida adelante, back-right empujando
+// ============================================================
+// Walk cycle multi-frame (M1) — SKELETAL ANIMATION 2D
+// Cada pata es upper-leg + lower-leg + paw con pivots:
+//   - Hip pivot: (legX, 115) — swing de la pata entera
+//   - Knee pivot: (legX, 147) — bend del lower-leg
+// Convención: rotación POSITIVA = clockwise (en screen coords, Y down).
+//   Positiva mueve el foot hacia la derecha (backward para cat mirando izquierda)
+//   Negativa mueve el foot hacia la izquierda (forward)
+// Frame 1 (Contact): front-left + back-right planted diagonal, otros en aire
+// Frame 2 (Down): 4 patas plantadas, body squash (absorción)
+// Frame 3 (Pass): front-right + back-left planted, otros en aire
+// Frame 4 (Up): todas las 4 cerca, body stretch (push-off)
+// ============================================================
+
+// Frame 1 — Contact
 const catWalk1SVG = `
 <svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -298,32 +312,32 @@ const catWalk1SVG = `
     </linearGradient>
   </defs>
 
-  <!-- Tail (alta, excited en este frame) -->
   <path id="cat-tail" d="M 140,108 C 162,96 172,68 178,48" fill="none" stroke="url(#cat-skin)" stroke-width="14" stroke-linecap="round" />
 
-  <!-- Back Left Leg (inside,抬起) -->
-  <g class="back-foot-left">
-    <rect x="115" y="108" width="12" height="60" rx="6" fill="#d9480f" />
-    <ellipse cx="121" cy="168" rx="8" ry="5" fill="#f1f3f5" />
-    <circle cx="121" cy="169" r="3.2" fill="#ffa8a8" />
+  <g class="back-foot-left" style="transform-origin: 115px 115px; transform: rotate(-15deg)">
+    <rect x="109" y="115" width="12" height="32" rx="6" fill="#d9480f" />
+    <g style="transform-origin: 115px 147px; transform: rotate(-60deg)">
+      <rect x="109" y="147" width="12" height="32" rx="6" fill="#d9480f" />
+      <ellipse cx="115" cy="179" rx="8" ry="5" fill="#f1f3f5" />
+      <circle cx="115" cy="180" r="3.2" fill="#ffa8a8" />
+    </g>
   </g>
 
-  <!-- Front Left Leg (extended front, contact) -->
-  <g class="left-paw">
-    <rect x="60" y="118" width="12" height="60" rx="6" fill="#d9480f" />
-    <ellipse cx="66" cy="178" rx="8" ry="5" fill="#f1f3f5" />
-    <circle cx="66" cy="179" r="3.2" fill="#ffa8a8" />
+  <g class="left-paw" style="transform-origin: 70px 115px; transform: rotate(10deg)">
+    <rect x="64" y="115" width="12" height="32" rx="6" fill="#d9480f" />
+    <g style="transform-origin: 70px 147px; transform: rotate(0deg)">
+      <rect x="64" y="147" width="12" height="32" rx="6" fill="#d9480f" />
+      <ellipse cx="70" cy="179" rx="8" ry="5" fill="#f1f3f5" />
+      <circle cx="70" cy="180" r="3.2" fill="#ffa8a8" />
+    </g>
   </g>
 
-  <!-- Body (slight stretch, frame alto) -->
-  <ellipse cx="100" cy="114" rx="45" ry="33" fill="url(#cat-skin)" />
+  <ellipse cx="100" cy="115" rx="45" ry="32" fill="url(#cat-skin)" />
+  <path d="M 94,92 L 91,105" stroke="#d9480f" stroke-width="4.5" stroke-linecap="round" />
+  <path d="M 106,92 L 102,107" stroke="#d9480f" stroke-width="4.5" stroke-linecap="round" />
+  <path d="M 118,94 L 114,109" stroke="#d9480f" stroke-width="4.5" stroke-linecap="round" />
+  <path d="M 60,95 Q 50,115 65,130 Z" fill="#ffffff" />
 
-  <path d="M 94,91 L 91,104" stroke="#d9480f" stroke-width="4.5" stroke-linecap="round" />
-  <path d="M 106,91 L 102,107" stroke="#d9480f" stroke-width="4.5" stroke-linecap="round" />
-  <path d="M 118,93 L 114,108" stroke="#d9480f" stroke-width="4.5" stroke-linecap="round" />
-  <path d="M 60,94 Q 50,114 65,129 Z" fill="#ffffff" />
-
-  <!-- Head Group -->
   <g style="transform-origin: 55px 80px;">
     <path d="M 40,55 L 30,25 Q 50,38 52,50 Z" fill="url(#cat-skin)" />
     <path d="M 42,52 L 34,31 Q 48,41 49,49 Z" fill="url(#cat-ear)" />
@@ -342,23 +356,27 @@ const catWalk1SVG = `
     <path d="M 26,86 Q 22,89 25,92" stroke="#212529" stroke-width="1.2" fill="none" stroke-linecap="round" />
   </g>
 
-  <!-- Back Right Leg (pushing back) -->
-  <g class="back-foot-right">
-    <rect x="130" y="118" width="12" height="60" rx="6" fill="url(#cat-skin)" />
-    <ellipse cx="136" cy="178" rx="8" ry="5" fill="#ffffff" />
-    <circle cx="136" cy="179" r="3.2" fill="#ffa8a8" />
+  <g class="back-foot-right" style="transform-origin: 125px 115px; transform: rotate(-10deg)">
+    <rect x="119" y="115" width="12" height="32" rx="6" fill="url(#cat-skin)" />
+    <g style="transform-origin: 125px 147px; transform: rotate(5deg)">
+      <rect x="119" y="147" width="12" height="32" rx="6" fill="url(#cat-skin)" />
+      <ellipse cx="125" cy="179" rx="8" ry="5" fill="#ffffff" />
+      <circle cx="125" cy="180" r="3.2" fill="#ffa8a8" />
+    </g>
   </g>
 
-  <!-- Front Right Leg (抬起, en el aire) -->
-  <g class="right-paw">
-    <rect x="85" y="108" width="12" height="60" rx="6" fill="url(#cat-skin)" />
-    <ellipse cx="91" cy="168" rx="8" ry="5" fill="#ffffff" />
-    <circle cx="91" cy="169" r="3.2" fill="#ffa8a8" />
+  <g class="right-paw" style="transform-origin: 80px 115px; transform: rotate(-5deg)">
+    <rect x="74" y="115" width="12" height="32" rx="6" fill="url(#cat-skin)" />
+    <g style="transform-origin: 80px 147px; transform: rotate(-30deg)">
+      <rect x="74" y="147" width="12" height="32" rx="6" fill="url(#cat-skin)" />
+      <ellipse cx="80" cy="179" rx="8" ry="5" fill="#ffffff" />
+      <circle cx="80" cy="180" r="3.2" fill="#ffa8a8" />
+    </g>
   </g>
 </svg>
 `;
 
-// Frame 2 — Down: todas las patas paralelas, cuerpo squash (absorción)
+// Frame 2 — Down
 const catWalk2SVG = `
 <svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -372,32 +390,31 @@ const catWalk2SVG = `
     </linearGradient>
   </defs>
 
-  <!-- Tail (neutral, en el medio) -->
   <path id="cat-tail" d="M 140,112 C 160,102 168,80 172,62" fill="none" stroke="url(#cat-skin)" stroke-width="14" stroke-linecap="round" />
 
-  <!-- Back Left Leg (en el suelo, paralelo) -->
-  <g class="back-foot-left">
-    <rect x="115" y="115" width="12" height="60" rx="6" fill="#d9480f" />
-    <ellipse cx="121" cy="175" rx="8" ry="5" fill="#f1f3f5" />
-    <circle cx="121" cy="176" r="3.2" fill="#ffa8a8" />
+  <g class="back-foot-left" style="transform-origin: 115px 115px; transform: rotate(0deg)">
+    <rect x="109" y="115" width="12" height="32" rx="6" fill="#d9480f" />
+    <g style="transform-origin: 115px 147px; transform: rotate(5deg)">
+      <rect x="109" y="147" width="12" height="32" rx="6" fill="#d9480f" />
+      <ellipse cx="115" cy="179" rx="8" ry="5" fill="#f1f3f5" />
+      <circle cx="115" cy="180" r="3.2" fill="#ffa8a8" />
+    </g>
+  </g>
+  <g class="left-paw" style="transform-origin: 70px 115px; transform: rotate(0deg)">
+    <rect x="64" y="115" width="12" height="32" rx="6" fill="#d9480f" />
+    <g style="transform-origin: 70px 147px; transform: rotate(5deg)">
+      <rect x="64" y="147" width="12" height="32" rx="6" fill="#d9480f" />
+      <ellipse cx="70" cy="179" rx="8" ry="5" fill="#f1f3f5" />
+      <circle cx="70" cy="180" r="3.2" fill="#ffa8a8" />
+    </g>
   </g>
 
-  <!-- Front Left Leg (en el suelo) -->
-  <g class="left-paw">
-    <rect x="70" y="115" width="12" height="60" rx="6" fill="#d9480f" />
-    <ellipse cx="76" cy="175" rx="8" ry="5" fill="#f1f3f5" />
-    <circle cx="76" cy="176" r="3.2" fill="#ffa8a8" />
-  </g>
-
-  <!-- Body (SQUASH: ry menor, cy mayor — punto bajo) -->
   <ellipse cx="100" cy="118" rx="46" ry="30" fill="url(#cat-skin)" />
-
   <path d="M 94,95 L 91,108" stroke="#d9480f" stroke-width="4.5" stroke-linecap="round" />
   <path d="M 106,95 L 102,111" stroke="#d9480f" stroke-width="4.5" stroke-linecap="round" />
   <path d="M 118,97 L 114,112" stroke="#d9480f" stroke-width="4.5" stroke-linecap="round" />
   <path d="M 60,98 Q 50,118 65,133 Z" fill="#ffffff" />
 
-  <!-- Head Group (más bajo por el squash) -->
   <g style="transform-origin: 55px 83px;">
     <path d="M 40,58 L 30,28 Q 50,41 52,53 Z" fill="url(#cat-skin)" />
     <path d="M 42,55 L 34,34 Q 48,44 49,52 Z" fill="url(#cat-ear)" />
@@ -416,23 +433,26 @@ const catWalk2SVG = `
     <path d="M 26,89 Q 22,92 25,95" stroke="#212529" stroke-width="1.2" fill="none" stroke-linecap="round" />
   </g>
 
-  <!-- Back Right Leg (en el suelo) -->
-  <g class="back-foot-right">
-    <rect x="125" y="115" width="12" height="60" rx="6" fill="url(#cat-skin)" />
-    <ellipse cx="131" cy="175" rx="8" ry="5" fill="#ffffff" />
-    <circle cx="131" cy="176" r="3.2" fill="#ffa8a8" />
+  <g class="back-foot-right" style="transform-origin: 125px 115px; transform: rotate(0deg)">
+    <rect x="119" y="115" width="12" height="32" rx="6" fill="url(#cat-skin)" />
+    <g style="transform-origin: 125px 147px; transform: rotate(5deg)">
+      <rect x="119" y="147" width="12" height="32" rx="6" fill="url(#cat-skin)" />
+      <ellipse cx="125" cy="179" rx="8" ry="5" fill="#ffffff" />
+      <circle cx="125" cy="180" r="3.2" fill="#ffa8a8" />
+    </g>
   </g>
-
-  <!-- Front Right Leg (en el suelo) -->
-  <g class="right-paw">
-    <rect x="80" y="115" width="12" height="60" rx="6" fill="url(#cat-skin)" />
-    <ellipse cx="86" cy="175" rx="8" ry="5" fill="#ffffff" />
-    <circle cx="86" cy="176" r="3.2" fill="#ffa8a8" />
+  <g class="right-paw" style="transform-origin: 80px 115px; transform: rotate(0deg)">
+    <rect x="74" y="115" width="12" height="32" rx="6" fill="url(#cat-skin)" />
+    <g style="transform-origin: 80px 147px; transform: rotate(5deg)">
+      <rect x="74" y="147" width="12" height="32" rx="6" fill="url(#cat-skin)" />
+      <ellipse cx="80" cy="179" rx="8" ry="5" fill="#ffffff" />
+      <circle cx="80" cy="180" r="3.2" fill="#ffa8a8" />
+    </g>
   </g>
 </svg>
 `;
 
-// Frame 3 — Pass: pata front-right adelante, back-left atrás
+// Frame 3 — Pass
 const catWalk3SVG = `
 <svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -446,32 +466,32 @@ const catWalk3SVG = `
     </linearGradient>
   </defs>
 
-  <!-- Tail (baja/lado, momento de relax) -->
   <path id="cat-tail" d="M 142,116 C 162,108 170,86 174,70" fill="none" stroke="url(#cat-skin)" stroke-width="14" stroke-linecap="round" />
 
-  <!-- Back Left Leg (pushing back) -->
-  <g class="back-foot-left">
-    <rect x="120" y="118" width="12" height="60" rx="6" fill="#d9480f" />
-    <ellipse cx="126" cy="178" rx="8" ry="5" fill="#f1f3f5" />
-    <circle cx="126" cy="179" r="3.2" fill="#ffa8a8" />
+  <g class="back-foot-left" style="transform-origin: 115px 115px; transform: rotate(-10deg)">
+    <rect x="109" y="115" width="12" height="32" rx="6" fill="#d9480f" />
+    <g style="transform-origin: 115px 147px; transform: rotate(5deg)">
+      <rect x="109" y="147" width="12" height="32" rx="6" fill="#d9480f" />
+      <ellipse cx="115" cy="179" rx="8" ry="5" fill="#f1f3f5" />
+      <circle cx="115" cy="180" r="3.2" fill="#ffa8a8" />
+    </g>
   </g>
 
-  <!-- Front Left Leg (抬起) -->
-  <g class="left-paw">
-    <rect x="75" y="108" width="12" height="60" rx="6" fill="#d9480f" />
-    <ellipse cx="81" cy="168" rx="8" ry="5" fill="#f1f3f5" />
-    <circle cx="81" cy="169" r="3.2" fill="#ffa8a8" />
+  <g class="left-paw" style="transform-origin: 70px 115px; transform: rotate(-5deg)">
+    <rect x="64" y="115" width="12" height="32" rx="6" fill="#d9480f" />
+    <g style="transform-origin: 70px 147px; transform: rotate(-30deg)">
+      <rect x="64" y="147" width="12" height="32" rx="6" fill="#d9480f" />
+      <ellipse cx="70" cy="179" rx="8" ry="5" fill="#f1f3f5" />
+      <circle cx="70" cy="180" r="3.2" fill="#ffa8a8" />
+    </g>
   </g>
 
-  <!-- Body (normal) -->
   <ellipse cx="100" cy="115" rx="45" ry="32" fill="url(#cat-skin)" />
-
   <path d="M 94,92 L 91,105" stroke="#d9480f" stroke-width="4.5" stroke-linecap="round" />
   <path d="M 106,92 L 102,107" stroke="#d9480f" stroke-width="4.5" stroke-linecap="round" />
   <path d="M 118,94 L 114,109" stroke="#d9480f" stroke-width="4.5" stroke-linecap="round" />
   <path d="M 60,95 Q 50,115 65,130 Z" fill="#ffffff" />
 
-  <!-- Head Group -->
   <g style="transform-origin: 55px 80px;">
     <path d="M 40,55 L 30,25 Q 50,38 52,50 Z" fill="url(#cat-skin)" />
     <path d="M 42,52 L 34,31 Q 48,41 49,49 Z" fill="url(#cat-ear)" />
@@ -490,23 +510,27 @@ const catWalk3SVG = `
     <path d="M 26,86 Q 22,89 25,92" stroke="#212529" stroke-width="1.2" fill="none" stroke-linecap="round" />
   </g>
 
-  <!-- Back Right Leg (抬起) -->
-  <g class="back-foot-right">
-    <rect x="130" y="108" width="12" height="60" rx="6" fill="url(#cat-skin)" />
-    <ellipse cx="136" cy="168" rx="8" ry="5" fill="#ffffff" />
-    <circle cx="136" cy="169" r="3.2" fill="#ffa8a8" />
+  <g class="back-foot-right" style="transform-origin: 125px 115px; transform: rotate(-15deg)">
+    <rect x="119" y="115" width="12" height="32" rx="6" fill="url(#cat-skin)" />
+    <g style="transform-origin: 125px 147px; transform: rotate(-60deg)">
+      <rect x="119" y="147" width="12" height="32" rx="6" fill="url(#cat-skin)" />
+      <ellipse cx="125" cy="179" rx="8" ry="5" fill="#ffffff" />
+      <circle cx="125" cy="180" r="3.2" fill="#ffa8a8" />
+    </g>
   </g>
 
-  <!-- Front Right Leg (extended front, contact) -->
-  <g class="right-paw">
-    <rect x="65" y="118" width="12" height="60" rx="6" fill="url(#cat-skin)" />
-    <ellipse cx="71" cy="178" rx="8" ry="5" fill="#ffffff" />
-    <circle cx="71" cy="179" r="3.2" fill="#ffa8a8" />
+  <g class="right-paw" style="transform-origin: 80px 115px; transform: rotate(10deg)">
+    <rect x="74" y="115" width="12" height="32" rx="6" fill="url(#cat-skin)" />
+    <g style="transform-origin: 80px 147px; transform: rotate(0deg)">
+      <rect x="74" y="147" width="12" height="32" rx="6" fill="url(#cat-skin)" />
+      <ellipse cx="80" cy="179" rx="8" ry="5" fill="#ffffff" />
+      <circle cx="80" cy="180" r="3.2" fill="#ffa8a8" />
+    </g>
   </g>
 </svg>
 `;
 
-// Frame 4 — Up: cuerpo en el aire, las 4 patas preparadas (stretch)
+// Frame 4 — Up
 const catWalk4SVG = `
 <svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -520,32 +544,31 @@ const catWalk4SVG = `
     </linearGradient>
   </defs>
 
-  <!-- Tail (alta otra vez, anticipation) -->
   <path id="cat-tail" d="M 140,108 C 162,98 172,70 178,50" fill="none" stroke="url(#cat-skin)" stroke-width="14" stroke-linecap="round" />
 
-  <!-- Back Left Leg (estirada) -->
-  <g class="back-foot-left">
-    <rect x="115" y="108" width="12" height="60" rx="6" fill="#d9480f" />
-    <ellipse cx="121" cy="168" rx="8" ry="5" fill="#f1f3f5" />
-    <circle cx="121" cy="169" r="3.2" fill="#ffa8a8" />
+  <g class="back-foot-left" style="transform-origin: 115px 115px; transform: rotate(-3deg)">
+    <rect x="109" y="115" width="12" height="32" rx="6" fill="#d9480f" />
+    <g style="transform-origin: 115px 147px; transform: rotate(-15deg)">
+      <rect x="109" y="147" width="12" height="32" rx="6" fill="#d9480f" />
+      <ellipse cx="115" cy="179" rx="8" ry="5" fill="#f1f3f5" />
+      <circle cx="115" cy="180" r="3.2" fill="#ffa8a8" />
+    </g>
+  </g>
+  <g class="left-paw" style="transform-origin: 70px 115px; transform: rotate(-3deg)">
+    <rect x="64" y="115" width="12" height="32" rx="6" fill="#d9480f" />
+    <g style="transform-origin: 70px 147px; transform: rotate(-15deg)">
+      <rect x="64" y="147" width="12" height="32" rx="6" fill="#d9480f" />
+      <ellipse cx="70" cy="179" rx="8" ry="5" fill="#f1f3f5" />
+      <circle cx="70" cy="180" r="3.2" fill="#ffa8a8" />
+    </g>
   </g>
 
-  <!-- Front Left Leg (estirada) -->
-  <g class="left-paw">
-    <rect x="70" y="108" width="12" height="60" rx="6" fill="#d9480f" />
-    <ellipse cx="76" cy="168" rx="8" ry="5" fill="#f1f3f5" />
-    <circle cx="76" cy="169" r="3.2" fill="#ffa8a8" />
-  </g>
-
-  <!-- Body (STRETCH: ry mayor, cy menor — punto alto) -->
   <ellipse cx="100" cy="112" rx="44" ry="34" fill="url(#cat-skin)" />
-
   <path d="M 94,89 L 91,102" stroke="#d9480f" stroke-width="4.5" stroke-linecap="round" />
   <path d="M 106,89 L 102,105" stroke="#d9480f" stroke-width="4.5" stroke-linecap="round" />
   <path d="M 118,91 L 114,106" stroke="#d9480f" stroke-width="4.5" stroke-linecap="round" />
   <path d="M 60,92 Q 50,112 65,127 Z" fill="#ffffff" />
 
-  <!-- Head Group (más alto por el stretch) -->
   <g style="transform-origin: 55px 77px;">
     <path d="M 40,52 L 30,22 Q 50,35 52,47 Z" fill="url(#cat-skin)" />
     <path d="M 42,49 L 34,28 Q 48,38 49,46 Z" fill="url(#cat-ear)" />
@@ -564,22 +587,26 @@ const catWalk4SVG = `
     <path d="M 26,83 Q 22,86 25,89" stroke="#212529" stroke-width="1.2" fill="none" stroke-linecap="round" />
   </g>
 
-  <!-- Back Right Leg (estirada) -->
-  <g class="back-foot-right">
-    <rect x="125" y="108" width="12" height="60" rx="6" fill="url(#cat-skin)" />
-    <ellipse cx="131" cy="168" rx="8" ry="5" fill="#ffffff" />
-    <circle cx="131" cy="169" r="3.2" fill="#ffa8a8" />
+  <g class="back-foot-right" style="transform-origin: 125px 115px; transform: rotate(-3deg)">
+    <rect x="119" y="115" width="12" height="32" rx="6" fill="url(#cat-skin)" />
+    <g style="transform-origin: 125px 147px; transform: rotate(-15deg)">
+      <rect x="119" y="147" width="12" height="32" rx="6" fill="url(#cat-skin)" />
+      <ellipse cx="125" cy="179" rx="8" ry="5" fill="#ffffff" />
+      <circle cx="125" cy="180" r="3.2" fill="#ffa8a8" />
+    </g>
   </g>
-
-  <!-- Front Right Leg (estirada) -->
-  <g class="right-paw">
-    <rect x="80" y="108" width="12" height="60" rx="6" fill="url(#cat-skin)" />
-    <ellipse cx="86" cy="168" rx="8" ry="5" fill="#ffffff" />
-    <circle cx="86" cy="169" r="3.2" fill="#ffa8a8" />
+  <g class="right-paw" style="transform-origin: 80px 115px; transform: rotate(-3deg)">
+    <rect x="74" y="115" width="12" height="32" rx="6" fill="url(#cat-skin)" />
+    <g style="transform-origin: 80px 147px; transform: rotate(-15deg)">
+      <rect x="74" y="147" width="12" height="32" rx="6" fill="url(#cat-skin)" />
+      <ellipse cx="80" cy="179" rx="8" ry="5" fill="#ffffff" />
+      <circle cx="80" cy="180" r="3.2" fill="#ffa8a8" />
+    </g>
   </g>
 </svg>
 `;
 
+// Array de frames en orden de cycle
 // Array de frames en orden de cycle
 const catWalkFrames = [catWalk1SVG, catWalk2SVG, catWalk3SVG, catWalk4SVG];
 
