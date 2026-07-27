@@ -607,8 +607,355 @@ const catWalk4SVG = `
 `;
 
 // Array de frames en orden de cycle
-// Array de frames en orden de cycle
 const catWalkFrames = [catWalk1SVG, catWalk2SVG, catWalk3SVG, catWalk4SVG];
+
+// ============================================================
+// M1-B — Sit, Lay, Stretch SVGs (profile mirando izquierda)
+// Sit: sentada en patas traseras, cuerpo vertical, patas traseras dobladas en V
+// Lay: acostada panza abajo, cuerpo horizontal, patas estiradas
+// Stretch: cuerpo extendido, lomo arqueado, patas adelante/atrás
+// ============================================================
+
+// === SIT ===
+const catSitSVG = `
+<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="cat-skin" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffd8a8" />
+      <stop offset="100%" stop-color="#ff922b" />
+    </linearGradient>
+    <linearGradient id="cat-ear" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffdeeb" />
+      <stop offset="100%" stop-color="#faa2c1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Tail enroscada al lado (curling) -->
+  <path id="cat-tail" d="M 130,140 C 150,130 162,110 168,90" fill="none" stroke="url(#cat-skin)" stroke-width="14" stroke-linecap="round" />
+
+  <!-- Back leg background (doblada en V) -->
+  <g class="back-foot-left">
+    <rect x="105" y="115" width="12" height="35" rx="6" fill="#d9480f" transform="rotate(15 111 132)" />
+    <ellipse cx="95" cy="160" rx="8" ry="5" fill="#f1f3f5" />
+    <circle cx="95" cy="161" r="3.2" fill="#ffa8a8" />
+  </g>
+
+  <!-- Front leg background (vertical, sentada) -->
+  <g class="left-paw">
+    <rect x="68" y="155" width="12" height="25" rx="6" fill="#d9480f" />
+    <ellipse cx="74" cy="180" rx="8" ry="5" fill="#f1f3f5" />
+    <circle cx="74" cy="181" r="3.2" fill="#ffa8a8" />
+  </g>
+
+  <!-- Body vertical (sentada, compacto) -->
+  <ellipse cx="100" cy="125" rx="42" ry="40" fill="url(#cat-skin)" />
+  <path d="M 70,115 Q 72,128 78,135" stroke="#d9480f" stroke-width="3.5" fill="none" stroke-linecap="round" />
+  <path d="M 130,115 Q 128,128 122,135" stroke="#d9480f" stroke-width="3.5" fill="none" stroke-linecap="round" />
+  <path d="M 78,140 Q 100,158 122,140 Q 100,148 78,140 Z" fill="#ffffff" />
+
+  <!-- Shadow bajo el chin -->
+  <ellipse cx="100" cy="98" rx="22" ry="3" fill="#000000" opacity="0.1" />
+
+  <!-- Collar -->
+  <rect x="80" y="96" width="40" height="5" rx="2.5" fill="#06b6d4" />
+  <circle cx="100" cy="105" r="6" fill="#facc15" stroke="#eab308" stroke-width="0.7" />
+  <circle cx="98" cy="103" r="1.5" fill="#ffffff" opacity="0.8" />
+
+  <!-- Head profile (mirando izquierda) -->
+  <g style="transform-origin: 60px 70px;">
+    <path d="M 45,45 L 35,15 Q 55,28 57,40 Z" fill="url(#cat-skin)" />
+    <path d="M 47,42 L 39,21 Q 53,31 54,39 Z" fill="url(#cat-ear)" />
+    <path d="M 57,45 L 53,12 Q 67,25 65,38 Z" fill="url(#cat-skin)" />
+    <circle cx="60" cy="70" r="30" fill="url(#cat-skin)" />
+    <path d="M 63,44 Q 58,50 53,54" stroke="#d9480f" stroke-width="3" fill="none" stroke-linecap="round" />
+    <path d="M 69,44 Q 66,52 60,57" stroke="#d9480f" stroke-width="3.5" fill="none" stroke-linecap="round" />
+    <path d="M 75,72 Q 69,74 65,73" stroke="#d9480f" stroke-width="2.5" fill="none" stroke-linecap="round" />
+    <line x1="33" y1="74" x2="15" y2="72" stroke="#f1f3f5" stroke-width="1.8" stroke-linecap="round" />
+    <line x1="33" y1="79" x2="11" y2="79" stroke="#f1f3f5" stroke-width="1.8" stroke-linecap="round" />
+    <line x1="33" y1="84" x2="15" y2="86" stroke="#f1f3f5" stroke-width="1.8" stroke-linecap="round" />
+    <ellipse cx="47" cy="68" rx="4" ry="5.5" fill="#1e1e24" />
+    <circle class="pet-pupil" data-anchor-x="47" data-anchor-y="68" cx="47" cy="68" r="1.6" fill="#ffffff" />
+    <ellipse cx="51" cy="76" rx="5" ry="2.5" fill="#ff8787" opacity="0.65" />
+    <polygon points="31,70 27,73 31,74" fill="#ff8787" />
+    <path d="M 31,76 Q 27,79 30,82" stroke="#212529" stroke-width="1.2" fill="none" stroke-linecap="round" />
+  </g>
+
+  <!-- Front leg foreground (vertical, sentada) -->
+  <g class="right-paw">
+    <rect x="78" y="155" width="12" height="25" rx="6" fill="url(#cat-skin)" />
+    <ellipse cx="84" cy="180" rx="8" ry="5" fill="#ffffff" />
+    <circle cx="84" cy="181" r="3.2" fill="#ffa8a8" />
+  </g>
+
+  <!-- Back leg foreground (doblada en V) -->
+  <g class="back-foot-right">
+    <rect x="115" y="115" width="12" height="35" rx="6" fill="url(#cat-skin)" transform="rotate(15 121 132)" />
+    <ellipse cx="105" cy="160" rx="8" ry="5" fill="#ffffff" />
+    <circle cx="105" cy="161" r="3.2" fill="#ffa8a8" />
+  </g>
+</svg>
+`;
+
+// === SIT BLINK (mismo que sit pero con ojo cerrado) ===
+const catSitBlinkSVG = `
+<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="cat-skin" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffd8a8" />
+      <stop offset="100%" stop-color="#ff922b" />
+    </linearGradient>
+    <linearGradient id="cat-ear" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffdeeb" />
+      <stop offset="100%" stop-color="#faa2c1" />
+    </linearGradient>
+  </defs>
+
+  <path id="cat-tail" d="M 130,140 C 150,130 162,110 168,90" fill="none" stroke="url(#cat-skin)" stroke-width="14" stroke-linecap="round" />
+
+  <g class="back-foot-left">
+    <rect x="105" y="115" width="12" height="35" rx="6" fill="#d9480f" transform="rotate(15 111 132)" />
+    <ellipse cx="95" cy="160" rx="8" ry="5" fill="#f1f3f5" />
+    <circle cx="95" cy="161" r="3.2" fill="#ffa8a8" />
+  </g>
+  <g class="left-paw">
+    <rect x="68" y="155" width="12" height="25" rx="6" fill="#d9480f" />
+    <ellipse cx="74" cy="180" rx="8" ry="5" fill="#f1f3f5" />
+    <circle cx="74" cy="181" r="3.2" fill="#ffa8a8" />
+  </g>
+
+  <ellipse cx="100" cy="125" rx="42" ry="40" fill="url(#cat-skin)" />
+  <path d="M 70,115 Q 72,128 78,135" stroke="#d9480f" stroke-width="3.5" fill="none" stroke-linecap="round" />
+  <path d="M 130,115 Q 128,128 122,135" stroke="#d9480f" stroke-width="3.5" fill="none" stroke-linecap="round" />
+  <path d="M 78,140 Q 100,158 122,140 Q 100,148 78,140 Z" fill="#ffffff" />
+  <ellipse cx="100" cy="98" rx="22" ry="3" fill="#000000" opacity="0.1" />
+  <rect x="80" y="96" width="40" height="5" rx="2.5" fill="#06b6d4" />
+  <circle cx="100" cy="105" r="6" fill="#facc15" stroke="#eab308" stroke-width="0.7" />
+  <circle cx="98" cy="103" r="1.5" fill="#ffffff" opacity="0.8" />
+
+  <g style="transform-origin: 60px 70px;">
+    <path d="M 45,45 L 35,15 Q 55,28 57,40 Z" fill="url(#cat-skin)" />
+    <path d="M 47,42 L 39,21 Q 53,31 54,39 Z" fill="url(#cat-ear)" />
+    <path d="M 57,45 L 53,12 Q 67,25 65,38 Z" fill="url(#cat-skin)" />
+    <circle cx="60" cy="70" r="30" fill="url(#cat-skin)" />
+    <path d="M 63,44 Q 58,50 53,54" stroke="#d9480f" stroke-width="3" fill="none" stroke-linecap="round" />
+    <path d="M 69,44 Q 66,52 60,57" stroke="#d9480f" stroke-width="3.5" fill="none" stroke-linecap="round" />
+    <path d="M 75,72 Q 69,74 65,73" stroke="#d9480f" stroke-width="2.5" fill="none" stroke-linecap="round" />
+    <line x1="33" y1="74" x2="15" y2="72" stroke="#f1f3f5" stroke-width="1.8" stroke-linecap="round" />
+    <line x1="33" y1="79" x2="11" y2="79" stroke="#f1f3f5" stroke-width="1.8" stroke-linecap="round" />
+    <line x1="33" y1="84" x2="15" y2="86" stroke="#f1f3f5" stroke-width="1.8" stroke-linecap="round" />
+    <!-- Ojo cerrado (línea horizontal) -->
+    <line x1="42" y1="68" x2="52" y2="68" stroke="#1e1e24" stroke-width="2" stroke-linecap="round" />
+    <ellipse cx="51" cy="76" rx="5" ry="2.5" fill="#ff8787" opacity="0.65" />
+    <polygon points="31,70 27,73 31,74" fill="#ff8787" />
+    <path d="M 31,76 Q 27,79 30,82" stroke="#212529" stroke-width="1.2" fill="none" stroke-linecap="round" />
+  </g>
+
+  <g class="right-paw">
+    <rect x="78" y="155" width="12" height="25" rx="6" fill="url(#cat-skin)" />
+    <ellipse cx="84" cy="180" rx="8" ry="5" fill="#ffffff" />
+    <circle cx="84" cy="181" r="3.2" fill="#ffa8a8" />
+  </g>
+  <g class="back-foot-right">
+    <rect x="115" y="115" width="12" height="35" rx="6" fill="url(#cat-skin)" transform="rotate(15 121 132)" />
+    <ellipse cx="105" cy="160" rx="8" ry="5" fill="#ffffff" />
+    <circle cx="105" cy="161" r="3.2" fill="#ffa8a8" />
+  </g>
+</svg>
+`;
+
+// === LAY (acostada panza abajo, cuerpo horizontal) ===
+const catLaySVG = `
+<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="cat-skin" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffd8a8" />
+      <stop offset="100%" stop-color="#ff922b" />
+    </linearGradient>
+    <linearGradient id="cat-ear" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffdeeb" />
+      <stop offset="100%" stop-color="#faa2c1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Tail estirada atrás -->
+  <path id="cat-tail" d="M 150,170 C 170,165 178,155 182,140" fill="none" stroke="url(#cat-skin)" stroke-width="14" stroke-linecap="round" />
+
+  <!-- Back leg background (estirada atrás) -->
+  <g class="back-foot-left">
+    <ellipse cx="125" cy="178" rx="20" ry="8" fill="#d9480f" transform="rotate(-15 125 178)" />
+    <ellipse cx="143" cy="173" rx="7" ry="4" fill="#f1f3f5" />
+  </g>
+
+  <!-- Front leg background (estirada adelante) -->
+  <g class="left-paw">
+    <ellipse cx="60" cy="175" rx="18" ry="7" fill="#d9480f" transform="rotate(10 60 175)" />
+    <ellipse cx="44" cy="178" rx="7" ry="4" fill="#f1f3f5" />
+  </g>
+
+  <!-- Body horizontal (acostada) -->
+  <ellipse cx="100" cy="170" rx="65" ry="20" fill="url(#cat-skin)" />
+  <path d="M 50,165 Q 52,170 56,172" stroke="#d9480f" stroke-width="3" fill="none" stroke-linecap="round" />
+  <path d="M 150,165 Q 148,170 144,172" stroke="#d9480f" stroke-width="3" fill="none" stroke-linecap="round" />
+
+  <!-- Head profile (apoyada al frente) -->
+  <g style="transform-origin: 35px 155px;">
+    <path d="M 20,135 L 10,105 Q 30,118 32,130 Z" fill="url(#cat-skin)" />
+    <path d="M 22,132 L 14,111 Q 28,121 29,129 Z" fill="url(#cat-ear)" />
+    <path d="M 32,135 L 28,102 Q 42,115 40,128 Z" fill="url(#cat-skin)" />
+    <circle cx="35" cy="155" r="28" fill="url(#cat-skin)" />
+    <path d="M 38,132 Q 33,138 28,142" stroke="#d9480f" stroke-width="2.5" fill="none" stroke-linecap="round" />
+    <path d="M 44,132 Q 41,140 35,145" stroke="#d9480f" stroke-width="3" fill="none" stroke-linecap="round" />
+    <line x1="10" y1="159" x2="-8" y2="157" stroke="#f1f3f5" stroke-width="1.5" stroke-linecap="round" />
+    <line x1="10" y1="164" x2="-12" y2="164" stroke="#f1f3f5" stroke-width="1.5" stroke-linecap="round" />
+    <line x1="10" y1="169" x2="-8" y2="171" stroke="#f1f3f5" stroke-width="1.5" stroke-linecap="round" />
+    <ellipse cx="23" cy="153" rx="4" ry="5" fill="#1e1e24" />
+    <circle class="pet-pupil" data-anchor-x="23" data-anchor-y="153" cx="23" cy="153" r="1.5" fill="#ffffff" />
+    <ellipse cx="27" cy="161" rx="5" ry="2.5" fill="#ff8787" opacity="0.55" />
+    <polygon points="7,155 3,158 7,159" fill="#ff8787" />
+    <path d="M 7,161 Q 3,164 6,167" stroke="#212529" stroke-width="1" fill="none" stroke-linecap="round" />
+  </g>
+
+  <!-- Back leg foreground (estirada atrás) -->
+  <g class="back-foot-right">
+    <ellipse cx="135" cy="180" rx="20" ry="8" fill="url(#cat-skin)" transform="rotate(-15 135 180)" />
+    <ellipse cx="153" cy="175" rx="7" ry="4" fill="#ffffff" />
+  </g>
+
+  <!-- Front leg foreground (estirada adelante) -->
+  <g class="right-paw">
+    <ellipse cx="70" cy="178" rx="18" ry="7" fill="url(#cat-skin)" transform="rotate(10 70 178)" />
+    <ellipse cx="54" cy="181" rx="7" ry="4" fill="#ffffff" />
+  </g>
+</svg>
+`;
+
+// === LAY BREATHE (mismo que lay, body un poco más inflado) ===
+const catLayBreatheSVG = `
+<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="cat-skin" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffd8a8" />
+      <stop offset="100%" stop-color="#ff922b" />
+    </linearGradient>
+    <linearGradient id="cat-ear" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffdeeb" />
+      <stop offset="100%" stop-color="#faa2c1" />
+    </linearGradient>
+  </defs>
+
+  <path id="cat-tail" d="M 150,170 C 170,165 178,155 182,140" fill="none" stroke="url(#cat-skin)" stroke-width="14" stroke-linecap="round" />
+
+  <g class="back-foot-left">
+    <ellipse cx="125" cy="178" rx="20" ry="8" fill="#d9480f" transform="rotate(-15 125 178)" />
+    <ellipse cx="143" cy="173" rx="7" ry="4" fill="#f1f3f5" />
+  </g>
+  <g class="left-paw">
+    <ellipse cx="60" cy="175" rx="18" ry="7" fill="#d9480f" transform="rotate(10 60 175)" />
+    <ellipse cx="44" cy="178" rx="7" ry="4" fill="#f1f3f5" />
+  </g>
+
+  <!-- Body un poco más inflado (ry 22 vs 20) -->
+  <ellipse cx="100" cy="170" rx="66" ry="22" fill="url(#cat-skin)" />
+  <path d="M 50,165 Q 52,170 56,172" stroke="#d9480f" stroke-width="3" fill="none" stroke-linecap="round" />
+  <path d="M 150,165 Q 148,170 144,172" stroke="#d9480f" stroke-width="3" fill="none" stroke-linecap="round" />
+
+  <g style="transform-origin: 35px 155px;">
+    <path d="M 20,135 L 10,105 Q 30,118 32,130 Z" fill="url(#cat-skin)" />
+    <path d="M 22,132 L 14,111 Q 28,121 29,129 Z" fill="url(#cat-ear)" />
+    <path d="M 32,135 L 28,102 Q 42,115 40,128 Z" fill="url(#cat-skin)" />
+    <circle cx="35" cy="155" r="28" fill="url(#cat-skin)" />
+    <path d="M 38,132 Q 33,138 28,142" stroke="#d9480f" stroke-width="2.5" fill="none" stroke-linecap="round" />
+    <path d="M 44,132 Q 41,140 35,145" stroke="#d9480f" stroke-width="3" fill="none" stroke-linecap="round" />
+    <line x1="10" y1="159" x2="-8" y2="157" stroke="#f1f3f5" stroke-width="1.5" stroke-linecap="round" />
+    <line x1="10" y1="164" x2="-12" y2="164" stroke="#f1f3f5" stroke-width="1.5" stroke-linecap="round" />
+    <line x1="10" y1="169" x2="-8" y2="171" stroke="#f1f3f5" stroke-width="1.5" stroke-linecap="round" />
+    <ellipse cx="23" cy="153" rx="4" ry="5" fill="#1e1e24" />
+    <circle class="pet-pupil" data-anchor-x="23" data-anchor-y="153" cx="23" cy="153" r="1.5" fill="#ffffff" />
+    <ellipse cx="27" cy="161" rx="5" ry="2.5" fill="#ff8787" opacity="0.55" />
+    <polygon points="7,155 3,158 7,159" fill="#ff8787" />
+    <path d="M 7,161 Q 3,164 6,167" stroke="#212529" stroke-width="1" fill="none" stroke-linecap="round" />
+  </g>
+
+  <g class="back-foot-right">
+    <ellipse cx="135" cy="180" rx="20" ry="8" fill="url(#cat-skin)" transform="rotate(-15 135 180)" />
+    <ellipse cx="153" cy="175" rx="7" ry="4" fill="#ffffff" />
+  </g>
+  <g class="right-paw">
+    <ellipse cx="70" cy="178" rx="18" ry="7" fill="url(#cat-skin)" transform="rotate(10 70 178)" />
+    <ellipse cx="54" cy="181" rx="7" ry="4" fill="#ffffff" />
+  </g>
+</svg>
+`;
+
+// === STRETCH (cuerpo extendido, lomo arqueado, patas adelante/atrás) ===
+const catStretchSVG = `
+<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="cat-skin" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffd8a8" />
+      <stop offset="100%" stop-color="#ff922b" />
+    </linearGradient>
+    <linearGradient id="cat-ear" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffdeeb" />
+      <stop offset="100%" stop-color="#faa2c1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Tail estirada atrás (larga) -->
+  <path id="cat-tail" d="M 150,168 C 172,160 180,148 184,130" fill="none" stroke="url(#cat-skin)" stroke-width="14" stroke-linecap="round" />
+
+  <!-- Back leg background (estirada atrás) -->
+  <g class="back-foot-left">
+    <rect x="118" y="160" width="12" height="22" rx="6" fill="#d9480f" transform="rotate(-30 124 171)" />
+    <ellipse cx="142" cy="178" rx="7" ry="4" fill="#f1f3f5" />
+  </g>
+
+  <!-- Front leg background (estirada adelante) -->
+  <g class="left-paw">
+    <rect x="58" y="160" width="12" height="22" rx="6" fill="#d9480f" transform="rotate(30 64 171)" />
+    <ellipse cx="40" cy="178" rx="7" ry="4" fill="#f1f3f5" />
+  </g>
+
+  <!-- Body extendido horizontal (lomo arqueado — elipse wide) -->
+  <ellipse cx="100" cy="160" rx="70" ry="18" fill="url(#cat-skin)" />
+  <path d="M 50,155 Q 52,160 56,162" stroke="#d9480f" stroke-width="3" fill="none" stroke-linecap="round" />
+  <path d="M 150,155 Q 148,160 144,162" stroke="#d9480f" stroke-width="3" fill="none" stroke-linecap="round" />
+
+  <!-- Head profile (al frente, baja, mirada abajo) -->
+  <g style="transform-origin: 32px 155px;">
+    <path d="M 18,138 L 8,108 Q 28,121 30,133 Z" fill="url(#cat-skin)" />
+    <path d="M 20,135 L 12,114 Q 26,124 27,132 Z" fill="url(#cat-ear)" />
+    <path d="M 30,138 L 26,105 Q 40,118 38,131 Z" fill="url(#cat-skin)" />
+    <circle cx="32" cy="158" r="28" fill="url(#cat-skin)" />
+    <path d="M 35,135 Q 30,141 25,145" stroke="#d9480f" stroke-width="2.5" fill="none" stroke-linecap="round" />
+    <path d="M 41,135 Q 38,143 32,148" stroke="#d9480f" stroke-width="3" fill="none" stroke-linecap="round" />
+    <line x1="7" y1="162" x2="-11" y2="160" stroke="#f1f3f5" stroke-width="1.5" stroke-linecap="round" />
+    <line x1="7" y1="167" x2="-15" y2="167" stroke="#f1f3f5" stroke-width="1.5" stroke-linecap="round" />
+    <line x1="7" y1="172" x2="-11" y2="174" stroke="#f1f3f5" stroke-width="1.5" stroke-linecap="round" />
+    <ellipse cx="20" cy="156" rx="4" ry="5" fill="#1e1e24" />
+    <circle class="pet-pupil" data-anchor-x="20" data-anchor-y="156" cx="20" cy="156" r="1.5" fill="#ffffff" />
+    <ellipse cx="24" cy="164" rx="5" ry="2.5" fill="#ff8787" opacity="0.55" />
+    <polygon points="4,158 0,161 4,162" fill="#ff8787" />
+    <path d="M 4,164 Q 0,167 3,170" stroke="#212529" stroke-width="1" fill="none" stroke-linecap="round" />
+  </g>
+
+  <!-- Back leg foreground (estirada atrás) -->
+  <g class="back-foot-right">
+    <rect x="125" y="160" width="12" height="22" rx="6" fill="url(#cat-skin)" transform="rotate(-30 131 171)" />
+    <ellipse cx="149" cy="180" rx="7" ry="4" fill="#ffffff" />
+  </g>
+
+  <!-- Front leg foreground (estirada adelante) -->
+  <g class="right-paw">
+    <rect x="65" y="160" width="12" height="22" rx="6" fill="url(#cat-skin)" transform="rotate(30 71 171)" />
+    <ellipse cx="47" cy="180" rx="7" ry="4" fill="#ffffff" />
+  </g>
+</svg>
+`;
+
+// Arrays de frames
+const catSitFrames = [catSitSVG, catSitBlinkSVG];
+const catLayFrames = [catLaySVG, catLayBreatheSVG];
 
 const catSVG = catIdleSVG; // Compatibility alias
 
@@ -622,6 +969,13 @@ if (typeof module !== 'undefined' && module.exports) {
     catWalk4SVG,
     catWalkFrames,
     catSleepSVG,
+    catSitSVG,
+    catSitBlinkSVG,
+    catSitFrames,
+    catLaySVG,
+    catLayBreatheSVG,
+    catLayFrames,
+    catStretchSVG,
     catSVG
   };
 } else {
@@ -633,5 +987,12 @@ if (typeof module !== 'undefined' && module.exports) {
   window.catWalk4SVG = catWalk4SVG;
   window.catWalkFrames = catWalkFrames;
   window.catSleepSVG = catSleepSVG;
+  window.catSitSVG = catSitSVG;
+  window.catSitBlinkSVG = catSitBlinkSVG;
+  window.catSitFrames = catSitFrames;
+  window.catLaySVG = catLaySVG;
+  window.catLayBreatheSVG = catLayBreatheSVG;
+  window.catLayFrames = catLayFrames;
+  window.catStretchSVG = catStretchSVG;
   window.catSVG = catSVG;
 }
