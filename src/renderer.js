@@ -19,6 +19,61 @@ const DRAG_THRESHOLD_PX = 7;
 const SLEEP_DELAY_MS = 45000;
 const hoveredInteractiveElements = new Set();
 
+// ============================================================
+// M2 — Multi-frame state machine
+// STATE_FRAMES: array de SVGs por (petType, state). Multi-frame para
+//   walk (4), sit (2: blink), lay (2: breathe); single-frame para los demás.
+// STATE_FRAME_RATE: ms por frame. Infinity = static. Walk ~6fps, sit/lay lentos.
+// ============================================================
+const STATE_FRAMES = {
+  idle: {
+    cat: () => [window.catIdleSVG],
+    dog: () => [window.dogIdleSVG]
+  },
+  walking: {
+    cat: () => window.catWalkFrames || [window.catWalkSVG],
+    dog: () => window.dogWalkFrames || [window.dogWalkSVG]
+  },
+  sleeping: {
+    cat: () => [window.catSleepSVG],
+    dog: () => [window.dogSleepSVG]
+  },
+  sitting: {
+    cat: () => window.catSitFrames || [window.catSitSVG],
+    dog: () => window.dogSitFrames || [window.dogSitSVG]
+  },
+  laying: {
+    cat: () => window.catLayFrames || [window.catLaySVG],
+    dog: () => window.dogLayFrames || [window.dogLaySVG]
+  },
+  stretching: {
+    cat: () => [window.catStretchSVG],
+    dog: () => [window.dogStretchSVG]
+  }
+};
+
+const STATE_FRAME_RATE = {
+  idle: Infinity,        // static
+  walking: 167,          // 6 fps (suficiente para 4 frames)
+  sleeping: Infinity,    // el zzz CSS ya anima
+  sitting: 2500,         // 0.4 fps para blink lento
+  laying: 3000,          // 0.33 fps para breathe lento
+  stretching: Infinity   // static
+};
+
+const STATE_FADE_MS = 120;  // cross-fade entre states (no entre frames del cycle)
+
+let currentFrameIndex = 0;
+let lastFrameSwap = 0;
+
+function getFramesForState(petType, state) {
+  const stateDef = STATE_FRAMES[state];
+  if (!stateDef) return null;
+  const getter = stateDef[petType] || stateDef.cat;
+  const frames = getter();
+  return Array.isArray(frames) && frames.length > 0 ? frames : null;
+}
+
 const petContainer = document.getElementById('pet-container');
 const petSvgWrapper = document.getElementById('pet-svg-wrapper');
 const speechBubble = document.getElementById('speech-bubble');
@@ -97,29 +152,49 @@ function initSettings() {
   scheduleSleep();
 }
 
-function loadMascotSVG(petType, state) {
-  if (petType === 'cat') {
-    petSvgWrapper.innerHTML = state === 'walking'
-      ? window.catWalkSVG
-      : state === 'sleeping' ? window.catSleepSVG : window.catIdleSVG;
-  } else {
-    petSvgWrapper.innerHTML = state === 'walking'
-      ? window.dogWalkSVG
-      : state === 'sleeping' ? window.dogSleepSVG : window.dogIdleSVG;
+// M2 — renderiza el frame actual (frame_index del array de frames del state).
+// Si withFade=true, cross-fade (usado cuando cambia el state).
+// Si withFade=false, swap directo (usado en el cycle de walk/sit/lay).
+function loadMascotSVG(petType, state, withFade = true) {
+  const frames = getFramesForState(petType, state);
+  if (!frames) {
+    // Fallback al state anterior si el nuevo no existe (defensivo)
+    return;
   }
-  // T5 perf — innerHTML arriba destruyó los nodos cacheados.
-  // Re-cachear después de cada cambio de SVG.
-  cachePetElements();
+
+  const svg = frames[currentFrameIndex] || frames[0];
+
+  if (withFade && petSvgWrapper.innerHTML) {
+    petSvgWrapper.style.transition = `opacity ${STATE_FADE_MS}ms`;
+    petSvgWrapper.style.opacity = '0';
+    setTimeout(() => {
+      petSvgWrapper.innerHTML = svg;
+      // T5 perf — re-cachear refs después de innerHTML swap.
+      cachePetElements();
+      petSvgWrapper.style.opacity = '1';
+    }, STATE_FADE_MS);
+  } else {
+    petSvgWrapper.innerHTML = svg;
+    cachePetElements();
+    petSvgWrapper.style.opacity = '1';
+  }
 }
 
 function setVisualState(state, direction = null, force = false) {
-  if (force || currentVisualState !== state) {
+  const stateChanged = currentVisualState !== state;
+  if (force || stateChanged) {
     currentVisualState = state;
-    loadMascotSVG(currentPet, state);
+    // Reset frame index cuando cambia el state (cross-fade desde frame 0).
+    currentFrameIndex = 0;
+    lastFrameSwap = performance.now();
+    loadMascotSVG(currentPet, state, stateChanged);
   }
 
   petContainer.classList.toggle('sleeping', state === 'sleeping');
   petContainer.classList.toggle('walking-bob', state === 'walking');
+  petContainer.classList.toggle('sitting', state === 'sitting');
+  petContainer.classList.toggle('laying', state === 'laying');
+  petContainer.classList.toggle('stretching', state === 'stretching');
   petContainer.classList.toggle('cat-walk', state === 'walking' && currentPet === 'cat');
   petContainer.classList.toggle('dog-walk', state === 'walking' && currentPet === 'dog');
   if (direction) petContainer.classList.toggle('flipped', direction === 'right');
@@ -466,6 +541,13 @@ function handlePetAction(data) {
   else if (data.action === 'wag') {
     tailWagSpeed = currentPet === 'cat' ? 0.09 : 0.19;
     tailWagAmplitude = 1.35;
+  } else if (data.action === 'sit') {
+    // M2 — sentada: cambia visual state. El state persiste hasta otro evento.
+    setVisualState('sitting', null, true);
+  } else if (data.action === 'lay') {
+    setVisualState('laying', null, true);
+  } else if (data.action === 'stretch') {
+    setVisualState('stretching', null, true);
   }
 }
 
@@ -648,7 +730,7 @@ function maybeTwitchEar() {
   setTimeout(() => ear.classList.remove('ear-twitching'), 500);
 }
 
-function animateTail() {
+function animateTail(now) {
   tailTime += tailWagSpeed;
   maybeTwitchEar();
   // T5 perf — usar refs cacheadas (init en cachePetElements) en vez de
@@ -676,6 +758,20 @@ function animateTail() {
       dogTail.setAttribute('d', `M 130,130 C ${145 + w1},118 ${151 + w2},100 ${157 + w3},84`);
     }
   }
+
+  // M2 — multi-frame cycle (walk 6fps, sit blink 0.4fps, lay breathe 0.33fps)
+  const rate = STATE_FRAME_RATE[currentVisualState];
+  if (Number.isFinite(rate) && now !== undefined && now - lastFrameSwap >= rate) {
+    const frames = getFramesForState(currentPet, currentVisualState);
+    if (frames && frames.length > 1) {
+      currentFrameIndex = (currentFrameIndex + 1) % frames.length;
+      // Swap directo (sin fade) entre frames del mismo state.
+      petSvgWrapper.innerHTML = frames[currentFrameIndex];
+      cachePetElements();
+      lastFrameSwap = now;
+    }
+  }
+
   requestAnimationFrame(animateTail);
 }
 
