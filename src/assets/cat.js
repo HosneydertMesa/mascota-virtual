@@ -160,7 +160,7 @@ const catWalkSVG = `
   <path d="M 60,95 Q 50,115 65,130 Z" fill="#ffffff" />
 
   <!-- Head Group (Profile) -->
-  <g style="transform-origin: 55px 80px;">
+  <g class="pet-head" style="transform-origin: 55px 80px;">
     <!-- Left Ear (Facing profile left) -->
     <path d="M 40,55 L 30,25 Q 50,38 52,50 Z" fill="url(#cat-skin)" />
     <path d="M 42,52 L 34,31 Q 48,41 49,49 Z" fill="url(#cat-ear)" />
@@ -250,7 +250,7 @@ const catSleepSVG = `
     <path d="M 123,115 Q 128,110 134,118" stroke="#d9480f" stroke-width="4.5" fill="none" stroke-linecap="round" />
 
     <!-- Sleeping Head resting on paws -->
-    <g style="transform-origin: 72px 122px;">
+    <g class="pet-head" style="transform-origin: 72px 122px;">
       <!-- Ears folded slightly back -->
       <path d="M 52,108 L 38,94 L 58,102 Z" fill="url(#cat-skin)" />
       <path d="M 78,104 L 72,90 L 84,102 Z" fill="url(#cat-skin)" />
@@ -338,7 +338,7 @@ const catWalk1SVG = `
   <path d="M 118,94 L 114,109" stroke="#d9480f" stroke-width="4.5" stroke-linecap="round" />
   <path d="M 60,95 Q 50,115 65,130 Z" fill="#ffffff" />
 
-  <g style="transform-origin: 55px 80px;">
+  <g class="pet-head" style="transform-origin: 55px 80px;">
     <path d="M 40,55 L 30,25 Q 50,38 52,50 Z" fill="url(#cat-skin)" />
     <path d="M 42,52 L 34,31 Q 48,41 49,49 Z" fill="url(#cat-ear)" />
     <path d="M 52,55 L 48,22 Q 62,35 60,48 Z" fill="url(#cat-skin)" />
@@ -415,7 +415,7 @@ const catWalk2SVG = `
   <path d="M 118,97 L 114,112" stroke="#d9480f" stroke-width="4.5" stroke-linecap="round" />
   <path d="M 60,98 Q 50,118 65,133 Z" fill="#ffffff" />
 
-  <g style="transform-origin: 55px 83px;">
+  <g class="pet-head" style="transform-origin: 55px 83px;">
     <path d="M 40,58 L 30,28 Q 50,41 52,53 Z" fill="url(#cat-skin)" />
     <path d="M 42,55 L 34,34 Q 48,44 49,52 Z" fill="url(#cat-ear)" />
     <path d="M 52,58 L 48,25 Q 62,38 60,51 Z" fill="url(#cat-skin)" />
@@ -492,7 +492,7 @@ const catWalk3SVG = `
   <path d="M 118,94 L 114,109" stroke="#d9480f" stroke-width="4.5" stroke-linecap="round" />
   <path d="M 60,95 Q 50,115 65,130 Z" fill="#ffffff" />
 
-  <g style="transform-origin: 55px 80px;">
+  <g class="pet-head" style="transform-origin: 55px 80px;">
     <path d="M 40,55 L 30,25 Q 50,38 52,50 Z" fill="url(#cat-skin)" />
     <path d="M 42,52 L 34,31 Q 48,41 49,49 Z" fill="url(#cat-ear)" />
     <path d="M 52,55 L 48,22 Q 62,35 60,48 Z" fill="url(#cat-skin)" />
@@ -569,7 +569,7 @@ const catWalk4SVG = `
   <path d="M 118,91 L 114,106" stroke="#d9480f" stroke-width="4.5" stroke-linecap="round" />
   <path d="M 60,92 Q 50,112 65,127 Z" fill="#ffffff" />
 
-  <g style="transform-origin: 55px 77px;">
+  <g class="pet-head" style="transform-origin: 55px 77px;">
     <path d="M 40,52 L 30,22 Q 50,35 52,47 Z" fill="url(#cat-skin)" />
     <path d="M 42,49 L 34,28 Q 48,38 49,46 Z" fill="url(#cat-ear)" />
     <path d="M 52,52 L 48,19 Q 62,32 60,45 Z" fill="url(#cat-skin)" />
@@ -662,7 +662,7 @@ const catSitSVG = `
   <circle cx="98" cy="103" r="1.5" fill="#ffffff" opacity="0.8" />
 
   <!-- Head profile (mirando izquierda) -->
-  <g style="transform-origin: 60px 70px;">
+  <g class="pet-head" style="transform-origin: 60px 70px;">
     <path d="M 45,45 L 35,15 Q 55,28 57,40 Z" fill="url(#cat-skin)" />
     <path d="M 47,42 L 39,21 Q 53,31 54,39 Z" fill="url(#cat-ear)" />
     <path d="M 57,45 L 53,12 Q 67,25 65,38 Z" fill="url(#cat-skin)" />
@@ -732,7 +732,7 @@ const catSitBlinkSVG = `
   <circle cx="100" cy="105" r="6" fill="#facc15" stroke="#eab308" stroke-width="0.7" />
   <circle cx="98" cy="103" r="1.5" fill="#ffffff" opacity="0.8" />
 
-  <g style="transform-origin: 60px 70px;">
+  <g class="pet-head" style="transform-origin: 60px 70px;">
     <path d="M 45,45 L 35,15 Q 55,28 57,40 Z" fill="url(#cat-skin)" />
     <path d="M 47,42 L 39,21 Q 53,31 54,39 Z" fill="url(#cat-ear)" />
     <path d="M 57,45 L 53,12 Q 67,25 65,38 Z" fill="url(#cat-skin)" />
@@ -798,7 +798,7 @@ const catLaySVG = `
   <path d="M 150,165 Q 148,170 144,172" stroke="#d9480f" stroke-width="3" fill="none" stroke-linecap="round" />
 
   <!-- Head profile (apoyada al frente) -->
-  <g style="transform-origin: 35px 155px;">
+  <g class="pet-head" style="transform-origin: 35px 155px;">
     <path d="M 20,135 L 10,105 Q 30,118 32,130 Z" fill="url(#cat-skin)" />
     <path d="M 22,132 L 14,111 Q 28,121 29,129 Z" fill="url(#cat-ear)" />
     <path d="M 32,135 L 28,102 Q 42,115 40,128 Z" fill="url(#cat-skin)" />
@@ -859,7 +859,7 @@ const catLayBreatheSVG = `
   <path d="M 50,165 Q 52,170 56,172" stroke="#d9480f" stroke-width="3" fill="none" stroke-linecap="round" />
   <path d="M 150,165 Q 148,170 144,172" stroke="#d9480f" stroke-width="3" fill="none" stroke-linecap="round" />
 
-  <g style="transform-origin: 35px 155px;">
+  <g class="pet-head" style="transform-origin: 35px 155px;">
     <path d="M 20,135 L 10,105 Q 30,118 32,130 Z" fill="url(#cat-skin)" />
     <path d="M 22,132 L 14,111 Q 28,121 29,129 Z" fill="url(#cat-ear)" />
     <path d="M 32,135 L 28,102 Q 42,115 40,128 Z" fill="url(#cat-skin)" />
@@ -922,7 +922,7 @@ const catStretchSVG = `
   <path d="M 150,155 Q 148,160 144,162" stroke="#d9480f" stroke-width="3" fill="none" stroke-linecap="round" />
 
   <!-- Head profile (al frente, baja, mirada abajo) -->
-  <g style="transform-origin: 32px 155px;">
+  <g class="pet-head" style="transform-origin: 32px 155px;">
     <path d="M 18,138 L 8,108 Q 28,121 30,133 Z" fill="url(#cat-skin)" />
     <path d="M 20,135 L 12,114 Q 26,124 27,132 Z" fill="url(#cat-ear)" />
     <path d="M 30,138 L 26,105 Q 40,118 38,131 Z" fill="url(#cat-skin)" />

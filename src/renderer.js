@@ -66,6 +66,47 @@ const STATE_FADE_MS = 120;  // cross-fade entre states (no entre frames del cycl
 let currentFrameIndex = 0;
 let lastFrameSwap = 0;
 
+// M3 — look-at-cursor (head rotation)
+let mouseX = 0;
+let mouseY = 0;
+let lastCursorDistance = Infinity;
+const HEAD_ROTATION_RANGE_DEG = 15;  // cap
+const HEAD_FOLLOW_DISTANCE_PX = 250; // solo rotar si el cursor está cerca
+
+function updateHeadRotation() {
+  const head = petSvgWrapper.querySelector('.pet-head');
+  if (!head) return;
+
+  const rect = petContainer.getBoundingClientRect();
+  const petCenterX = rect.left + rect.width / 2;
+  const petCenterY = rect.top + rect.height / 2;
+  const dx = mouseX - petCenterX;
+  const dy = mouseY - petCenterY;
+  const distance = Math.hypot(dx, dy);
+
+  lastCursorDistance = distance;
+
+  if (distance > HEAD_FOLLOW_DISTANCE_PX) {
+    // Cursor lejos: head vuelve a neutro
+    head.style.transform = 'rotate(0deg)';
+    return;
+  }
+
+  // Head "front" en profile mirando izquierda es (-1, 0) en screen coords.
+  // Para que la cabeza apunte al cursor: rot = atan2(dy, -dx) (en radianes).
+  // atan2(dy, -dx) para dx=-100, dy=0 (cursor in front) = 0 (sin rotacion)
+  //                                  dx=+100, dy=0 (atras) = 180 (cap a 15)
+  //                                  dy=-100, dy=0 (arriba) = -90 (cap a -15)
+  const rawDeg = Math.atan2(dy, -dx) * 180 / Math.PI;
+  const rot = Math.max(-HEAD_ROTATION_RANGE_DEG, Math.min(HEAD_ROTATION_RANGE_DEG, rawDeg));
+  head.style.transform = `rotate(${rot.toFixed(2)}deg)`;
+}
+
+window.addEventListener('mousemove', event => {
+  mouseX = event.clientX;
+  mouseY = event.clientY;
+});
+
 function getFramesForState(petType, state) {
   const stateDef = STATE_FRAMES[state];
   if (!stateDef) return null;
@@ -731,6 +772,9 @@ function maybeTwitchEar() {
 }
 
 function animateTail(now) {
+  // M3 — look-at-cursor (re-aplicar cada frame para sobrevivir SVG swaps)
+  updateHeadRotation();
+
   tailTime += tailWagSpeed;
   maybeTwitchEar();
   // T5 perf — usar refs cacheadas (init en cachePetElements) en vez de

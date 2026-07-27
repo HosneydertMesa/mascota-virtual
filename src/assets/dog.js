@@ -146,7 +146,7 @@ const dogWalkSVG = `
   <path d="M 58,96 Q 48,115 63,128 Z" fill="#ffffff" />
 
   <!-- Head Group (Profile) -->
-  <g style="transform-origin: 55px 80px;">
+  <g class="pet-head" style="transform-origin: 55px 80px;">
     <circle cx="55" cy="80" r="30" fill="url(#dog-skin)" />
 
     <!-- Snout profile (Left facing) -->
@@ -220,7 +220,7 @@ const dogSleepSVG = `
     <circle cx="126" cy="115" r="6" fill="url(#dog-patch)" opacity="0.85" />
 
     <!-- Sleeping Head resting on paws -->
-    <g style="transform-origin: 72px 122px;">
+    <g class="pet-head" style="transform-origin: 72px 122px;">
       <circle cx="72" cy="122" r="26" fill="url(#dog-skin)" />
 
       <!-- Floppy ear folded cozily -->
@@ -294,7 +294,7 @@ const dogWalk1SVG = `
   <circle cx="120" cy="120" r="6" fill="url(#dog-patch)" opacity="0.85" />
   <path d="M 58,96 Q 48,115 63,128 Z" fill="#ffffff" />
 
-  <g style="transform-origin: 55px 80px;">
+  <g class="pet-head" style="transform-origin: 55px 80px;">
     <circle cx="55" cy="80" r="30" fill="url(#dog-skin)" />
     <path d="M 40,85 L 20,85 L 20,74 Q 30,68 40,72 Z" fill="url(#dog-skin)" />
     <ellipse cx="20" cy="76" rx="3.5" ry="3" fill="#1e1e24" />
@@ -363,7 +363,7 @@ const dogWalk2SVG = `
   <circle cx="120" cy="122" r="5" fill="url(#dog-patch)" opacity="0.85" />
   <path d="M 58,99 Q 48,118 63,131 Z" fill="#ffffff" />
 
-  <g style="transform-origin: 55px 83px;">
+  <g class="pet-head" style="transform-origin: 55px 83px;">
     <circle cx="55" cy="83" r="30" fill="url(#dog-skin)" />
     <path d="M 40,88 L 20,88 L 20,77 Q 30,71 40,75 Z" fill="url(#dog-skin)" />
     <ellipse cx="20" cy="79" rx="3.5" ry="3" fill="#1e1e24" />
@@ -432,7 +432,7 @@ const dogWalk3SVG = `
   <circle cx="120" cy="120" r="6" fill="url(#dog-patch)" opacity="0.85" />
   <path d="M 58,96 Q 48,115 63,128 Z" fill="#ffffff" />
 
-  <g style="transform-origin: 55px 80px;">
+  <g class="pet-head" style="transform-origin: 55px 80px;">
     <circle cx="55" cy="80" r="30" fill="url(#dog-skin)" />
     <path d="M 40,85 L 20,85 L 20,74 Q 30,68 40,72 Z" fill="url(#dog-skin)" />
     <ellipse cx="20" cy="76" rx="3.5" ry="3" fill="#1e1e24" />
@@ -501,7 +501,7 @@ const dogWalk4SVG = `
   <circle cx="120" cy="118" r="6" fill="url(#dog-patch)" opacity="0.85" />
   <path d="M 58,93 Q 48,112 63,125 Z" fill="#ffffff" />
 
-  <g style="transform-origin: 55px 77px;">
+  <g class="pet-head" style="transform-origin: 55px 77px;">
     <circle cx="55" cy="77" r="30" fill="url(#dog-skin)" />
     <path d="M 40,82 L 20,82 L 20,71 Q 30,65 40,69 Z" fill="url(#dog-skin)" />
     <ellipse cx="20" cy="73" rx="3.5" ry="3" fill="#1e1e24" />
@@ -570,7 +570,7 @@ const dogSitSVG = `
   <rect x="80" y="98" width="40" height="5" rx="2.5" fill="#e74c3c" />
   <path d="M 94,107 Q 94,104 96,104 Q 98,104 98,107 L 102,107 Q 102,104 104,104 Q 106,104 106,107 L 106,111 Q 106,114 104,114 Q 102,114 102,111 L 98,111 Q 98,114 96,114 Q 94,114 94,111 Z" fill="#ffffff" stroke="#cbd5e1" stroke-width="0.8" />
 
-  <g style="transform-origin: 60px 70px;">
+  <g class="pet-head" style="transform-origin: 60px 70px;">
     <circle cx="60" cy="70" r="32" fill="url(#dog-skin)" />
     <path d="M 45,75 L 20,75 L 20,64 Q 30,58 45,62 Z" fill="url(#dog-skin)" />
     <ellipse cx="20" cy="66" rx="3.5" ry="3" fill="#1e1e24" />
@@ -624,7 +624,7 @@ const dogSitBlinkSVG = `
   <rect x="80" y="98" width="40" height="5" rx="2.5" fill="#e74c3c" />
   <path d="M 94,107 Q 94,104 96,104 Q 98,104 98,107 L 102,107 Q 102,104 104,104 Q 106,104 106,107 L 106,111 Q 106,114 104,114 Q 102,114 102,111 L 98,111 Q 98,114 96,114 Q 94,114 94,111 Z" fill="#ffffff" stroke="#cbd5e1" stroke-width="0.8" />
 
-  <g style="transform-origin: 60px 70px;">
+  <g class="pet-head" style="transform-origin: 60px 70px;">
     <circle cx="60" cy="70" r="32" fill="url(#dog-skin)" />
     <path d="M 45,75 L 20,75 L 20,64 Q 30,58 45,62 Z" fill="url(#dog-skin)" />
     <ellipse cx="20" cy="66" rx="3.5" ry="3" fill="#1e1e24" />
@@ -674,7 +674,7 @@ const dogLaySVG = `
   <circle cx="80" cy="170" r="9" fill="url(#dog-patch)" opacity="0.85" />
   <circle cx="125" cy="175" r="7" fill="url(#dog-patch)" opacity="0.85" />
 
-  <g style="transform-origin: 35px 155px;">
+  <g class="pet-head" style="transform-origin: 35px 155px;">
     <circle cx="35" cy="155" r="30" fill="url(#dog-skin)" />
     <path d="M 20,160 L -5,160 L -5,149 Q 5,143 20,147 Z" fill="url(#dog-skin)" />
     <ellipse cx="-5" cy="151" rx="3.5" ry="3" fill="#1e1e24" />
@@ -725,7 +725,7 @@ const dogLayBreatheSVG = `
   <circle cx="80" cy="170" r="9" fill="url(#dog-patch)" opacity="0.85" />
   <circle cx="125" cy="175" r="7" fill="url(#dog-patch)" opacity="0.85" />
 
-  <g style="transform-origin: 35px 155px;">
+  <g class="pet-head" style="transform-origin: 35px 155px;">
     <circle cx="35" cy="155" r="30" fill="url(#dog-skin)" />
     <path d="M 20,160 L -5,160 L -5,149 Q 5,143 20,147 Z" fill="url(#dog-skin)" />
     <ellipse cx="-5" cy="151" rx="3.5" ry="3" fill="#1e1e24" />
@@ -776,7 +776,7 @@ const dogStretchSVG = `
   <circle cx="80" cy="160" r="9" fill="url(#dog-patch)" opacity="0.85" />
   <circle cx="125" cy="165" r="7" fill="url(#dog-patch)" opacity="0.85" />
 
-  <g style="transform-origin: 32px 158px;">
+  <g class="pet-head" style="transform-origin: 32px 158px;">
     <circle cx="32" cy="158" r="30" fill="url(#dog-skin)" />
     <path d="M 17,163 L -8,163 L -8,152 Q 2,146 17,150 Z" fill="url(#dog-skin)" />
     <ellipse cx="-8" cy="154" rx="3.5" ry="3" fill="#1e1e24" />
