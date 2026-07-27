@@ -6,6 +6,9 @@ const path = require('path');
 const { getQuickTip, sendMessageToMiniMax } = require('./src/services/ai');
 const { createPowerMonitor } = require('./src/services/power-monitor');
 const { createIdleMonitor } = require('./src/services/idle-monitor');
+// v2.2.0 — App-aware mascota: detecta foreground app para mood reactivo.
+const { startDetector, stopDetector } = require('./src/services/app-detector');
+const { CATEGORY_MOODS, CATEGORY_WAG_TARGETS } = require('./src/core/app-categories');
 const { registerGlobalShortcuts } = require('./src/core/global-shortcuts');
 const { executeBehavior, buildMainDeps } = require('./src/core/pet-behavior');
 const { loadPetName, savePetName } = require('./src/services/pet-name-store');
@@ -1603,6 +1606,26 @@ app.whenReady().then(() => {
     petConfig = { version: 1, silentMode: false, calendarIcsPath: null };
   }
   initCalendarWatcher();
+  // v2.2.0 — app-detector: arranca polling del foreground app para mood reactivo.
+  // Solo envia IPC cuando la CATEGORY cambia (no en cada poll). El renderer
+  // mapea la category a un mood + wag targets via M4 lerp (gradual).
+  try {
+    startDetector(({ processName, windowTitle, category }) => {
+      const mood = CATEGORY_MOODS[category] || null;
+      const wagTargets = CATEGORY_WAG_TARGETS[category] || null;
+      logDebug('APP CHANGED', { processName, category, mood });
+      safeSend(petWindow, 'app-changed', {
+        processName,
+        windowTitle,
+        category,
+        mood,
+        wagTargets
+      });
+    });
+    logDebug('APP DETECTOR STARTED');
+  } catch (error) {
+    logDebug('APP DETECTOR START ERROR: ' + error.message);
+  }
   // A1 — mood system: cargar mood desde disco + iniciar tick periodico
   try {
     currentMood = loadMood(app.getPath('userData'));
@@ -1772,6 +1795,9 @@ app.on('before-quit', () => {
   try { maybeShowEveningSummary(); }
   catch (error) { logDebug(`EVENING SUMMARY BEFORE-QUIT: ${serializeError(error)}`); }
   clearAllTimers();
+  // v2.2.0 — app-detector: para el polling de foreground.
+  try { stopDetector(); }
+  catch (error) { logDebug(`APP DETECTOR STOP ERROR: ${serializeError(error)}`); }
   if (moodTickHandle) {
     moodTickHandle.stop();
     moodTickHandle = null;

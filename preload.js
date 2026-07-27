@@ -77,6 +77,10 @@ contextBridge.exposeInMainWorld('api', {
   onUpdatePetPosition: (callback) => subscribe('update-pet-position', callback),
   onTriggerAutonomousTip: (callback) => subscribe('trigger-autonomous-tip', callback),
   onSystemEvent: (callback) => subscribe('pet-system-event', callback),
+  // v2.2.0 — app-aware mascota: el main process envia cambios de
+  // foreground app aqui. Callback recibe { processName, windowTitle,
+  // category, mood, wagTargets }.
+  onAppChanged: (callback) => subscribe('app-changed', callback),
 
   // T4 — globalShortcut IPC channels
   onPomodoroToggle: (callback) => subscribe('pomodoro-toggle', callback),
