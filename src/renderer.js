@@ -534,6 +534,34 @@ window.petAPI?.onRetreatChanged?.(({ active, summary, until }) => {
   else clearPetRetreatVisuals();
 });
 
+// v2.2.0 — app-aware mascota: cuando cambia la foreground app (category),
+// actualizar el mood target y el wag target. El lerp M4 hace la transicion
+// gradual, no hay jumps. Tambien muestra el nombre de la app en la
+// speech bubble la primera vez que se detecta (luego se calla).
+const SEEN_APPS = new Set();
+const APP_GREETINGS = {
+  code: '¡Modo código! A romperla.',
+  creative: '¡A crear cosas!',
+  office: '¿Trabajo de oficina? Zzz...',
+  browser: '¿Navegando?',
+  social: '¡Asocializar!',
+  game: '¡A jugar!',
+  system: ''
+};
+window.petAPI?.onAppChanged?.(({ processName, windowTitle, category, mood, wagTargets }) => {
+  // Update wag targets (lerp M4 los interpola gradualmente).
+  if (wagTargets) {
+    tailWagSpeedTarget = wagTargets.speed;
+    tailWagAmplitudeTarget = wagTargets.amplitude;
+  }
+  // Mostrar saludo solo la primera vez que vemos esta category.
+  if (!SEEN_APPS.has(category)) {
+    SEEN_APPS.add(category);
+    const greeting = APP_GREETINGS[category] || '';
+    if (greeting) showSpeech(greeting);
+  }
+});
+
 window.api.onPetMoveState(data => {
   if (!data || typeof data.state !== 'string') return;
   if (data.state === 'walking') {
