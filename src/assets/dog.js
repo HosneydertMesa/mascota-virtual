@@ -2358,6 +2358,88 @@ const dogStretchFrontLegRightSVG = `<svg viewBox="0 0 200 200" xmlns="http://www
   </g>
 </svg>`;
 
+// Expose all per-part constants to window (browser).
+window.dogIdleHeadSVG = dogIdleHeadSVG;
+window.dogIdleBodySVG = dogIdleBodySVG;
+window.dogIdleTailSVG = dogIdleTailSVG;
+window.dogIdleBackLegLeftSVG = dogIdleBackLegLeftSVG;
+window.dogIdleBackLegRightSVG = dogIdleBackLegRightSVG;
+window.dogIdleFrontLegLeftSVG = dogIdleFrontLegLeftSVG;
+window.dogIdleFrontLegRightSVG = dogIdleFrontLegRightSVG;
+window.dogWalkHeadSVG = dogWalkHeadSVG;
+window.dogWalkBodySVG = dogWalkBodySVG;
+window.dogWalkTailSVG = dogWalkTailSVG;
+window.dogWalkBackLegLeftSVG = dogWalkBackLegLeftSVG;
+window.dogWalkBackLegRightSVG = dogWalkBackLegRightSVG;
+window.dogWalkFrontLegLeftSVG = dogWalkFrontLegLeftSVG;
+window.dogWalkFrontLegRightSVG = dogWalkFrontLegRightSVG;
+window.dogSleepHeadSVG = dogSleepHeadSVG;
+window.dogSleepBodySVG = dogSleepBodySVG;
+window.dogWalk1HeadSVG = dogWalk1HeadSVG;
+window.dogWalk1BodySVG = dogWalk1BodySVG;
+window.dogWalk1TailSVG = dogWalk1TailSVG;
+window.dogWalk1BackLegLeftSVG = dogWalk1BackLegLeftSVG;
+window.dogWalk1BackLegRightSVG = dogWalk1BackLegRightSVG;
+window.dogWalk1FrontLegLeftSVG = dogWalk1FrontLegLeftSVG;
+window.dogWalk1FrontLegRightSVG = dogWalk1FrontLegRightSVG;
+window.dogWalk2HeadSVG = dogWalk2HeadSVG;
+window.dogWalk2BodySVG = dogWalk2BodySVG;
+window.dogWalk2TailSVG = dogWalk2TailSVG;
+window.dogWalk2BackLegLeftSVG = dogWalk2BackLegLeftSVG;
+window.dogWalk2BackLegRightSVG = dogWalk2BackLegRightSVG;
+window.dogWalk2FrontLegLeftSVG = dogWalk2FrontLegLeftSVG;
+window.dogWalk2FrontLegRightSVG = dogWalk2FrontLegRightSVG;
+window.dogWalk3HeadSVG = dogWalk3HeadSVG;
+window.dogWalk3BodySVG = dogWalk3BodySVG;
+window.dogWalk3TailSVG = dogWalk3TailSVG;
+window.dogWalk3BackLegLeftSVG = dogWalk3BackLegLeftSVG;
+window.dogWalk3BackLegRightSVG = dogWalk3BackLegRightSVG;
+window.dogWalk3FrontLegLeftSVG = dogWalk3FrontLegLeftSVG;
+window.dogWalk3FrontLegRightSVG = dogWalk3FrontLegRightSVG;
+window.dogWalk4HeadSVG = dogWalk4HeadSVG;
+window.dogWalk4BodySVG = dogWalk4BodySVG;
+window.dogWalk4TailSVG = dogWalk4TailSVG;
+window.dogWalk4BackLegLeftSVG = dogWalk4BackLegLeftSVG;
+window.dogWalk4BackLegRightSVG = dogWalk4BackLegRightSVG;
+window.dogWalk4FrontLegLeftSVG = dogWalk4FrontLegLeftSVG;
+window.dogWalk4FrontLegRightSVG = dogWalk4FrontLegRightSVG;
+window.dogSitHeadSVG = dogSitHeadSVG;
+window.dogSitBodySVG = dogSitBodySVG;
+window.dogSitTailSVG = dogSitTailSVG;
+window.dogSitBackLegLeftSVG = dogSitBackLegLeftSVG;
+window.dogSitBackLegRightSVG = dogSitBackLegRightSVG;
+window.dogSitFrontLegLeftSVG = dogSitFrontLegLeftSVG;
+window.dogSitFrontLegRightSVG = dogSitFrontLegRightSVG;
+window.dogSitBlinkHeadSVG = dogSitBlinkHeadSVG;
+window.dogSitBlinkBodySVG = dogSitBlinkBodySVG;
+window.dogSitBlinkTailSVG = dogSitBlinkTailSVG;
+window.dogSitBlinkBackLegLeftSVG = dogSitBlinkBackLegLeftSVG;
+window.dogSitBlinkBackLegRightSVG = dogSitBlinkBackLegRightSVG;
+window.dogSitBlinkFrontLegLeftSVG = dogSitBlinkFrontLegLeftSVG;
+window.dogSitBlinkFrontLegRightSVG = dogSitBlinkFrontLegRightSVG;
+window.dogLayHeadSVG = dogLayHeadSVG;
+window.dogLayBodySVG = dogLayBodySVG;
+window.dogLayTailSVG = dogLayTailSVG;
+window.dogLayBackLegLeftSVG = dogLayBackLegLeftSVG;
+window.dogLayBackLegRightSVG = dogLayBackLegRightSVG;
+window.dogLayFrontLegLeftSVG = dogLayFrontLegLeftSVG;
+window.dogLayFrontLegRightSVG = dogLayFrontLegRightSVG;
+window.dogLayBreatheHeadSVG = dogLayBreatheHeadSVG;
+window.dogLayBreatheBodySVG = dogLayBreatheBodySVG;
+window.dogLayBreatheTailSVG = dogLayBreatheTailSVG;
+window.dogLayBreatheBackLegLeftSVG = dogLayBreatheBackLegLeftSVG;
+window.dogLayBreatheBackLegRightSVG = dogLayBreatheBackLegRightSVG;
+window.dogLayBreatheFrontLegLeftSVG = dogLayBreatheFrontLegLeftSVG;
+window.dogLayBreatheFrontLegRightSVG = dogLayBreatheFrontLegRightSVG;
+window.dogStretchHeadSVG = dogStretchHeadSVG;
+window.dogStretchBodySVG = dogStretchBodySVG;
+window.dogStretchTailSVG = dogStretchTailSVG;
+window.dogStretchBackLegLeftSVG = dogStretchBackLegLeftSVG;
+window.dogStretchBackLegRightSVG = dogStretchBackLegRightSVG;
+window.dogStretchFrontLegLeftSVG = dogStretchFrontLegLeftSVG;
+window.dogStretchFrontLegRightSVG = dogStretchFrontLegRightSVG;
+
+
 function getDogPartsForState(state) {
   // state: lowercase ("idle", "walking", "sleeping", "sitting", "laying", "stretching")
   // Returns array of part-dicts (one per frame). Each part is an SVG string

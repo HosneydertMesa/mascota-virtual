@@ -2652,6 +2652,88 @@ const catStretchFrontLegRightSVG = `<svg viewBox="0 0 200 200" xmlns="http://www
   </g>
 </svg>`;
 
+// Expose all per-part constants to window (browser).
+window.catIdleHeadSVG = catIdleHeadSVG;
+window.catIdleBodySVG = catIdleBodySVG;
+window.catIdleTailSVG = catIdleTailSVG;
+window.catIdleBackLegLeftSVG = catIdleBackLegLeftSVG;
+window.catIdleBackLegRightSVG = catIdleBackLegRightSVG;
+window.catIdleFrontLegLeftSVG = catIdleFrontLegLeftSVG;
+window.catIdleFrontLegRightSVG = catIdleFrontLegRightSVG;
+window.catWalkHeadSVG = catWalkHeadSVG;
+window.catWalkBodySVG = catWalkBodySVG;
+window.catWalkTailSVG = catWalkTailSVG;
+window.catWalkBackLegLeftSVG = catWalkBackLegLeftSVG;
+window.catWalkBackLegRightSVG = catWalkBackLegRightSVG;
+window.catWalkFrontLegLeftSVG = catWalkFrontLegLeftSVG;
+window.catWalkFrontLegRightSVG = catWalkFrontLegRightSVG;
+window.catSleepHeadSVG = catSleepHeadSVG;
+window.catSleepBodySVG = catSleepBodySVG;
+window.catWalk1HeadSVG = catWalk1HeadSVG;
+window.catWalk1BodySVG = catWalk1BodySVG;
+window.catWalk1TailSVG = catWalk1TailSVG;
+window.catWalk1BackLegLeftSVG = catWalk1BackLegLeftSVG;
+window.catWalk1BackLegRightSVG = catWalk1BackLegRightSVG;
+window.catWalk1FrontLegLeftSVG = catWalk1FrontLegLeftSVG;
+window.catWalk1FrontLegRightSVG = catWalk1FrontLegRightSVG;
+window.catWalk2HeadSVG = catWalk2HeadSVG;
+window.catWalk2BodySVG = catWalk2BodySVG;
+window.catWalk2TailSVG = catWalk2TailSVG;
+window.catWalk2BackLegLeftSVG = catWalk2BackLegLeftSVG;
+window.catWalk2BackLegRightSVG = catWalk2BackLegRightSVG;
+window.catWalk2FrontLegLeftSVG = catWalk2FrontLegLeftSVG;
+window.catWalk2FrontLegRightSVG = catWalk2FrontLegRightSVG;
+window.catWalk3HeadSVG = catWalk3HeadSVG;
+window.catWalk3BodySVG = catWalk3BodySVG;
+window.catWalk3TailSVG = catWalk3TailSVG;
+window.catWalk3BackLegLeftSVG = catWalk3BackLegLeftSVG;
+window.catWalk3BackLegRightSVG = catWalk3BackLegRightSVG;
+window.catWalk3FrontLegLeftSVG = catWalk3FrontLegLeftSVG;
+window.catWalk3FrontLegRightSVG = catWalk3FrontLegRightSVG;
+window.catWalk4HeadSVG = catWalk4HeadSVG;
+window.catWalk4BodySVG = catWalk4BodySVG;
+window.catWalk4TailSVG = catWalk4TailSVG;
+window.catWalk4BackLegLeftSVG = catWalk4BackLegLeftSVG;
+window.catWalk4BackLegRightSVG = catWalk4BackLegRightSVG;
+window.catWalk4FrontLegLeftSVG = catWalk4FrontLegLeftSVG;
+window.catWalk4FrontLegRightSVG = catWalk4FrontLegRightSVG;
+window.catSitHeadSVG = catSitHeadSVG;
+window.catSitBodySVG = catSitBodySVG;
+window.catSitTailSVG = catSitTailSVG;
+window.catSitBackLegLeftSVG = catSitBackLegLeftSVG;
+window.catSitBackLegRightSVG = catSitBackLegRightSVG;
+window.catSitFrontLegLeftSVG = catSitFrontLegLeftSVG;
+window.catSitFrontLegRightSVG = catSitFrontLegRightSVG;
+window.catSitBlinkHeadSVG = catSitBlinkHeadSVG;
+window.catSitBlinkBodySVG = catSitBlinkBodySVG;
+window.catSitBlinkTailSVG = catSitBlinkTailSVG;
+window.catSitBlinkBackLegLeftSVG = catSitBlinkBackLegLeftSVG;
+window.catSitBlinkBackLegRightSVG = catSitBlinkBackLegRightSVG;
+window.catSitBlinkFrontLegLeftSVG = catSitBlinkFrontLegLeftSVG;
+window.catSitBlinkFrontLegRightSVG = catSitBlinkFrontLegRightSVG;
+window.catLayHeadSVG = catLayHeadSVG;
+window.catLayBodySVG = catLayBodySVG;
+window.catLayTailSVG = catLayTailSVG;
+window.catLayBackLegLeftSVG = catLayBackLegLeftSVG;
+window.catLayBackLegRightSVG = catLayBackLegRightSVG;
+window.catLayFrontLegLeftSVG = catLayFrontLegLeftSVG;
+window.catLayFrontLegRightSVG = catLayFrontLegRightSVG;
+window.catLayBreatheHeadSVG = catLayBreatheHeadSVG;
+window.catLayBreatheBodySVG = catLayBreatheBodySVG;
+window.catLayBreatheTailSVG = catLayBreatheTailSVG;
+window.catLayBreatheBackLegLeftSVG = catLayBreatheBackLegLeftSVG;
+window.catLayBreatheBackLegRightSVG = catLayBreatheBackLegRightSVG;
+window.catLayBreatheFrontLegLeftSVG = catLayBreatheFrontLegLeftSVG;
+window.catLayBreatheFrontLegRightSVG = catLayBreatheFrontLegRightSVG;
+window.catStretchHeadSVG = catStretchHeadSVG;
+window.catStretchBodySVG = catStretchBodySVG;
+window.catStretchTailSVG = catStretchTailSVG;
+window.catStretchBackLegLeftSVG = catStretchBackLegLeftSVG;
+window.catStretchBackLegRightSVG = catStretchBackLegRightSVG;
+window.catStretchFrontLegLeftSVG = catStretchFrontLegLeftSVG;
+window.catStretchFrontLegRightSVG = catStretchFrontLegRightSVG;
+
+
 function getCatPartsForState(state) {
   // state: lowercase ("idle", "walking", "sleeping", "sitting", "laying", "stretching")
   // Returns array of part-dicts (one per frame). Each part is an SVG string

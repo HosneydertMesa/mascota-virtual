@@ -50,7 +50,49 @@
     return frames[frameIndex] || frames[0] || null;
   }
 
-  function rebuildDisplayTree() {
+  // PIXI.Texture.from() does NOT accept SVG strings. We need to convert
+  // each part-SVG string → data URL → HTMLImageElement → Texture. We use
+  // data URLs (not blob URLs) because the browser may revoke the blob URL
+  // after PIXI's GPU upload is queued, causing texImage2D to fail with
+  // INVALID_VALUE. Data URLs stay valid for the image's lifetime.
+  //
+  // We also set img.width/height explicitly to match the SVG viewBox
+  // (200x200) — without this, the browser may rasterize the SVG at a
+  // default 300x150 size, causing PIXI texture-size warnings.
+  const textureCache = new Map();  // svg string → Promise<PIXI.Texture>
+
+  function loadSvgTexture(svgString) {
+    if (textureCache.has(svgString)) return textureCache.get(svgString);
+    // base64-encode the SVG string for use as a data URL.
+    // For UTF-8 safety: TextEncoder → bytes → base64.
+    const bytes = new TextEncoder().encode(svgString);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    const dataUrl = 'data:image/svg+xml;base64,' + btoa(binary);
+    const promise = new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          // Force explicit dimensions so the texture is 200x200 (matches viewBox).
+          img.width = 200;
+          img.height = 200;
+          const texture = PIXI.Texture.from(img);
+          resolve(texture);
+        } catch (err) {
+          reject(err);
+        }
+      };
+      img.onerror = () => reject(new Error('Image load failed for SVG part'));
+      img.src = dataUrl;
+    }).catch((err) => {
+      textureCache.delete(svgString);
+      throw err;
+    });
+    textureCache.set(svgString, promise);
+    return promise;
+  }
+
+  async function rebuildDisplayTree() {
     if (!app) return;
     const parts = getCurrentParts();
     if (!parts) {
@@ -63,16 +105,19 @@
       displayTree.destroy({ children: true, texture: false });
     }
     displayTree = new PIXI.Container();
-    for (const partName of PART_RENDER_ORDER) {
+
+    const spritePromises = PART_RENDER_ORDER.map(async (partName) => {
       const svg = parts[partName];
-      if (!svg) continue;
+      if (!svg) return;
       try {
-        const sprite = PIXI.Sprite.from(svg);
+        const texture = await loadSvgTexture(svg);
+        const sprite = new PIXI.Sprite(texture);
         displayTree.addChild(sprite);
       } catch (err) {
         console.warn(`[pet-pixi] failed sprite for ${partName}:`, err.message);
       }
-    }
+    });
+    await Promise.all(spritePromises);
     app.stage.addChild(displayTree);
   }
 
@@ -136,7 +181,9 @@
     }
     // Initial pet type from body dataset (set by renderer.js via applyPetTheme).
     currentPetType = document.body.dataset.pet || 'cat';
-    rebuildDisplayTree();
+    // Await the initial display tree so the pet is visible by the time we log
+    // "ready" (no flash of empty canvas).
+    await rebuildDisplayTree();
     startFrameCycling();
     initialized = true;
     console.log('[pet-pixi] ready — pet=' + currentPetType + ' state=' + currentState);
