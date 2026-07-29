@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PixiJS v8 Spike — mascotaVirtual</title>
+  <style>
+    body { margin: 0; background: #0a0a0a; color: #e0e0e0; font-family: ui-monospace, monospace; padding: 20px; min-height: 100vh; box-sizing: border-box; }
+    h1 { margin: 0 0 6px; font-size: 18px; color: #ff922b; }
+    p { margin: 0 0 16px; font-size: 12px; color: #888; }
+    #pixi-container { display: inline-block; border: 1px solid #333; border-radius: 4px; overflow: hidden; background: #1a1a1a; }
+    #pixi-container canvas { display: block; }
+    #stats { position: fixed; top: 16px; right: 16px; background: rgba(0,0,0,0.85); border: 1px solid #333; padding: 10px 14px; border-radius: 4px; font-size: 11px; line-height: 1.6; min-width: 180px; }
+    #stats .label { color: #888; }
+    #stats .value { color: #ffdeeb; font-weight: 600; }
+    #stats .ok { color: #51cf66; }
+    #stats .warn { color: #ffd43b; }
+    #stats .err { color: #ff6b6b; }
+    #console { margin-top: 16px; padding: 12px; background: #000; border: 1px solid #333; border-radius: 4px; font-size: 11px; line-height: 1.5; max-height: 200px; overflow-y: auto; }
+    #console .log { color: #e0e0e0; }
+    #console .ok { color: #51cf66; }
+    #console .err { color: #ff6b6b; }
+    #console .warn { color: #ffd43b; }
+  </style>
+</head>
+<body>
+  <h1>🧪 PixiJS v8 Spike — v2.3.0 M0</h1>
+  <p>Validate: PixiJS runs in Chromium (Electron's renderer), 60fps achievable, no console errors, DPR-aware.</p>
+
+  <div id="pixi-container"></div>
+
+  <div id="stats">
+    <div><span class="label">Status:</span> <span class="value" id="status">initializing...</span></div>
+    <div><span class="label">FPS:</span> <span class="value" id="fps">--</span></div>
+    <div><span class="label">Frame time:</span> <span class="value" id="frametime">--</span></div>
+    <div><span class="label">Memory (JS heap):</span> <span class="value" id="mem">--</span></div>
+    <div><span class="label">DPR:</span> <span class="value" id="dpr">--</span></div>
+    <div><span class="label">Canvas:</span> <span class="value" id="canvassize">--</span></div>
+  </div>
+
+  <div id="console"></div>
+
+  <script src="../../src/vendor/pixi.min.js"></script>
+  <script>
+    const consoleEl = document.getElementById('console');
+    const statusEl = document.getElementById('status');
+    const appendLog = (msg, level = 'log') => {
+      const line = document.createElement('div');
+      line.className = level;
+      line.textContent = `[${new Date().toISOString().split('T')[1].slice(0, -1)}] ${msg}`;
+      consoleEl.appendChild(line);
+      consoleEl.scrollTop = consoleEl.scrollHeight;
+      // Also push to dev console so the Electron runner can capture it.
+      if (level === 'err') console.error(msg);
+      else if (level === 'warn') console.warn(msg);
+      else console.log(msg);
+    };
+
+    const setStatus = (text, cls = '') => {
+      statusEl.textContent = text;
+      statusEl.className = `value ${cls}`;
+    };
+
+    appendLog('PIXI global check: ' + (typeof PIXI !== 'undefined' ? `OK (version ${PIXI.VERSION || 'unknown'})` : 'MISSING'), typeof PIXI !== 'undefined' ? 'ok' : 'err');
+    appendLog('User agent: ' + navigator.userAgent);
+
+    document.getElementById('dpr').textContent = window.devicePixelRatio || 1;
+
+    async function main() {
+      if (typeof PIXI === 'undefined') throw new Error('PIXI global not loaded');
+
+      const app = new PIXI.Application();
+      await app.init({
+        width: 400,
+        height: 400,
+        backgroundColor: 0x1099bb,
+        antialias: true,
+        resolution: window.devicePixelRatio || 1,
+        autoDensity: true
+      });
+      document.getElementById('pixi-container').appendChild(app.canvas);
+      appendLog(`PIXI.Application initialized: ${app.canvas.width}x${app.canvas.height} (logical ${app.renderer.width}x${app.renderer.height})`, 'ok');
+      document.getElementById('canvassize').textContent = `${app.canvas.width}x${app.canvas.height}`;
+
+      // Build a fake "pet" — concentric circles to test transforms
+      const body = new PIXI.Container();
+      body.x = 200;
+      body.y = 200;
+
+      const bodySprite = new PIXI.Sprite(PIXI.Texture.WHITE);
+      bodySprite.anchor.set(0.5);
+      bodySprite.width = 160;
+      bodySprite.height = 100;
+      bodySprite.tint = 0xff922b;
+      bodySprite.alpha = 0.9;
+      body.addChild(bodySprite);
+
+      const head = new PIXI.Container();
+      head.x = -50;  // head to the left of body (matches our pets looking left)
+      const headSprite = new PIXI.Sprite(PIXI.Texture.WHITE);
+      headSprite.anchor.set(0.5);
+      headSprite.width = 70;
+      headSprite.height = 70;
+      headSprite.tint = 0xffd8a8;
+      head.addChild(headSprite);
+      body.addChild(head);
+
+      const tail = new PIXI.Container();
+      tail.x = 70;  // tail to the right of body
+      const tailSprite = new PIXI.Sprite(PIXI.Texture.WHITE);
+      tailSprite.anchor.set(0.5, 0.5);
+      tailSprite.width = 50;
+      tailSprite.height = 12;
+      tailSprite.tint = 0xd9480f;
+      tail.addChild(tailSprite);
+      body.addChild(tail);
+
+      app.stage.addChild(body);
+      appendLog('Display tree built: body > (bodySprite, head, tail)', 'ok');
+
+      // Motion blur test
+      const blurFilter = new PIXI.BlurFilter({ strength: 2 });
+      tail.filters = [blurFilter];
+      appendLog('BlurFilter attached to tail (M4 test)', 'ok');
+
+      // FPS + frame time tracking. PIXI v8 ticker has built-in FPS/deltaMS —
+      // we just sample them every ~10 ticks.
+      const fpsEl = document.getElementById('fps');
+      const ftEl = document.getElementById('frametime');
+      const memEl = document.getElementById('mem');
+      let sampleCount = 0;
+
+      app.ticker.add(() => {
+        // Spin the body slightly (validates animation loop)
+        body.rotation += 0.005;
+
+        // Wag the tail with sin() (validates bone rotation)
+        tail.rotation = Math.sin(performance.now() * 0.005) * 0.3;
+
+        sampleCount++;
+        if (sampleCount % 60 === 0) {
+          appendLog(`tick=${sampleCount} PIXI.FPS=${Math.round(app.ticker.FPS)} deltaMS=${app.ticker.deltaMS.toFixed(2)}`, 'ok');
+        }
+        if (sampleCount % 10 === 0) {
+          const fps = Math.round(app.ticker.FPS);
+          const dt = app.ticker.deltaMS;
+          fpsEl.textContent = `${fps} (delta ${dt.toFixed(2)}ms)`;
+          fpsEl.className = `value ${fps >= 55 ? 'ok' : fps >= 30 ? 'warn' : 'err'}`;
+          ftEl.textContent = `${dt.toFixed(2)}ms`;
+          if (performance.memory) {
+            const mb = (performance.memory.usedJSHeapSize / 1024 / 1024).toFixed(1);
+            memEl.textContent = `${mb} MB`;
+          } else {
+            memEl.textContent = 'n/a (no perf.memory)';
+          }
+        }
+      });
+      appendLog(`Ticker started — sampling FPS via app.ticker.FPS every 10 ticks`, 'ok');
+      setStatus('RUNNING', 'ok');
+
+      // M0 acceptance: run for 5 seconds, then report
+      setTimeout(() => {
+        const finalFps = Math.round(app.ticker.FPS);
+        const verdict = finalFps >= 55 ? 'PASS — ready for M1' : finalFps >= 30 ? 'MARGINAL — investigate' : 'FAIL — pivot to canvas2D';
+        const cls = finalFps >= 55 ? 'ok' : finalFps >= 30 ? 'warn' : 'err';
+        appendLog(`M0 RESULT after 5s: PIXI.FPS=${finalFps} deltaMS=${app.ticker.deltaMS.toFixed(2)} → ${verdict}`, cls);
+        setStatus(verdict, cls);
+      }, 5000);
+    }
+
+    main().catch(err => {
+      console.error(err);
+      appendLog('FAILED: ' + err.message, 'err');
+      appendLog('Stack: ' + (err.stack || '(no stack)'), 'err');
+      setStatus('FAILED', 'err');
+    });
+  </script>
+</body>
+</html>
