@@ -27,6 +27,27 @@
     'body', 'head'
   ];
 
+  // === v2.3.0 M2 — Bone hierarchy + animations ===
+  // Pivot points in SVG viewBox coords (0-200).
+  //   head: rotates around the neck (100, 110) — visible but subtle.
+  //   tail: rotates around its base (130, 130) — natural swing.
+  const PIVOT_HEAD = { x: 100, y: 110 };
+  const PIVOT_TAIL = { x: 130, y: 130 };
+  const HEAD_FOLLOW_DISTANCE_PX = 250;
+  const HEAD_ROTATION_RANGE_DEG = 15;
+  const TAIL_LERP_FACTOR = 0.05;  // ~20 frames to converge (333ms @ 60fps)
+
+  let mouseX = 0;
+  let mouseY = 0;
+  let tailTime = 0;                       // seconds
+  let tailWagSpeedTarget = 0.04;          // rad/s
+  let tailWagAmplitudeTarget = 12;        // degrees
+  let tailWagSpeedCurrent = 0.04;         // lerped toward target
+  let tailWagAmplitudeCurrent = 12;
+  // Container refs (re-assigned on every display-tree rebuild).
+  let headContainer = null;
+  let tailContainer = null;
+
   let app = null;
   let currentPetType = 'cat';
   let currentState = 'idle';
@@ -105,19 +126,48 @@
       displayTree.destroy({ children: true, texture: false });
     }
     displayTree = new PIXI.Container();
+    headContainer = null;
+    tailContainer = null;
 
-    const spritePromises = PART_RENDER_ORDER.map(async (partName) => {
-      const svg = parts[partName];
-      if (!svg) return;
+    async function loadPartSprite(svg) {
+      if (!svg) return null;
       try {
-        const texture = await loadSvgTexture(svg);
-        const sprite = new PIXI.Sprite(texture);
-        displayTree.addChild(sprite);
+        const tex = await loadSvgTexture(svg);
+        return new PIXI.Sprite(tex);
       } catch (err) {
-        console.warn(`[pet-pixi] failed sprite for ${partName}:`, err.message);
+        console.warn('[pet-pixi] failed part:', err.message);
+        return null;
       }
-    });
-    await Promise.all(spritePromises);
+    }
+
+    // Tail container (animated — rotates around the tail base).
+    const tailSprite = await loadPartSprite(parts.tail);
+    if (tailSprite) {
+      tailContainer = new PIXI.Container();
+      tailContainer.pivot.set(PIVOT_TAIL.x, PIVOT_TAIL.y);
+      tailContainer.addChild(tailSprite);
+      displayTree.addChild(tailContainer);
+    }
+
+    // Legs (static — their per-frame pose is baked into the walk cycle).
+    for (const legName of ['backLegLeft', 'backLegRight', 'frontLegLeft', 'frontLegRight']) {
+      const sprite = await loadPartSprite(parts[legName]);
+      if (sprite) displayTree.addChild(sprite);
+    }
+
+    // Body (static for M2 — M4 will add breathing via container scale).
+    const bodySprite = await loadPartSprite(parts.body);
+    if (bodySprite) displayTree.addChild(bodySprite);
+
+    // Head container (animated — rotates around the neck for look-at-cursor).
+    const headSprite = await loadPartSprite(parts.head);
+    if (headSprite) {
+      headContainer = new PIXI.Container();
+      headContainer.pivot.set(PIVOT_HEAD.x, PIVOT_HEAD.y);
+      headContainer.addChild(headSprite);
+      displayTree.addChild(headContainer);
+    }
+
     app.stage.addChild(displayTree);
   }
 
@@ -139,10 +189,19 @@
 
   function startFrameCycling() {
     if (!app || !app.ticker) return;
+    let lastTickerTime = performance.now();
     app.ticker.add(() => {
+      const now = performance.now();
+      const deltaSeconds = Math.min((now - lastTickerTime) / 1000, 0.1);
+      lastTickerTime = now;
+
+      // v2.3.0 M2 — head turn + tail wag every frame (smooth at 60fps).
+      updateHeadRotation();
+      updateTailWag(deltaSeconds);
+
+      // Walk/sit/lay frame cycling — only when finite rate.
       const rate = PET_FRAME_RATES[currentState];
       if (!Number.isFinite(rate)) return;
-      const now = performance.now();
       if (now - lastFrameSwapTime < rate) return;
       const frames = getFrames(currentPetType, currentState);
       if (!frames || frames.length <= 1) return;
@@ -150,6 +209,43 @@
       rebuildDisplayTree();
       lastFrameSwapTime = now;
     });
+  }
+
+  // === v2.3.0 M2 — animation update functions ===
+
+  function updateHeadRotation() {
+    if (!headContainer || !app || !app.canvas) return;
+    const rect = app.canvas.getBoundingClientRect();
+    const petCenterX = rect.left + rect.width / 2;
+    const petCenterY = rect.top + rect.height / 2;
+    const dx = mouseX - petCenterX;
+    const dy = mouseY - petCenterY;
+    const distance = Math.hypot(dx, dy);
+    if (distance > HEAD_FOLLOW_DISTANCE_PX) {
+      // Cursor far: head returns to neutral.
+      headContainer.rotation = 0;
+      return;
+    }
+    // Head "front" in profile (cat looks left) is (-1, 0) in screen coords.
+    // For head to point at cursor: rot = atan2(dy, -dx), capped to ±15°.
+    const rawDeg = Math.atan2(dy, -dx) * 180 / Math.PI;
+    const rotDeg = Math.max(-HEAD_ROTATION_RANGE_DEG, Math.min(HEAD_ROTATION_RANGE_DEG, rawDeg));
+    headContainer.rotation = rotDeg * Math.PI / 180;
+  }
+
+  function updateTailWag(deltaSeconds) {
+    if (!tailContainer) return;
+    // Lerp toward targets (smooth transitions, ~333ms to converge).
+    tailWagSpeedCurrent += (tailWagSpeedTarget - tailWagSpeedCurrent) * TAIL_LERP_FACTOR;
+    tailWagAmplitudeCurrent += (tailWagAmplitudeTarget - tailWagAmplitudeCurrent) * TAIL_LERP_FACTOR;
+    tailTime += tailWagSpeedCurrent * deltaSeconds;
+    // PIXI rotation is in radians; amplitude target is in degrees.
+    tailContainer.rotation = Math.sin(tailTime) * tailWagAmplitudeCurrent * Math.PI / 180;
+  }
+
+  function setTailWagTargets(speed, amplitude) {
+    if (typeof speed === 'number' && Number.isFinite(speed)) tailWagSpeedTarget = speed;
+    if (typeof amplitude === 'number' && Number.isFinite(amplitude)) tailWagAmplitudeTarget = amplitude;
   }
 
   async function init() {
@@ -181,6 +277,11 @@
     }
     // Initial pet type from body dataset (set by renderer.js via applyPetTheme).
     currentPetType = document.body.dataset.pet || 'cat';
+    // v2.3.0 M2 — track mouse for head turn.
+    window.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    });
     // Await the initial display tree so the pet is visible by the time we log
     // "ready" (no flash of empty canvas).
     await rebuildDisplayTree();
@@ -194,6 +295,7 @@
     init,
     setState,
     setPetType,
+    setTailWagTargets,   // v2.3.0 M2 — mood affecting tail wag (lerps internally)
     isReady: () => initialized
   };
 })();

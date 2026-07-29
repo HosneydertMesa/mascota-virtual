@@ -32,6 +32,12 @@ function lerpTailTargets() {
   } else {
     tailWagAmplitude = tailWagAmplitudeTarget;
   }
+  // v2.3.0 M2 — push the TARGETS to PIXI (PIXI lerps internally toward them).
+  // The legacy tail wag code below still runs but has no visible effect since
+  // the SVG path is gone. PIXI owns the wag from here.
+  if (window.petPixiRenderer?.isReady()) {
+    window.petPixiRenderer.setTailWagTargets(tailWagSpeedTarget, tailWagAmplitudeTarget);
+  }
 }
 let currentPetX = 0;
 let isQuickChatSending = false;
