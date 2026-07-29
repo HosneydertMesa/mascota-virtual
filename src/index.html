@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' blob: data:; connect-src 'none'; object-src 'none'; base-uri 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' blob: data:; connect-src 'none'; object-src 'none'; base-uri 'none'">
   <title>Mascota Virtual - Compañero de Escritorio</title>
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -55,7 +55,9 @@
       </div>
       
       <!-- SVG loaded dynamically inside this wrapper -->
-      <div id="pet-svg-wrapper"></div>
+      <div id="pet-svg-wrapper" hidden></div>
+      <!-- v2.3.0 M1 — PIXI canvas (replaces pet-svg-wrapper for WebGL rendering) -->
+      <canvas id="pet-canvas" width="200" height="200" style="width: 100%; height: 100%; display: block;"></canvas>
     </div>
   </div>
 
@@ -79,6 +81,9 @@
   <script src="core/pet-protocol.js"></script>
   <script src="core/auto-updater.js"></script>
   <script src="services/pet-audio.js"></script>
+  <!-- v2.3.0 M1: PIXI rendering (must load before renderer.js) -->
+  <script src="vendor/pixi.min.js"></script>
+  <script src="pet-renderer-pixi.js"></script>
   <script src="renderer.js"></script>
   <script src="quick-capture-renderer.js"></script>
 </body>

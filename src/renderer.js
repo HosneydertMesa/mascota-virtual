@@ -220,6 +220,12 @@ function initSettings() {
 // Si withFade=true, cross-fade (usado cuando cambia el state).
 // Si withFade=false, swap directo (usado en el cycle de walk/sit/lay).
 function loadMascotSVG(petType, state, withFade = true) {
+  // v2.3.0 M1 — delegate to PIXI renderer if available.
+  if (window.petPixiRenderer?.isReady()) {
+    window.petPixiRenderer.setPetType(petType);
+    window.petPixiRenderer.setState(state);
+    return;
+  }
   const frames = getFramesForState(petType, state);
   if (!frames) {
     // Fallback al state anterior si el nuevo no existe (defensivo)
@@ -858,24 +864,33 @@ function animateTail(now) {
   }
 
   // M2 — multi-frame cycle (walk 6fps, sit blink 0.4fps, lay breathe 0.33fps)
-  const rate = STATE_FRAME_RATE[currentVisualState];
-  if (Number.isFinite(rate) && now !== undefined && now - lastFrameSwap >= rate) {
-    const frames = getFramesForState(currentPet, currentVisualState);
-    if (frames && frames.length > 1) {
-      currentFrameIndex = (currentFrameIndex + 1) % frames.length;
-      // Swap directo (sin fade) entre frames del mismo state.
-      petSvgWrapper.innerHTML = frames[currentFrameIndex];
-      cachePetElements();
-      lastFrameSwap = now;
+  // v2.3.0 M1 — skipped when PIXI is active (PIXI.Ticker handles it via petPixiRenderer).
+  if (!window.petPixiRenderer?.isReady()) {
+    const rate = STATE_FRAME_RATE[currentVisualState];
+    if (Number.isFinite(rate) && now !== undefined && now - lastFrameSwap >= rate) {
+      const frames = getFramesForState(currentPet, currentVisualState);
+      if (frames && frames.length > 1) {
+        currentFrameIndex = (currentFrameIndex + 1) % frames.length;
+        // Swap directo (sin fade) entre frames del mismo state.
+        petSvgWrapper.innerHTML = frames[currentFrameIndex];
+        cachePetElements();
+        lastFrameSwap = now;
+      }
     }
   }
 
   requestAnimationFrame(animateTail);
 }
 
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
   setupInteraction();
   initSettings();
+  // v2.3.0 M1 — init PIXI renderer BEFORE the first state load so loadMascotSVG
+  // sees isReady()=true and delegates to PIXI (no SVG flash on startup).
+  if (window.petPixiRenderer?.init) {
+    const ready = await window.petPixiRenderer.init();
+    if (!ready) console.warn('[renderer] PIXI init did not succeed; falling back to SVG path');
+  }
   initMicroPresence();
   // T5 perf — cache de elementos DESPUÉS de que cat.js / dog.js inyectaron los
   // SVGs (initMicroPresence los crea via swapPetSvg según currentPet).
