@@ -6,6 +6,14 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; connect-src 'none'; object-src 'none'; base-uri 'none'">
   <title>Mascota Virtual - Compañero de Escritorio</title>
   <link rel="stylesheet" href="styles.css">
+  <style>
+    /* v2.3.0 M2 — el speech bubble (bottom:120 en styles.css) tapa la cabeza
+       cuando el pet window es 320x250 (tamaño real). Lo subimos para que
+       el bubble quede ARRIBA del canvas (que se extiende 35px arriba del
+       pet-container). 170 deja la cola del bubble justo arriba de las
+       orejas de la mascota. */
+    #speech-bubble { bottom: 170px !important; }
+  </style>
 </head>
 <body>
   <!-- Main layout container for the transparent Electron window -->

@@ -141,9 +141,15 @@
     }
 
     // Tail container (animated — rotates around the tail base).
+    // PIXI pivot+position trick: setting both to (px, py) makes the
+    // container's matrix effectively identity (so the sprite at (0,0) of
+    // the container stays at (0,0) of the displayTree), and the rotation
+    // happens around (px, py) in the displayTree. Without this, the pivot
+    // would also shift the sprite by (-px, -py).
     const tailSprite = await loadPartSprite(parts.tail);
     if (tailSprite) {
       tailContainer = new PIXI.Container();
+      tailContainer.position.set(PIVOT_TAIL.x, PIVOT_TAIL.y);
       tailContainer.pivot.set(PIVOT_TAIL.x, PIVOT_TAIL.y);
       tailContainer.addChild(tailSprite);
       displayTree.addChild(tailContainer);
@@ -163,6 +169,7 @@
     const headSprite = await loadPartSprite(parts.head);
     if (headSprite) {
       headContainer = new PIXI.Container();
+      headContainer.position.set(PIVOT_HEAD.x, PIVOT_HEAD.y);
       headContainer.pivot.set(PIVOT_HEAD.x, PIVOT_HEAD.y);
       headContainer.addChild(headSprite);
       displayTree.addChild(headContainer);

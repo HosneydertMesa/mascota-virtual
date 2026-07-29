@@ -8,16 +8,17 @@ const { app, BrowserWindow } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
-const SMOKE_DURATION_MS = 5000;
+const SMOKE_DURATION_MS = 8000;
 const SCREENSHOT_PATH = path.join(__dirname, '..', 'docs', 'm1b-smoke-screenshot.png');
 
 app.commandLine.appendSwitch('disable-gpu-sandbox');
 
 app.whenReady().then(() => {
-  // Use a wider window to give the pet room and to see the layout.
+  // Match the production pet window size (WINDOW_SIZE in main.js) so the layout
+  // is comparable to what the user sees in npm start.
   const win = new BrowserWindow({
-    width: 820,
-    height: 360,
+    width: 320,
+    height: 250,
     show: true,
     backgroundColor: '#0a0a0a',
     webPreferences: {
@@ -43,6 +44,22 @@ app.whenReady().then(() => {
   win.loadFile(path.join(__dirname, '..', 'src', 'index.html'));
 
   setTimeout(async () => {
+    // v2.3.0 M2 — dispatch a mousemove near the canvas to trigger head turn,
+    // so the screenshot shows the head rotated. Pick a position close to the
+    // pet (which sits at the bottom-right in bar mode).
+    try {
+      const cx = 220;  // approx x of the pet center in a 320px window
+      const cy = 170;  // approx y of the pet center in a 250px window
+      await win.webContents.executeJavaScript(`
+        window.dispatchEvent(new MouseEvent('mousemove', { clientX: ${cx}, clientY: ${cy} }));
+      `);
+      logs.push(`[runner] dispatched mousemove at (${cx}, ${cy})`);
+    } catch (err) {
+      logs.push(`[runner] mousemove dispatch failed: ${err.message}`);
+    }
+    // Give the PIXI ticker a few frames to apply the head rotation.
+    await new Promise(r => setTimeout(r, 200));
+
     // Capture a screenshot so the user can verify what PIXI actually rendered.
     try {
       const image = await win.webContents.capturePage();
