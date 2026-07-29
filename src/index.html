@@ -56,8 +56,12 @@
       
       <!-- SVG loaded dynamically inside this wrapper -->
       <div id="pet-svg-wrapper" hidden></div>
-      <!-- v2.3.0 M1 — PIXI canvas (replaces pet-svg-wrapper for WebGL rendering) -->
-      <canvas id="pet-canvas" width="200" height="200" style="width: 100%; height: 100%; display: block;"></canvas>
+      <!-- v2.3.0 M1 — PIXI canvas (replaces pet-svg-wrapper for WebGL rendering).
+           Explicit 200x200 CSS size (matching original SVG viewBox). Absolute
+           positioning, centered in pet-container. The pet-container is 130x130
+           with overflow:visible, so the canvas extends past it (head/ears
+           above the speech bubble, like the old SVG layout). -->
+      <canvas id="pet-canvas" width="200" height="200" style="position: absolute; top: 50%; left: 50%; width: 200px; height: 200px; transform: translate(-50%, -50%); display: block; pointer-events: none;"></canvas>
     </div>
   </div>
 
