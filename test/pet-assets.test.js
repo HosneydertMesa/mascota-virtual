@@ -213,3 +213,91 @@ test('dashboard.css: transform-origin de las patas apunta a la cadera real del n
     assert.ok(!css.includes(bad), `dashboard.css still has OLD transform-origin: ${bad}`);
   }
 });
+
+// --- Walk v2: amplitud del leg swing mas pronunciada para look "natural" ---
+// v2.3.0 walk enhancement: HOSNE pidio walk mas natural. La amplitud original
+// (-22deg a +18deg) era muy sutil. La nueva amplitud (-28deg a +24deg, 52deg
+// total) es visible sin ser caricaturesca. Si alguien reduce la amplitud de
+// vuelta, el test falla.
+
+/**
+ * Extract the @keyframes block for a given name, handling nested braces.
+ * Returns the body between the opening { and the matching closing }.
+ */
+function extractKeyframeBody(css, name) {
+  const idx = css.indexOf('@keyframes ' + name);
+  if (idx === -1) return null;
+  const braceStart = css.indexOf('{', idx);
+  if (braceStart === -1) return null;
+  // Walk forward counting braces to find the matching close
+  let depth = 1;
+  let i = braceStart + 1;
+  while (i < css.length && depth > 0) {
+    if (css[i] === '{') depth++;
+    else if (css[i] === '}') depth--;
+    i++;
+  }
+  if (depth !== 0) return null;
+  return css.slice(braceStart + 1, i - 1);
+}
+
+/**
+ * Find the rotate(deg) value in the rule for a given keyframe stop.
+ * `stop` is e.g. "0%, 100%" or "50%".
+ */
+function findRotateAtStop(body, stop) {
+  const re = new RegExp(stop.replace('%', '%') + '\\s*\\{([^}]*)\\}');
+  const m = body.match(re);
+  if (!m) return null;
+  const rot = m[1].match(/rotate\(([-\d.]+)deg\)/);
+  return rot ? parseFloat(rot[1]) : null;
+}
+
+test('dashboard.css: leg swing amplitude es >= 50deg (walk v2 enhancement)', () => {
+  const css = fs.readFileSync(CSS_PATH, 'utf8');
+  for (const name of ['sideWalkSwingLeft', 'sideWalkSwingRight']) {
+    const body = extractKeyframeBody(css, name);
+    assert.ok(body !== null, `${name} keyframe block not found`);
+    const start = findRotateAtStop(body, '0%, 100%');
+    const mid = findRotateAtStop(body, '50%');
+    assert.ok(start !== null, `${name} 0%/100% stop not found`);
+    assert.ok(mid !== null, `${name} 50% stop not found`);
+    const range = Math.abs(start - mid);
+    assert.ok(range >= 50,
+      `${name} swing range too small: ${range}deg (expected >= 50deg)`);
+  }
+});
+
+// --- Walk v2: body bob mas pronunciado ---
+test('dashboard.css: body bob translateY es >= 5px (walk v2 enhancement)', () => {
+  const css = fs.readFileSync(CSS_PATH, 'utf8');
+  for (const name of ['catBodyWalk', 'dogBodyWalk']) {
+    const body = extractKeyframeBody(css, name);
+    assert.ok(body !== null, `${name} keyframe block not found`);
+    // Find ALL translateY values across all stops
+    const tyValues = [];
+    const tyRe = /translateY\(([-\d.]+)(?:px)?\)/g;
+    let mm;
+    while ((mm = tyRe.exec(body)) !== null) {
+      tyValues.push(Math.abs(parseFloat(mm[1])));
+    }
+    assert.ok(tyValues.length > 0, `${name} has no translateY in any keyframe`);
+    const maxTy = Math.max(...tyValues);
+    assert.ok(maxTy >= 5,
+      `${name} body bob translateY too small: max=${maxTy}px (expected >= 5px)`);
+  }
+});
+
+// --- Walk v2: tail sway amplitud visible ---
+test('dashboard.css: tail sway amplitude es >= 30deg (walk v2 enhancement)', () => {
+  const css = fs.readFileSync(CSS_PATH, 'utf8');
+  const body = extractKeyframeBody(css, 'catTailWalk');
+  assert.ok(body !== null, 'catTailWalk keyframe block not found');
+  const start = findRotateAtStop(body, '0%, 100%');
+  const mid = findRotateAtStop(body, '50%');
+  assert.ok(start !== null, 'catTailWalk 0%/100% stop not found');
+  assert.ok(mid !== null, 'catTailWalk 50% stop not found');
+  const range = Math.abs(start - mid);
+  assert.ok(range >= 30,
+    `cat tail sway range too small: ${range}deg (expected >= 30deg)`);
+});

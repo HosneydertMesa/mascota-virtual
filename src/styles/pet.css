@@ -303,24 +303,37 @@ body.bar-mode #quick-chat-panel {
 }
 
 #quick-chat-close {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--text-muted);
-  font-size: 1.1rem;
+  /* B2 v2 fix (chat-bugs): the previous bg/border were 6%/10% white over a
+     dark panel = essentially invisible. Use solid color + visible border
+     so the X is always findable. */
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: var(--text-main, #e9ecef);
+  font-size: 1.15rem;
+  font-weight: 600;
   cursor: pointer;
-  width: 22px;
-  height: 22px;
+  width: 26px;
+  height: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   transition: var(--transition);
+  line-height: 1;
+  padding: 0;
+  flex-shrink: 0;
 }
 
 #quick-chat-close:hover {
   background: var(--danger);
+  border-color: var(--danger);
   color: white;
   transform: scale(1.1);
+}
+
+#quick-chat-close:focus-visible {
+  outline: 2px solid var(--primary, #ff922b);
+  outline-offset: 2px;
 }
 
 .quick-chat-reply {

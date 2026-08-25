@@ -619,34 +619,43 @@
 /* --- Walking Animations --- */
 
 /* 1. Cat Walk (Smooth hip sway, low bounce, slinky glide) */
+/* v2.3.0 walk v2: body bob translateY increased from -4px to -6px,
+   rotation increased from ±1.5deg to ±2.5deg, and added translateX for
+   visible forward momentum. Result: a noticeably bouncier walk that
+   reads as "walking" rather than "sliding". */
 .walking-bob.cat-walk {
   animation: catBodyWalk 0.65s infinite ease-in-out;
 }
 
 @keyframes catBodyWalk {
-  0%, 100% { transform: translateY(0) rotate(-1.5deg) translateX(-1px); }
-  50% { transform: translateY(-4px) rotate(1.5deg) translateX(1px); }
+  0%, 100% { transform: translateY(0) rotate(-2.5deg) translateX(-1.5px); }
+  50% { transform: translateY(-6px) rotate(2.5deg) translateX(1.5px); }
 }
 
 /* Cat Tail Sinusoidal wave while walking */
+/* v2.3.0 walk v2: tail sway amplitude increased from 26deg (-8..+18) to
+   34deg (-10..+24) for a more visible "happy walking" sway. */
 .walking-bob.cat-walk .anim-wag {
   animation: catTailWalk 1.3s infinite ease-in-out !important;
   transform-origin: 130px 145px !important;
 }
 
 @keyframes catTailWalk {
-  0%, 100% { transform: rotate(-8deg) skewX(-4deg); }
-  50% { transform: rotate(18deg) skewX(10deg); }
+  0%, 100% { transform: rotate(-10deg) skewX(-4deg); }
+  50% { transform: rotate(24deg) skewX(10deg); }
 }
 
 /* 2. Dog Walk (High energy, bouncy trot, head bobbing) */
+/* v2.3.0 walk v2: body bob translateY increased from -7px to -10px,
+   rotation increased from ±2deg to ±3deg. Dogs bounce more than cats
+   (energetic trot), so bigger amplitude is appropriate. */
 .walking-bob.dog-walk {
   animation: dogBodyWalk 0.48s infinite ease-in-out;
 }
 
 @keyframes dogBodyWalk {
-  0%, 100% { transform: translateY(0) rotate(-2deg); }
-  50% { transform: translateY(-7px) rotate(2deg); }
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-10px) rotate(3deg); }
 }
 
 /* Dog Tail fast wide wag while walking */
@@ -661,13 +670,20 @@
 }
 
 /* 3. Quadruped Profile Walk swinging animations */
+/* v2.3.0 walk v2: amplitudes increased from 40deg total to 52deg total
+   for a more visible, natural-looking stride. Previous 40deg range
+   (cat: -22..+18, dog: -22..+18) was too subtle — pet looked like it
+   was sliding rather than walking. New 52deg range (cat: -28..+24,
+   dog: -28..+24) gives a clearly visible step motion without being
+   cartoonish. Verified by test/pet-assets.test.js "leg swing amplitude
+   es >= 50deg" — DO NOT reduce without updating that test. */
 @keyframes sideWalkSwingLeft {
-  0%, 100% { transform: rotate(-22deg); }
-  50% { transform: rotate(18deg); }
+  0%, 100% { transform: rotate(-28deg); }
+  50% { transform: rotate(24deg); }
 }
 @keyframes sideWalkSwingRight {
-  0%, 100% { transform: rotate(18deg); }
-  50% { transform: rotate(-22deg); }
+  0%, 100% { transform: rotate(24deg); }
+  50% { transform: rotate(-28deg); }
 }
 
 /* Apply profile leg swinging animations to both pets when walking */
