@@ -169,6 +169,7 @@
 
   <script src="../../src/assets/cat.js"></script>
   <script src="../../src/assets/dog.js"></script>
+  <link rel="stylesheet" href="../../src/styles/dashboard.css">
   <script>
     // === Tabs ===
     document.querySelectorAll('.tab').forEach(tab => {
@@ -194,6 +195,16 @@
     }
     const catWalk = makeCycle('cat-walk-stage', window.catWalkFrames);
     const dogWalk = makeCycle('dog-walk-stage', window.dogWalkFrames);
+
+    // Aplica .walking-bob + .cat-walk / .dog-walk al stage para que las
+    // animaciones CSS de las patas (sideWalkSwingLeft/Right) se activen
+    // y se vea el balanceo real de las patas. Sin esto, el preview solo
+    // cicla frames estaticos y no se nota la animacion.
+    const catStage = document.getElementById('cat-walk-stage');
+    catStage.classList.add('walking-bob', 'cat-walk');
+    const dogStage = document.getElementById('dog-walk-stage');
+    dogStage.classList.add('walking-bob', 'dog-walk');
+
     document.getElementById('cat-walk-play').onclick = catWalk.start;
     document.getElementById('cat-walk-stop').onclick = catWalk.stop;
     document.getElementById('dog-walk-play').onclick = dogWalk.start;

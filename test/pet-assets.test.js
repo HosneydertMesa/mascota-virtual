@@ -13,8 +13,12 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { catIdleSVG, catWalkSVG, catSleepSVG } = require('../src/assets/cat');
-const { dogIdleSVG, dogWalkSVG, dogSleepSVG } = require('../src/assets/dog');
+const {
+  catIdleSVG, catWalkSVG, catWalk1SVG, catWalk2SVG, catWalk3SVG, catWalk4SVG, catSleepSVG
+} = require('../src/assets/cat');
+const {
+  dogIdleSVG, dogWalkSVG, dogWalk1SVG, dogWalk2SVG, dogWalk3SVG, dogWalk4SVG, dogSleepSVG
+} = require('../src/assets/dog');
 
 /** Cuenta ocurrencias de `class="pet-pupil"` en un SVG string. */
 function countPetPupils(svg) {
@@ -120,5 +124,92 @@ test('ninguna pupila queda fuera del viewBox (0..200)', () => {
       assert.ok(a.x >= 0 && a.x <= 200, `anchor x fuera de rango: ${a.x}`);
       assert.ok(a.y >= 0 && a.y <= 200, `anchor y fuera de rango: ${a.y}`);
     }
+  }
+});
+
+// --- Walk cycle: patas individuales con clase para CSS swing ---
+// v2.x bug fix: el refactor consolido las patas en <g class="pet-front-paws"> /
+// <g class="pet-hind-legs"> y se perdieron los grupos individuales
+// (back-foot-left/right, left-paw, right-paw) que el CSS apunta con las
+// animaciones sideWalkSwingLeft/Right. Resultado: al caminar, las patas NO
+// se mueven y la mascota parece deslizar. Cada frame de caminar debe tener
+// las 4 patas en grupos con la clase correcta para que la animacion CSS las
+// encuentre.
+
+const LEG_CLASSES = ['back-foot-left', 'back-foot-right', 'left-paw', 'right-paw'];
+
+function countLegGroups(svg) {
+  const out = {};
+  for (const cls of LEG_CLASSES) {
+    const re = new RegExp(`class="${cls}"`, 'g');
+    const matches = svg.match(re);
+    out[cls] = matches ? matches.length : 0;
+  }
+  return out;
+}
+
+test('cat walk frames: 4 patas con clase (back-foot-left/right + left-paw/right-paw)', () => {
+  const frames = [catWalk1SVG, catWalk2SVG, catWalk3SVG, catWalk4SVG];
+  for (const svg of frames) {
+    const counts = countLegGroups(svg);
+    for (const cls of LEG_CLASSES) {
+      assert.equal(counts[cls], 1, `cat frame missing class="${cls}" (counts=${JSON.stringify(counts)})`);
+    }
+  }
+});
+
+test('dog walk frames: 4 patas con clase (back-foot-left/right + left-paw/right-paw)', () => {
+  const frames = [dogWalk1SVG, dogWalk2SVG, dogWalk3SVG, dogWalk4SVG];
+  for (const svg of frames) {
+    const counts = countLegGroups(svg);
+    for (const cls of LEG_CLASSES) {
+      assert.equal(counts[cls], 1, `dog frame missing class="${cls}" (counts=${JSON.stringify(counts)})`);
+    }
+  }
+});
+
+// --- Walk cycle: el CSS debe tener animaciones que apunten a las 4 patas ---
+// Guard contra cambios accidentales en dashboard.css que desconecten la
+// animacion sideWalkSwingLeft/Right de las patas del SVG. Sin este CSS, las
+// patas tienen las clases correctas pero no se mueven.
+
+const fs = require('fs');
+const path = require('path');
+const CSS_PATH = path.join(__dirname, '..', 'src', 'styles', 'dashboard.css');
+
+test('dashboard.css: reglas .cat-walk + .dog-walk para las 4 patas (animation + transform-origin)', () => {
+  const css = fs.readFileSync(CSS_PATH, 'utf8');
+  const expected = [
+    '.cat-walk .back-foot-left',
+    '.cat-walk .left-paw',
+    '.cat-walk .back-foot-right',
+    '.cat-walk .right-paw',
+    '.dog-walk .back-foot-left',
+    '.dog-walk .left-paw',
+    '.dog-walk .back-foot-right',
+    '.dog-walk .right-paw'
+  ];
+  for (const sel of expected) {
+    assert.ok(css.includes(sel), `dashboard.css missing selector: ${sel}`);
+  }
+  // Sanity: las 8 reglas deben apuntar a una animacion sideWalkSwing*
+  const matches = css.match(/animation:\s*sideWalkSwing(Left|Right)\s+0\.\d+s/g) || [];
+  assert.ok(matches.length >= 8, `expected >=8 sideWalkSwing animation refs, got ${matches.length}`);
+});
+
+test('dashboard.css: transform-origin de las patas apunta a la cadera real del nuevo SVG', () => {
+  const css = fs.readFileSync(CSS_PATH, 'utf8');
+  // Cat: cadera (top of leg) y=132 para back, y=132 para front (nuevo SVG)
+  // Dog: cadera y=134 (nuevo SVG)
+  // Si alguien restaura los origins viejos (121/131/76/86 px, y=115), las patas
+  // rotan alrededor del cuerpo y se ven "despegadas".
+  const badOrigins = [
+    'transform-origin: 121px 115px',
+    'transform-origin: 131px 115px',
+    'transform-origin: 76px 115px',
+    'transform-origin: 86px 115px'
+  ];
+  for (const bad of badOrigins) {
+    assert.ok(!css.includes(bad), `dashboard.css still has OLD transform-origin: ${bad}`);
   }
 });

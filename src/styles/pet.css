@@ -1,0 +1,379 @@
+/* === PET COMPANION WINDOW STYLES === */
+#pet-window-container {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  height: 100%;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  position: relative;
+  pointer-events: none; /* Make window background click-through */
+}
+
+/* Interactive elements */
+.interactive {
+  pointer-events: auto !important;
+}
+
+/* Pet Container (200x200 canvas viewport) */
+#pet-container {
+  width: 200px;
+  height: 200px;
+  cursor: grab;
+  position: absolute;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+#pet-container:active {
+  cursor: grabbing;
+  transform: scale(0.96);
+}
+
+/* Widescreen bar mode */
+body.bar-mode #pet-container {
+  left: var(--pet-x, 0px);
+  bottom: var(--pet-y, 0px);
+  right: auto;
+  transition: bottom 0.15s ease-out, transform 0.2s ease;
+}
+
+/* Drag mode (340x320 window) */
+body.drag-mode #pet-container {
+  left: 70px !important;
+  bottom: 20px !important;
+  right: auto !important;
+}
+
+/* Unified Mascot Canvas & SVG Wrapper */
+#pet-svg-wrapper {
+  width: 200px;
+  height: 200px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: none;
+}
+
+#pet-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+#pet-canvas {
+  width: 200px;
+  height: 200px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  display: block;
+  pointer-events: none;
+}
+
+/* Direction flip when walking right */
+.flipped #pet-svg,
+.flipped #pet-canvas,
+.flipped #pet-svg-wrapper {
+  transform: scaleX(-1);
+  transform-origin: center;
+}
+
+/* Speech Bubble (Centered above the mascot) */
+#speech-bubble {
+  position: absolute;
+  bottom: 185px;
+  left: 50%;
+  transform: translateX(-50%) translateY(8px) scale(0.95);
+  width: max-content;
+  max-width: 240px;
+  padding: 10px 14px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-glass);
+  border-radius: 18px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 15px var(--border-glow);
+  opacity: 0;
+  transform-origin: bottom center;
+  transition: opacity 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), 
+              transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 100;
+  color: var(--text-main);
+  font-size: 0.85rem;
+  line-height: 1.35;
+  pointer-events: none !important;
+  text-align: center;
+  word-wrap: break-word;
+  white-space: normal;
+}
+
+body.bar-mode #speech-bubble {
+  left: calc(var(--pet-x, 0px) + 100px);
+  bottom: calc(var(--pet-y, 0px) + 185px);
+  transform: translateX(-50%) translateY(8px) scale(0.95);
+}
+
+#speech-bubble.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0) scale(1);
+  pointer-events: auto !important;
+}
+
+body.bar-mode #speech-bubble.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0) scale(1);
+  pointer-events: auto !important;
+}
+
+/* Floating Action Buttons */
+#settings-btn,
+#quick-chat-btn {
+  position: absolute;
+  top: 8px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border-glass);
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 20;
+  opacity: 0;
+  transform: scale(0.85);
+}
+
+#settings-btn {
+  right: 12px;
+}
+
+#quick-chat-btn {
+  left: 12px;
+}
+
+#pet-container:hover #settings-btn,
+#pet-container:hover #quick-chat-btn,
+#quick-chat-btn[aria-expanded="true"] {
+  opacity: 1;
+  transform: scale(1);
+}
+
+#settings-btn:hover {
+  color: var(--primary);
+  border-color: var(--primary-glow);
+  box-shadow: 0 0 10px var(--primary-glow);
+  transform: rotate(45deg);
+}
+
+#quick-chat-btn:hover,
+#quick-chat-btn[aria-expanded="true"] {
+  color: white;
+  background: var(--primary);
+  border-color: var(--secondary-glow);
+  box-shadow: 0 0 14px var(--primary-glow);
+  transform: scale(1.08);
+}
+
+/* Mini Pomodoro Badge on Floating Pet */
+#pet-pomodoro-badge {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%) scale(0.95);
+  background: var(--bg-glass);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border-glass);
+  border-radius: 20px;
+  padding: 3px 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-main);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  z-index: 15;
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  opacity: 0.85;
+}
+
+#pet-container:hover #pet-pomodoro-badge {
+  opacity: 1;
+  transform: translateX(-50%) scale(1.02);
+  border-color: var(--primary-glow);
+}
+
+/* Zzz Sleeping Particles */
+.zzz-container {
+  position: absolute;
+  top: 10px;
+  right: 25px;
+  pointer-events: none;
+  display: none;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  font-weight: bold;
+  color: #93c5fd;
+  text-shadow: 0 0 8px rgba(147, 197, 253, 0.6);
+  z-index: 10;
+}
+
+.sleeping .zzz-container {
+  display: block;
+}
+
+.zzz-1, .zzz-2, .zzz-3 {
+  position: absolute;
+  opacity: 0;
+  animation: floatZzz 3.5s infinite ease-out;
+}
+
+.zzz-1 { font-size: 14px; animation-delay: 0s; right: 0; top: 0; }
+.zzz-2 { font-size: 18px; animation-delay: 1.2s; right: 12px; top: -14px; }
+.zzz-3 { font-size: 22px; animation-delay: 2.4s; right: 26px; top: -30px; }
+
+/* === QUICK CHAT PANEL (Floating overlay on mascot) === */
+#quick-chat-panel {
+  position: absolute;
+  bottom: 180px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 290px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-glass);
+  border-radius: 18px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6), 0 0 16px var(--border-glow);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 120;
+  color: var(--text-main);
+  animation: fadeIn 0.25s ease-out;
+}
+
+body.bar-mode #quick-chat-panel {
+  left: calc(var(--pet-x, 0px) + 100px);
+  bottom: calc(var(--pet-y, 0px) + 180px);
+  transform: translateX(-50%);
+}
+
+#quick-chat-panel[hidden] {
+  display: none !important;
+}
+
+.quick-chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 6px;
+}
+
+.quick-chat-header > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+#quick-chat-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+#quick-chat-subtitle {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+#quick-chat-close {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: var(--transition);
+}
+
+#quick-chat-close:hover {
+  background: var(--danger);
+  color: white;
+  transform: scale(1.1);
+}
+
+.quick-chat-reply {
+  font-size: 0.84rem;
+  color: var(--text-main);
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 8px 10px;
+  line-height: 1.4;
+  max-height: 90px;
+  overflow-y: auto;
+  word-wrap: break-word;
+}
+
+.quick-chat-input-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+#quick-chat-input {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-glass);
+  border-radius: 10px;
+  padding: 7px 10px;
+  color: var(--text-main);
+  font-size: 0.82rem;
+  outline: none;
+  transition: var(--transition);
+}
+
+#quick-chat-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 10px var(--primary-glow);
+}
+
+#quick-chat-send {
+  background: var(--primary);
+  border: none;
+  border-radius: 10px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+#quick-chat-send:hover {
+  background: var(--primary-deep);
+  transform: scale(1.06);
+}
+

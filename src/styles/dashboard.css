@@ -1,0 +1,1644 @@
+/* === 2. DASHBOARD / SETTINGS PANEL STYLES === */
+
+.dashboard-card {
+  width: 100%;
+  height: 100%;
+  background: var(--bg-dark);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid var(--border-glass);
+  border-radius: 24px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 
+              inset 0 0 20px rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Custom Title Bar for Dashboard */
+.title-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border-glass);
+  background: rgba(0, 0, 0, 0.2);
+  -webkit-app-region: drag; /* Make it draggable */
+}
+
+.title-bar-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 0.5px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.close-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+  transition: var(--transition);
+}
+
+.close-btn:hover {
+  background: var(--danger);
+  color: white;
+  transform: scale(1.1);
+}
+
+/* Dashboard Content Grid */
+.dashboard-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  gap: 20px;
+  overflow-y: auto;
+}
+
+/* Navigation Tabs */
+.tabs-header {
+  display: flex;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-glass);
+  padding: 4px;
+  border-radius: 12px;
+  gap: 4px;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.tab-btn.active {
+  background: var(--primary-glow);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.2);
+}
+
+/* Tab Panels */
+.tab-panel {
+  display: none;
+  flex-direction: column;
+  gap: 20px;
+  height: 100%;
+}
+
+.tab-panel.active {
+  display: flex;
+}
+
+/* Pomodoro Timer UI */
+.pomodoro-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 10px 0;
+}
+
+.timer-circle-wrap {
+  position: relative;
+  width: 180px;
+  height: 180px;
+}
+
+.timer-svg {
+  width: 180px;
+  height: 180px;
+  transform: rotate(-90deg);
+}
+
+.timer-bg-circle {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.03);
+  stroke-width: 8px;
+}
+
+.timer-progress-circle {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 8px;
+  stroke-linecap: round;
+  stroke-dasharray: 502; /* 2 * PI * r (r=80) -> 502.6 */
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 1s linear, stroke 0.5s ease;
+}
+
+.timer-text-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.timer-time {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--text-main);
+  text-shadow: var(--text-glow);
+}
+
+.timer-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-top: 4px;
+}
+
+.timer-controls {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.btn {
+  flex: 1;
+  padding: 12px 20px;
+  border-radius: 12px;
+  border: 1px solid var(--border-glass);
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: var(--transition);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-deep));
+  color: white;
+  border: none;
+  box-shadow: 0 4px 15px rgba(var(--primary-rgb), 0.34);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(var(--primary-rgb), 0.5);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-main);
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+/* Chat Assistant Panel */
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 380px;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border-glass);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.chat-companion-header {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 13px 15px;
+  border-bottom: 1px solid var(--border-glass);
+  background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.16), rgba(var(--secondary-rgb), 0.07));
+}
+
+.chat-pet-avatar {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border-glass);
+  border-radius: 12px;
+  background: rgba(var(--primary-rgb), 0.18);
+  font-size: 1.2rem;
+}
+
+.chat-companion-copy strong,
+.chat-companion-copy span {
+  display: block;
+}
+
+.chat-companion-copy strong {
+  color: var(--text-main);
+  font-size: 0.92rem;
+}
+
+.chat-companion-copy span {
+  margin-top: 3px;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.chat-companion-copy i {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 5px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 7px var(--success);
+}
+
+.chat-companion-copy i.busy {
+  background: var(--warning);
+  box-shadow: 0 0 7px var(--warning);
+  animation: statusPulse 0.85s infinite alternate ease-in-out;
+}
+
+@keyframes statusPulse {
+  from { opacity: 0.45; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1.15); }
+}
+
+.chat-history {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chat-bubble {
+  max-width: 80%;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+.chat-bubble.assistant {
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
+  color: var(--text-main);
+  align-self: flex-start;
+  border-bottom-left-radius: 2px;
+  border-left: 3px solid var(--primary);
+}
+
+.chat-bubble.user {
+  background: var(--primary-glow);
+  border: 1px solid rgba(var(--primary-rgb), 0.28);
+  color: white;
+  align-self: flex-end;
+  border-bottom-right-radius: 2px;
+}
+
+.quick-prompts {
+  display: flex;
+  gap: 7px;
+  padding: 0 12px 10px;
+  overflow-x: auto;
+}
+
+.quick-prompts button {
+  flex: 0 0 auto;
+  padding: 6px 9px;
+  border: 1px solid var(--border-glass);
+  border-radius: 999px;
+  background: rgba(var(--primary-rgb), 0.11);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.7rem;
+  transition: var(--transition);
+}
+
+.quick-prompts button:hover {
+  color: white;
+  border-color: var(--primary);
+  background: rgba(var(--primary-rgb), 0.22);
+}
+
+.chat-bubble.system {
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  align-self: center;
+  text-align: center;
+  max-width: 100%;
+  border-radius: 0;
+  padding: 4px;
+}
+
+.chat-input-area {
+  display: flex;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.25);
+  border-top: 1px solid var(--border-glass);
+  gap: 8px;
+}
+
+.chat-input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-glass);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: white;
+  font-size: 0.9rem;
+  outline: none;
+  transition: var(--transition);
+}
+
+.chat-input:focus {
+  border-color: var(--primary);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.send-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--primary);
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.send-btn:hover {
+  background: var(--primary-deep);
+  transform: scale(1.05);
+}
+
+/* Settings Forms */
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.settings-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-glass);
+  border-radius: 10px;
+  padding: 12px;
+  color: white;
+  outline: none;
+  font-size: 0.9rem;
+  transition: var(--transition);
+}
+
+.settings-input:focus {
+  border-color: var(--secondary);
+  box-shadow: 0 0 8px rgba(var(--secondary-rgb), 0.3);
+}
+
+/* Mascot Cards Selector */
+.mascot-selector {
+  display: flex;
+  gap: 16px;
+}
+
+.mascot-card {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-glass);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.mascot-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-4px);
+}
+
+.mascot-card.active {
+  background: rgba(var(--primary-rgb), 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 0 15px rgba(var(--primary-rgb), 0.2);
+}
+
+.sound-setting-row {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  border: 1px solid var(--border-glass);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.sound-setting-row > div > span {
+  display: block;
+  margin-top: 3px;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.switch-control {
+  position: relative;
+  width: 42px;
+  height: 24px;
+  flex: 0 0 42px;
+}
+
+.switch-control input {
+  position: absolute;
+  opacity: 0;
+}
+
+.switch-control span {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.switch-control span::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  left: 3px;
+  top: 3px;
+  border-radius: 50%;
+  background: white;
+  transition: var(--transition);
+}
+
+.switch-control input:checked + span {
+  background: var(--primary);
+}
+
+.switch-control input:checked + span::after {
+  transform: translateX(18px);
+}
+
+.mascot-preview-svg {
+  width: 60px;
+  height: 60px;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+}
+
+.mascot-card-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.mascot-card-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+
+/* === 3. KEYFRAME ANIMATIONS === */
+/* Breathing */
+@keyframes breathing {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.03) translateY(-1px); }
+  100% { transform: scale(1); }
+}
+
+.anim-breath {
+  animation: breathing 3s ease-in-out infinite;
+}
+
+/* Tail Wagging */
+@keyframes wag {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(15deg); }
+}
+
+.anim-wag {
+  transform-origin: bottom left;
+  animation: wag 1.2s ease-in-out infinite;
+}
+
+.anim-wag-fast {
+  transform-origin: bottom left;
+  animation: wag 0.6s ease-in-out infinite;
+}
+
+/* Blinking */
+@keyframes blink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.1); }
+}
+
+.anim-blink {
+  transform-origin: center;
+  animation: blink 4s infinite;
+}
+
+/* Floating animation for settings gear */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* --- Ear Twitch (idle micro-animation) ---
+   Triggered by adding .ear-twitching to .pet-ear-left or .pet-ear-right.
+   Subtle rotation, runs once over 400ms. */
+@keyframes earTwitchLeft {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-6deg); }
+}
+@keyframes earTwitchRight {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(6deg); }
+}
+.pet-ear.ear-twitching {
+  animation-duration: 0.4s;
+  animation-timing-function: ease-in-out;
+}
+.pet-ear-left.ear-twitching { animation-name: earTwitchLeft; }
+.pet-ear-right.ear-twitching { animation-name: earTwitchRight; }
+/* No twitch mientras duerme o se arrastra */
+.sleeping .pet-ear,
+.drag-mode .pet-ear { animation: none !important; }
+
+/* --- Walking Animations --- */
+
+/* 1. Cat Walk (Smooth hip sway, low bounce, slinky glide) */
+.walking-bob.cat-walk {
+  animation: catBodyWalk 0.65s infinite ease-in-out;
+}
+
+@keyframes catBodyWalk {
+  0%, 100% { transform: translateY(0) rotate(-1.5deg) translateX(-1px); }
+  50% { transform: translateY(-4px) rotate(1.5deg) translateX(1px); }
+}
+
+/* Cat Tail Sinusoidal wave while walking */
+.walking-bob.cat-walk .anim-wag {
+  animation: catTailWalk 1.3s infinite ease-in-out !important;
+  transform-origin: 130px 145px !important;
+}
+
+@keyframes catTailWalk {
+  0%, 100% { transform: rotate(-8deg) skewX(-4deg); }
+  50% { transform: rotate(18deg) skewX(10deg); }
+}
+
+/* 2. Dog Walk (High energy, bouncy trot, head bobbing) */
+.walking-bob.dog-walk {
+  animation: dogBodyWalk 0.48s infinite ease-in-out;
+}
+
+@keyframes dogBodyWalk {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-7px) rotate(2deg); }
+}
+
+/* Dog Tail fast wide wag while walking */
+.walking-bob.dog-walk .anim-wag-fast {
+  animation: dogTailWalk 0.24s infinite ease-in-out !important;
+  transform-origin: 130px 145px !important;
+}
+
+@keyframes dogTailWalk {
+  0%, 100% { transform: rotate(-15deg) scaleY(0.95); }
+  50% { transform: rotate(25deg) scaleY(1.05); }
+}
+
+/* 3. Quadruped Profile Walk swinging animations */
+@keyframes sideWalkSwingLeft {
+  0%, 100% { transform: rotate(-22deg); }
+  50% { transform: rotate(18deg); }
+}
+@keyframes sideWalkSwingRight {
+  0%, 100% { transform: rotate(18deg); }
+  50% { transform: rotate(-22deg); }
+}
+
+/* Apply profile leg swinging animations to both pets when walking */
+/* Cat Cycle (0.65s duration) — pivots at hip joint (top of each leg) */
+.cat-walk .back-foot-left {
+  animation: sideWalkSwingLeft 0.65s infinite ease-in-out;
+  transform-origin: 58px 132px;
+}
+.cat-walk .left-paw {
+  animation: sideWalkSwingRight 0.65s infinite ease-in-out;
+  transform-origin: 76px 132px;
+}
+.cat-walk .back-foot-right {
+  animation: sideWalkSwingRight 0.65s infinite ease-in-out;
+  transform-origin: 142px 132px;
+}
+.cat-walk .right-paw {
+  animation: sideWalkSwingLeft 0.65s infinite ease-in-out;
+  transform-origin: 110px 132px;
+}
+
+/* Dog Cycle (0.48s duration) — pivots at hip joint (top of each leg) */
+.dog-walk .back-foot-left {
+  animation: sideWalkSwingLeft 0.48s infinite ease-in-out;
+  transform-origin: 56px 134px;
+}
+.dog-walk .left-paw {
+  animation: sideWalkSwingRight 0.48s infinite ease-in-out;
+  transform-origin: 76px 134px;
+}
+.dog-walk .back-foot-right {
+  animation: sideWalkSwingRight 0.48s infinite ease-in-out;
+  transform-origin: 144px 134px;
+}
+.dog-walk .right-paw {
+  animation: sideWalkSwingLeft 0.48s infinite ease-in-out;
+  transform-origin: 110px 134px;
+}
+
+/* Happy jump/bounce animation with organic squash & stretch */
+@keyframes happyBounce {
+  0% { transform: translateY(0) scale(1, 1); }
+  15% { transform: translateY(4px) scale(1.12, 0.88); }
+  45% { transform: translateY(-26px) scale(0.92, 1.1); }
+  65% { transform: translateY(0) scale(1.08, 0.94); }
+  82% { transform: translateY(-8px) scale(0.96, 1.04); }
+  100% { transform: translateY(0) scale(1, 1); }
+}
+.happy-bounce {
+  animation: happyBounce 0.85s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Sleeping closed eyes & breathing animations */
+.sleeping .anim-blink {
+  transform: scaleY(0.1) !important;
+  transform-origin: center !important;
+  animation: none !important;
+}
+.sleeping .anim-breath {
+  animation-duration: 5s !important; /* Breathe very slowly */
+}
+.sleeping .anim-wag, .sleeping .anim-wag-fast {
+  animation: none !important; /* Stop wagging */
+}
+
+/* Zzz sleeping particles */
+@keyframes zzzFloat {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.6); }
+  50% { opacity: 0.8; transform: translate(12px, -18px) scale(1); }
+  100% { opacity: 0; transform: translate(20px, -36px) scale(0.7); }
+}
+.zzz-container {
+  position: absolute;
+  top: 15px;
+  left: 20px;
+  font-weight: 700;
+  font-family: var(--font-family);
+  color: var(--secondary);
+  pointer-events: none;
+  opacity: 0;
+  z-index: 5;
+  transition: opacity 0.5s ease;
+}
+.sleeping .zzz-container {
+  opacity: 1;
+}
+.zzz-1 { animation: zzzFloat 3s infinite 0s; position: absolute; }
+.zzz-2 { animation: zzzFloat 3s infinite 1s; position: absolute; left: 10px; top: -6px; font-size: 1.1rem; }
+.zzz-3 { animation: zzzFloat 3s infinite 2s; position: absolute; left: 20px; top: -12px; font-size: 0.8rem; }
+
+/* Collapsible Details Element for AI Reasoning */
+.thinking-details {
+  margin-bottom: 8px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  width: 100%;
+}
+.thinking-details summary {
+  padding: 6px 10px;
+  cursor: pointer;
+  outline: none;
+  font-weight: 500;
+  user-select: none;
+}
+.thinking-details summary:hover {
+  color: var(--primary);
+}
+.thinking-content {
+  padding: 8px 12px;
+  line-height: 1.4;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  white-space: pre-wrap;
+  font-style: italic;
+}
+
+/* === Micro presence (batch 1) === */
+
+/* M1 — Respiración idle. Aplicar al SVG-container. Sutil, no distrae. */
+#pet-svg-wrapper.breathing {
+  animation: petBreathe 3.2s infinite ease-in-out;
+  transform-origin: 50% 60%;
+}
+
+@keyframes petBreathe {
+  0%, 100% { transform: scaleY(1.00); }
+  50%      { transform: scaleY(1.04); }
+}
+
+/* M3 — Pupil dilation nocturna. Pupilas se agrandan 1.6x */
+.pet-pupil {
+  transition: r 0.6s ease, cx 0.18s ease, cy 0.18s ease;
+}
+body.pupils-dilated .pet-pupil {
+  /* Sin transform (no afecta el parent), usa el atributo r en SVG */
+  /* El renderer setea el radio via JS; esta clase es la senial */
+}
+
+/* M4 — Yawn overlay. Un parpadeo simple por ahora. */
+.pet-yawn {
+  animation: petYawn 1.6s ease-in-out;
+}
+@keyframes petYawn {
+  0%   { opacity: 0; transform: scaleY(0.6); }
+  20%  { opacity: 1; transform: scaleY(1.0); }
+  60%  { opacity: 1; transform: scaleY(1.0); }
+  100% { opacity: 0; transform: scaleY(0.6); }
+}
+
+/* Hint al lado del input del pet name */
+.settings-hint {
+  font-size: 0.78rem;
+  color: var(--text-secondary, #888);
+  margin: 4px 0 0 0;
+}
+
+/* Mood widget (Settings tab) — chip + 4 mini bars */
+.mood-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg-card, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.08));
+  border-radius: 10px;
+}
+.mood-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 13px;
+  width: fit-content;
+  transition: background 0.3s ease, color 0.3s ease;
+  user-select: none;
+}
+.mood-chip-emoji { font-size: 16px; line-height: 1; }
+.mood-chip.mood-state-calm   { background: #dbeafe; color: #1e40af; }
+.mood-chip.mood-state-happy  { background: #dcfce7; color: #166534; }
+.mood-chip.mood-state-sleepy { background: #ede9fe; color: #5b21b6; }
+.mood-chip.mood-state-sad    { background: #e5e7eb; color: #374151; }
+.mood-chip.mood-state-bored  { background: #ffedd5; color: #9a3412; }
+.mood-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 12px;
+}
+.mood-stat-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 11px;
+  margin-bottom: 3px;
+}
+.mood-stat-label { color: var(--text-secondary, #888); }
+.mood-stat-value { font-weight: 600; color: var(--text, #212529); font-variant-numeric: tabular-nums; }
+.mood-stat-bar {
+  height: 6px;
+  background: var(--bg-card-hover, rgba(0, 0, 0, 0.08));
+  border-radius: 3px;
+  overflow: hidden;
+}
+.mood-stat-bar-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--primary, #339af0);
+  border-radius: 3px;
+  transition: width 0.4s ease, background 0.3s ease;
+}
+.mood-stat-bar-fill[data-stat="hunger"]    { background: #f59e0b; }
+.mood-stat-bar-fill[data-stat="happiness"] { background: #ec4899; }
+.mood-stat-bar-fill[data-stat="curiosity"] { background: #8b5cf6; }
+.mood-stat-bar-fill[data-stat="energy"]    { background: #06b6d4; }
+
+/* Memories widget (Settings tab — P3 recuerdos persistentes) */
+.memories-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+.memories-count {
+  font-size: 12px;
+  color: var(--text-secondary, #888);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+.memories-list {
+  max-height: 320px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+  padding-right: 4px;
+}
+.memories-empty {
+  padding: 20px 12px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-secondary, #888);
+  font-style: italic;
+  background: var(--bg-card, rgba(0, 0, 0, 0.02));
+  border: 1px dashed var(--border, rgba(0, 0, 0, 0.1));
+  border-radius: 8px;
+}
+.memory-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--bg-card, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.08));
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+.memory-item:hover {
+  background: var(--bg-card-hover, rgba(0, 0, 0, 0.06));
+}
+.memory-item-text {
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+.memory-item-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+.memory-item-date {
+  font-size: 10px;
+  color: var(--text-secondary, #888);
+  font-variant-numeric: tabular-nums;
+}
+.memory-item-remove {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary, #888);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 6px;
+  border-radius: 4px;
+  transition: background 0.15s, color 0.15s;
+}
+.memory-item-remove:hover {
+  background: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+}
+.memories-pii-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.settings-hint-inline {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-secondary, #888);
+  margin-top: 2px;
+}
+/* Mood widget (Settings tab) — chip + 4 mini bars */
+.mood-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg-card, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.08));
+  border-radius: 10px;
+}
+.mood-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 13px;
+  width: fit-content;
+  transition: background 0.3s ease, color 0.3s ease;
+  user-select: none;
+}
+.mood-chip-emoji { font-size: 16px; line-height: 1; }
+.mood-chip.mood-state-calm   { background: #dbeafe; color: #1e40af; }
+.mood-chip.mood-state-happy  { background: #dcfce7; color: #166534; }
+.mood-chip.mood-state-sleepy { background: #ede9fe; color: #5b21b6; }
+.mood-chip.mood-state-sad    { background: #e5e7eb; color: #374151; }
+.mood-chip.mood-state-bored  { background: #ffedd5; color: #9a3412; }
+.mood-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 12px;
+}
+.mood-stat-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 11px;
+  margin-bottom: 3px;
+}
+.mood-stat-label { color: var(--text-secondary, #888); }
+.mood-stat-value { font-weight: 600; color: var(--text, #212529); font-variant-numeric: tabular-nums; }
+.mood-stat-bar {
+  height: 6px;
+  background: var(--bg-card-hover, rgba(0, 0, 0, 0.08));
+  border-radius: 3px;
+  overflow: hidden;
+}
+.mood-stat-bar-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--primary, #339af0);
+  border-radius: 3px;
+  transition: width 0.4s ease, background 0.3s ease;
+}
+.mood-stat-bar-fill[data-stat="hunger"]    { background: #f59e0b; }
+.mood-stat-bar-fill[data-stat="happiness"] { background: #ec4899; }
+.mood-stat-bar-fill[data-stat="curiosity"] { background: #8b5cf6; }
+.mood-stat-bar-fill[data-stat="energy"]    { background: #06b6d4; }
+
+/* Memories widget (Settings tab — P3 recuerdos persistentes) */
+.memories-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+.memories-count {
+  font-size: 12px;
+  color: var(--text-secondary, #888);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+.memories-list {
+  max-height: 320px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+  padding-right: 4px;
+}
+.memories-empty {
+  padding: 20px 12px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-secondary, #888);
+  font-style: italic;
+  background: var(--bg-card, rgba(0, 0, 0, 0.02));
+  border: 1px dashed var(--border, rgba(0, 0, 0, 0.1));
+  border-radius: 8px;
+}
+.memory-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--bg-card, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.08));
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+.memory-item:hover {
+  background: var(--bg-card-hover, rgba(0, 0, 0, 0.06));
+}
+.memory-item-text {
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+.memory-item-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+.memory-item-date {
+  font-size: 10px;
+  color: var(--text-secondary, #888);
+  font-variant-numeric: tabular-nums;
+}
+.memory-item-remove {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary, #888);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 6px;
+  border-radius: 4px;
+  transition: background 0.15s, color 0.15s;
+}
+.memory-item-remove:hover {
+  background: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+}
+.memories-pii-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.settings-hint-inline {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-secondary, #888);
+  margin-top: 2px;
+}
+
+/* === Track A — Pomodoro: plantilla + custom inputs + stats === */
+.pomodoro-config {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 0 4px 0;
+  border-top: 1px solid var(--border-glass, rgba(255,255,255,0.06));
+  margin-top: 6px;
+}
+.pomodoro-config-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-secondary, #888);
+  font-weight: 600;
+}
+.template-select {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-glass, rgba(255,255,255,0.08));
+  background: var(--bg-card, rgba(255,255,255,0.04));
+  color: var(--text-main, #fff);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.template-select:focus {
+  outline: 2px solid var(--primary, #6366f1);
+  outline-offset: 1px;
+}
+.custom-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 8px 0 0 0;
+}
+.custom-input-label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.7rem;
+  color: var(--text-secondary, #888);
+  gap: 4px;
+}
+.settings-input.compact {
+  padding: 6px 8px;
+  font-size: 0.85rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-glass, rgba(255,255,255,0.08));
+  background: var(--bg-card, rgba(255,255,255,0.04));
+  color: var(--text-main, #fff);
+}
+#pomodoro-apply-btn {
+  grid-column: 1 / -1;
+  margin-top: 4px;
+}
+.pomodoro-config-status {
+  grid-column: 1 / -1;
+  font-size: 0.7rem;
+  color: var(--text-secondary, #888);
+  margin: 0;
+  min-height: 1em;
+}
+.pomodoro-config-status.error {
+  color: #dc2626;
+}
+.pomodoro-config-status.success {
+  color: #16a34a;
+}
+.pomodoro-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 0 0 0;
+  margin-top: 6px;
+  font-size: 0.78rem;
+  color: var(--text-secondary, #888);
+  border-top: 1px solid var(--border-glass, rgba(255,255,255,0.06));
+}
+.pomodoro-stat {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.pomodoro-stat-num {
+  font-weight: 700;
+  color: var(--primary, #6366f1);
+  font-variant-numeric: tabular-nums;
+}
+.pomodoro-stat-sep {
+  opacity: 0.5;
+}
+/* Mood widget (Settings tab) — chip + 4 mini bars */
+.mood-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg-card, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.08));
+  border-radius: 10px;
+}
+.mood-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 13px;
+  width: fit-content;
+  transition: background 0.3s ease, color 0.3s ease;
+  user-select: none;
+}
+.mood-chip-emoji { font-size: 16px; line-height: 1; }
+.mood-chip.mood-state-calm   { background: #dbeafe; color: #1e40af; }
+.mood-chip.mood-state-happy  { background: #dcfce7; color: #166534; }
+.mood-chip.mood-state-sleepy { background: #ede9fe; color: #5b21b6; }
+.mood-chip.mood-state-sad    { background: #e5e7eb; color: #374151; }
+.mood-chip.mood-state-bored  { background: #ffedd5; color: #9a3412; }
+.mood-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 12px;
+}
+.mood-stat-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 11px;
+  margin-bottom: 3px;
+}
+.mood-stat-label { color: var(--text-secondary, #888); }
+.mood-stat-value { font-weight: 600; color: var(--text, #212529); font-variant-numeric: tabular-nums; }
+.mood-stat-bar {
+  height: 6px;
+  background: var(--bg-card-hover, rgba(0, 0, 0, 0.08));
+  border-radius: 3px;
+  overflow: hidden;
+}
+.mood-stat-bar-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--primary, #339af0);
+  border-radius: 3px;
+  transition: width 0.4s ease, background 0.3s ease;
+}
+.mood-stat-bar-fill[data-stat="hunger"]    { background: #f59e0b; }
+.mood-stat-bar-fill[data-stat="happiness"] { background: #ec4899; }
+.mood-stat-bar-fill[data-stat="curiosity"] { background: #8b5cf6; }
+.mood-stat-bar-fill[data-stat="energy"]    { background: #06b6d4; }
+
+/* Memories widget (Settings tab — P3 recuerdos persistentes) */
+.memories-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+.memories-count {
+  font-size: 12px;
+  color: var(--text-secondary, #888);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+.memories-list {
+  max-height: 320px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+  padding-right: 4px;
+}
+.memories-empty {
+  padding: 20px 12px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-secondary, #888);
+  font-style: italic;
+  background: var(--bg-card, rgba(0, 0, 0, 0.02));
+  border: 1px dashed var(--border, rgba(0, 0, 0, 0.1));
+  border-radius: 8px;
+}
+.memory-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--bg-card, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.08));
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+.memory-item:hover {
+  background: var(--bg-card-hover, rgba(0, 0, 0, 0.06));
+}
+.memory-item-text {
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+.memory-item-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+.memory-item-date {
+  font-size: 10px;
+  color: var(--text-secondary, #888);
+  font-variant-numeric: tabular-nums;
+}
+.memory-item-remove {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary, #888);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 6px;
+  border-radius: 4px;
+  transition: background 0.15s, color 0.15s;
+}
+.memory-item-remove:hover {
+  background: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+}
+.memories-pii-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.settings-hint-inline {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-secondary, #888);
+  margin-top: 2px;
+}
+
+/* === Quick Capture Overlay (I2) === */
+/* El overlay tapa toda la ventana del pet. pointer-events auto solo en el box
+   para que el click "fuera del box" cierre el overlay sin romper el drag del pet. */
+.quick-capture-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.quick-capture-box {
+  background: var(--bg-dark, #1f1f1f);
+  color: var(--text-main, #f3f4f6);
+  padding: 18px 20px;
+  border-radius: 10px;
+  border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.18));
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.55);
+  max-width: 400px;
+  width: calc(100% - 40px);
+  position: relative;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#quick-capture-text {
+  width: 100%;
+  height: 80px;
+  resize: none;
+  font-family: ui-monospace, 'Consolas', 'Monaco', monospace;
+  font-size: 0.85rem;
+  padding: 8px 10px;
+  border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.18));
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-main, #f3f4f6);
+  outline: none;
+  user-select: text;
+  box-sizing: border-box;
+}
+
+#quick-capture-text:focus {
+  border-color: var(--primary, #d9480f);
+  box-shadow: 0 0 0 3px rgba(217, 72, 15, 0.18);
+}
+
+.quick-capture-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+  gap: 10px;
+}
+
+#quick-capture-counter {
+  font-size: 0.72rem;
+  color: var(--text-muted, #9ca3af);
+  font-variant-numeric: tabular-nums;
+}
+
+.quick-capture-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+#quick-capture-cancel,
+#quick-capture-save {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.18));
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition, all 0.3s ease);
+}
+
+#quick-capture-cancel {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted, #9ca3af);
+}
+
+#quick-capture-cancel:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-main, #f3f4f6);
+}
+
+#quick-capture-save {
+  background: var(--primary, #d9480f);
+  color: white;
+  border-color: var(--primary, #d9480f);
+}
+
+#quick-capture-save:hover {
+  background: var(--primary-deep, #a83408);
+  transform: translateY(-1px);
+}
+
+/* === Captures list (Dashboard) === */
+.captures-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 320px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.captures-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+
+.captures-item:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.captures-item-text {
+  flex: 1;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--text-main, #f3f4f6);
+  word-break: break-word;
+  user-select: text;
+}
+
+.captures-item-time {
+  font-size: 0.7rem;
+  color: var(--text-muted, #9ca3af);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.captures-empty {
+  padding: 18px 12px;
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--text-muted, #9ca3af);
+  font-style: italic;
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+/* === Weekly report (Dashboard) === */
+.weekly-report-output {
+  background: rgba(0, 0, 0, 0.18);
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.12));
+  font-family: ui-monospace, 'Consolas', 'Monaco', monospace;
+  font-size: 0.78rem;
+  white-space: pre-wrap;
+  line-height: 1.5;
+  color: var(--text-main, #f3f4f6);
+  max-height: 320px;
+  overflow-y: auto;
+  user-select: text;
+  margin-top: 10px;
+}
+
+.weekly-report-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* === Track B — W1 silent mode + W2 retreat visuals === */
+
+/* W1 — silent mode: la mascota esta visible pero "callada".
+   Solo se ve mas apagada (menos saturada, opacity reducida).
+   Sigue respirando, eye-tracking, etc. — visual only. */
+body.pet--silent #pet-container {
+  opacity: 0.7;
+  filter: saturate(0.6) brightness(0.95);
+  transition: opacity 0.4s ease, filter 0.4s ease;
+}
+
+/* W2 — retreat: la mascota se "esconde" porque hay reunion.
+   Visual mas fuerte que silent mode (opacity 0.5, scale 0.7).
+   El position override no se hace en CSS porque el petWindow es draggable;
+   el renderer setea el transform via JS. */
+body.pet--retreat #pet-container {
+  opacity: 0.5;
+  transform: scale(0.7);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+/* Si ambos (silent + retreat), el retreat manda (mayor especificidad
+   porque pet--retreat esta en el body ademas de las inline styles). */
+body.pet--retreat.pet--silent #pet-container {
+  opacity: 0.5;
+  transform: scale(0.7);
+  filter: saturate(0.6) brightness(0.95);
+}
+
+/* Indicador de silent mode en el dashboard: chip visible al lado del
+   titulo de la mascota. */
+.silent-mode-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: rgba(99, 102, 241, 0.15);
+  color: rgb(99, 102, 241);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  margin-left: 8px;
+}
+.silent-mode-chip::before {
+  content: '\01F507';
+  font-size: 0.85rem;
+}
+
+/* Indicator de retreat activo (reunion) */
+.retreat-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: rgb(245, 158, 11);
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-top: 8px;
+}
+.retreat-indicator::before {
+  content: '\01F4C5';
+  font-size: 1rem;
+}
+
+/* Calendar test results: lista compacta de eventos */
+.calendar-test-result {
+  margin-top: 8px;
+  font-size: 0.78rem;
+  color: var(--text-muted, #aaa);
+}
+.calendar-test-result.error {
+  color: rgb(239, 68, 68);
+}
+.calendar-test-result ul {
+  list-style: none;
+  padding: 0;
+  margin: 4px 0 0 0;
+}
+.calendar-test-result li {
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
