@@ -251,6 +251,7 @@ body.bar-mode #speech-bubble.visible {
   left: 50%;
   transform: translateX(-50%);
   width: 290px;
+  max-height: 360px;             /* B2 fix (chat-bugs-leak): prevent long reply from covering X button */
   background: var(--bg-glass);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -325,6 +326,10 @@ body.bar-mode #quick-chat-panel {
 .quick-chat-reply {
   font-size: 0.84rem;
   color: var(--text-main);
+  max-height: 160px;             /* B2 fix: bounded reply area, scroll inside if really long */
+  overflow-y: auto;
+  word-break: break-word;        /* prevent long single words from overflowing the panel */
+  white-space: pre-wrap;         /* preserve any newlines from the LLM response */
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 10px;

@@ -1,1046 +1,228 @@
-'use strict';
+/* ============================================================
+   MASCOTA VIRTUAL — MAIN RENDERER COORDINATOR
+   Coordinates modular controllers: Viewport, Speech, Interaction,
+   EyeTracker, Pomodoro, and IPC bridge.
+   ============================================================ */
 
-let currentPet = 'cat';
+let viewport = null;
+let speech = null;
+let interaction = null;
+let pomodoro = null;
 let soundEnabled = true;
-let currentVisualState = null;
-let speechTimeout = null;
+let currentPet = 'cat';
 let sleepTimeout = null;
-let dragCandidate = null;
-let isDragging = false;
-let tailTime = 0;
-// M4 — mood affecting motion (gradual lerp).
-// _target = valor deseado (lo que el mood quiere). _current = valor actual
-// (lo que el rAF loop usa). En cada frame, _current lerppea hacia _target
-// a razon de TAIL_LERP_FACTOR por frame (5% = ~200-300ms transicion).
-let tailWagSpeed = 0.04;
-let tailWagAmplitude = 1;
-let tailWagSpeedTarget = 0.04;
-let tailWagAmplitudeTarget = 1;
-const TAIL_LERP_FACTOR = 0.05;
-const TAIL_LERP_EPSILON = 0.0005;
 
-function lerpTailTargets() {
-  const speedDelta = tailWagSpeedTarget - tailWagSpeed;
-  if (Math.abs(speedDelta) > TAIL_LERP_EPSILON) {
-    tailWagSpeed += speedDelta * TAIL_LERP_FACTOR;
-  } else {
-    tailWagSpeed = tailWagSpeedTarget;
-  }
-  const ampDelta = tailWagAmplitudeTarget - tailWagAmplitude;
-  if (Math.abs(ampDelta) > TAIL_LERP_EPSILON) {
-    tailWagAmplitude += ampDelta * TAIL_LERP_FACTOR;
-  } else {
-    tailWagAmplitude = tailWagAmplitudeTarget;
-  }
-  // v2.3.0 M2 — push the TARGETS to PIXI (PIXI lerps internally toward them).
-  // The legacy tail wag code below still runs but has no visible effect since
-  // the SVG path is gone. PIXI owns the wag from here.
-  if (window.petPixiRenderer?.isReady()) {
-    window.petPixiRenderer.setTailWagTargets(tailWagSpeedTarget, tailWagAmplitudeTarget);
-  }
-}
-let currentPetX = 0;
-let isQuickChatSending = false;
-let quickChatHistory = [];
-let nextEarTwitchAt = 0;
+// Ear twitch idle timer
+let earTwitchTimer = null;
 
-const DRAG_THRESHOLD_PX = 7;
-const SLEEP_DELAY_MS = 45000;
-const hoveredInteractiveElements = new Set();
-
-// ============================================================
-// M2 — Multi-frame state machine
-// STATE_FRAMES: array de SVGs por (petType, state). Multi-frame para
-//   walk (4), sit (2: blink), lay (2: breathe); single-frame para los demás.
-// STATE_FRAME_RATE: ms por frame. Infinity = static. Walk ~6fps, sit/lay lentos.
-// ============================================================
-const STATE_FRAMES = {
-  idle: {
-    cat: () => [window.catIdleSVG],
-    dog: () => [window.dogIdleSVG]
-  },
-  walking: {
-    cat: () => window.catWalkFrames || [window.catWalkSVG],
-    dog: () => window.dogWalkFrames || [window.dogWalkSVG]
-  },
-  sleeping: {
-    cat: () => [window.catSleepSVG],
-    dog: () => [window.dogSleepSVG]
-  },
-  sitting: {
-    cat: () => window.catSitFrames || [window.catSitSVG],
-    dog: () => window.dogSitFrames || [window.dogSitSVG]
-  },
-  laying: {
-    cat: () => window.catLayFrames || [window.catLaySVG],
-    dog: () => window.dogLayFrames || [window.dogLaySVG]
-  },
-  stretching: {
-    cat: () => [window.catStretchSVG],
-    dog: () => [window.dogStretchSVG]
-  }
-};
-
-const STATE_FRAME_RATE = {
-  idle: Infinity,        // static
-  walking: 167,          // 6 fps (suficiente para 4 frames)
-  sleeping: Infinity,    // el zzz CSS ya anima
-  sitting: 2500,         // 0.4 fps para blink lento
-  laying: 3000,          // 0.33 fps para breathe lento
-  stretching: Infinity   // static
-};
-
-const STATE_FADE_MS = 120;  // cross-fade entre states (no entre frames del cycle)
-
-let currentFrameIndex = 0;
-let lastFrameSwap = 0;
-
-// M3 — look-at-cursor (head rotation)
-let mouseX = 0;
-let mouseY = 0;
-let lastCursorDistance = Infinity;
-const HEAD_ROTATION_RANGE_DEG = 15;  // cap
-const HEAD_FOLLOW_DISTANCE_PX = 250; // solo rotar si el cursor está cerca
-
-function updateHeadRotation() {
-  const head = petSvgWrapper.querySelector('.pet-head');
-  if (!head) return;
-
-  const rect = petContainer.getBoundingClientRect();
-  const petCenterX = rect.left + rect.width / 2;
-  const petCenterY = rect.top + rect.height / 2;
-  const dx = mouseX - petCenterX;
-  const dy = mouseY - petCenterY;
-  const distance = Math.hypot(dx, dy);
-
-  lastCursorDistance = distance;
-
-  if (distance > HEAD_FOLLOW_DISTANCE_PX) {
-    // Cursor lejos: head vuelve a neutro
-    head.style.transform = 'rotate(0deg)';
-    return;
-  }
-
-  // Head "front" en profile mirando izquierda es (-1, 0) en screen coords.
-  // Para que la cabeza apunte al cursor: rot = atan2(dy, -dx) (en radianes).
-  // atan2(dy, -dx) para dx=-100, dy=0 (cursor in front) = 0 (sin rotacion)
-  //                                  dx=+100, dy=0 (atras) = 180 (cap a 15)
-  //                                  dy=-100, dy=0 (arriba) = -90 (cap a -15)
-  const rawDeg = Math.atan2(dy, -dx) * 180 / Math.PI;
-  const rot = Math.max(-HEAD_ROTATION_RANGE_DEG, Math.min(HEAD_ROTATION_RANGE_DEG, rawDeg));
-  head.style.transform = `rotate(${rot.toFixed(2)}deg)`;
+function triggerEarTwitch() {
+  if (document.body.classList.contains('sleeping') || document.body.classList.contains('drag-mode')) return;
+  const leftEar = document.querySelector('.pet-ear-left');
+  const rightEar = document.querySelector('.pet-ear-right');
+  const ear = Math.random() < 0.5 ? leftEar : rightEar;
+  if (!ear) return;
+  ear.classList.remove('ear-twitching');
+  void ear.offsetWidth; // reflow
+  ear.classList.add('ear-twitching');
+  setTimeout(() => ear.classList.remove('ear-twitching'), 450);
 }
 
-window.addEventListener('mousemove', event => {
-  mouseX = event.clientX;
-  mouseY = event.clientY;
-});
-
-function getFramesForState(petType, state) {
-  const stateDef = STATE_FRAMES[state];
-  if (!stateDef) return null;
-  const getter = stateDef[petType] || stateDef.cat;
-  const frames = getter();
-  return Array.isArray(frames) && frames.length > 0 ? frames : null;
-}
-
-const petContainer = document.getElementById('pet-container');
-const petSvgWrapper = document.getElementById('pet-svg-wrapper');
-const speechBubble = document.getElementById('speech-bubble');
-const speechText = document.getElementById('speech-text');
-const settingsBtn = document.getElementById('settings-btn');
-const quickChatBtn = document.getElementById('quick-chat-btn');
-const quickChatPanel = document.getElementById('quick-chat-panel');
-const quickChatClose = document.getElementById('quick-chat-close');
-const quickChatTitle = document.getElementById('quick-chat-title');
-const quickChatSubtitle = document.getElementById('quick-chat-subtitle');
-const quickChatReply = document.getElementById('quick-chat-reply');
-const quickChatInput = document.getElementById('quick-chat-input');
-const quickChatSend = document.getElementById('quick-chat-send');
-
-// T5 perf — cache de elementos que se acceden en hot paths (rAF + mousemove).
-// Inicializados a null; se llenan en cachePetElements() después de que cat.js /
-// dog.js inyectan los SVGs (el render hot path usa estas refs y evita
-// getElementById / querySelectorAll cada frame).
-let catTailEl = null;
-let dogTailEl = null;
-let earLeftEl = null;
-let earRightEl = null;
-let pupilEls = [];
-
-function cachePetElements() {
-  catTailEl = document.getElementById('cat-tail');
-  dogTailEl = document.getElementById('dog-tail');
-  earLeftEl = petSvgWrapper ? petSvgWrapper.querySelector('.pet-ear-left') : null;
-  earRightEl = petSvgWrapper ? petSvgWrapper.querySelector('.pet-ear-right') : null;
-  pupilEls = petSvgWrapper ? Array.from(petSvgWrapper.querySelectorAll('.pet-pupil')) : [];
-}
-
-// Allow-lists y parser de respuestas de la IA viven en PetProtocol (src/core/pet-protocol.js).
-// Carga via <script> antes de este archivo (ver index.html).
-
-function applyPetTheme() {
-  document.body.dataset.pet = currentPet;
-  quickChatTitle.textContent = currentPet === 'cat' ? 'Habla con Luna' : 'Habla con Max';
-  quickChatSubtitle.textContent = currentPet === 'cat'
-    ? 'Tu compañera está escuchando'
-    : 'Tu compañero está listo';
-}
-
-function getQuickHistoryKey(petType = currentPet) {
-  return `quickChatHistory:${petType}`;
-}
-
-function loadQuickChatHistory(petType = currentPet) {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(getQuickHistoryKey(petType)) || '[]');
-    return Array.isArray(parsed)
-      ? parsed.filter(item => item && ['user', 'assistant'].includes(item.role) && typeof item.content === 'string').slice(-6)
-      : [];
-  } catch (_error) {
-    localStorage.removeItem(getQuickHistoryKey(petType));
-    return [];
-  }
-}
-
-function initSettings() {
-  localStorage.removeItem('apiKey');
-  const savedPet = localStorage.getItem('pet');
-  if (savedPet === 'cat' || savedPet === 'dog') currentPet = savedPet;
-  else localStorage.setItem('pet', currentPet);
-  soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
-  const legacyQuickHistory = localStorage.getItem('quickChatHistory');
-  if (legacyQuickHistory && !localStorage.getItem(getQuickHistoryKey())) {
-    localStorage.setItem(getQuickHistoryKey(), legacyQuickHistory);
-  }
-  localStorage.removeItem('quickChatHistory');
-  quickChatHistory = loadQuickChatHistory();
-
-  applyPetTheme();
-  setVisualState('idle', null, true);
-  window.api.syncSettings({ pet: currentPet, soundEnabled });
-  scheduleSleep();
-}
-
-// M2 — renderiza el frame actual (frame_index del array de frames del state).
-// Si withFade=true, cross-fade (usado cuando cambia el state).
-// Si withFade=false, swap directo (usado en el cycle de walk/sit/lay).
-function loadMascotSVG(petType, state, withFade = true) {
-  // v2.3.0 M1 — delegate to PIXI renderer if available.
-  if (window.petPixiRenderer?.isReady()) {
-    window.petPixiRenderer.setPetType(petType);
-    window.petPixiRenderer.setState(state);
-    return;
-  }
-  const frames = getFramesForState(petType, state);
-  if (!frames) {
-    // Fallback al state anterior si el nuevo no existe (defensivo)
-    return;
-  }
-
-  const svg = frames[currentFrameIndex] || frames[0];
-
-  if (withFade && petSvgWrapper.innerHTML) {
-    petSvgWrapper.style.transition = `opacity ${STATE_FADE_MS}ms`;
-    petSvgWrapper.style.opacity = '0';
-    setTimeout(() => {
-      petSvgWrapper.innerHTML = svg;
-      // T5 perf — re-cachear refs después de innerHTML swap.
-      cachePetElements();
-      petSvgWrapper.style.opacity = '1';
-    }, STATE_FADE_MS);
-  } else {
-    petSvgWrapper.innerHTML = svg;
-    cachePetElements();
-    petSvgWrapper.style.opacity = '1';
-  }
-}
-
-function setVisualState(state, direction = null, force = false) {
-  const stateChanged = currentVisualState !== state;
-  if (force || stateChanged) {
-    currentVisualState = state;
-    // Reset frame index cuando cambia el state (cross-fade desde frame 0).
-    currentFrameIndex = 0;
-    lastFrameSwap = performance.now();
-    loadMascotSVG(currentPet, state, stateChanged);
-  }
-
-  petContainer.classList.toggle('sleeping', state === 'sleeping');
-  petContainer.classList.toggle('walking-bob', state === 'walking');
-  petContainer.classList.toggle('sitting', state === 'sitting');
-  petContainer.classList.toggle('laying', state === 'laying');
-  petContainer.classList.toggle('stretching', state === 'stretching');
-  petContainer.classList.toggle('cat-walk', state === 'walking' && currentPet === 'cat');
-  petContainer.classList.toggle('dog-walk', state === 'walking' && currentPet === 'dog');
-  if (direction) petContainer.classList.toggle('flipped', direction === 'right');
-}
-
-function updateMousePassthrough() {
-  const shouldIgnore = !isDragging && hoveredInteractiveElements.size === 0;
-  window.api.setIgnoreMouseEvents(shouldIgnore, shouldIgnore ? { forward: true } : undefined);
-}
-
-function setupInteraction() {
-  [petContainer, speechBubble, quickChatPanel].forEach(element => {
-    element.addEventListener('mouseenter', () => {
-      hoveredInteractiveElements.add(element);
-      updateMousePassthrough();
-    });
-    element.addEventListener('mouseleave', () => {
-      hoveredInteractiveElements.delete(element);
-      setTimeout(updateMousePassthrough, 0);
-    });
-  });
-}
-
-function beginDragCandidate(event) {
-  if (event.button !== 0 || event.target.closest('#settings-btn, #quick-chat-btn')) return;
-  dragCandidate = { x: event.screenX, y: event.screenY };
-  petContainer.style.cursor = 'grabbing';
-  wakeUp();
-  event.preventDefault();
-}
-
-function moveDrag(event) {
-  if (!dragCandidate) return;
-  const distance = Math.hypot(event.screenX - dragCandidate.x, event.screenY - dragCandidate.y);
-  if (!isDragging && distance >= DRAG_THRESHOLD_PX) {
-    closeQuickChat();
-    isDragging = true;
-    hoveredInteractiveElements.add(petContainer);
-    window.api.dragStart();
-  }
-  if (isDragging) window.api.dragMove();
-}
-
-function finishDrag() {
-  if (!dragCandidate && !isDragging) return;
-  const wasDragging = isDragging;
-  dragCandidate = null;
-  isDragging = false;
-  petContainer.style.cursor = 'grab';
-  if (wasDragging) window.api.dragEnd();
-  scheduleSleep();
-  setTimeout(updateMousePassthrough, 0);
-}
-
-petContainer.addEventListener('mousedown', beginDragCandidate);
-window.addEventListener('mousemove', moveDrag);
-window.addEventListener('mouseup', finishDrag);
-window.addEventListener('blur', finishDrag);
-
-settingsBtn.addEventListener('mousedown', event => event.stopPropagation());
-quickChatBtn.addEventListener('mousedown', event => event.stopPropagation());
-petContainer.addEventListener('dblclick', event => {
-  if (event.target.closest('#settings-btn, #quick-chat-btn')) return;
-  window.api.openDashboard('chat');
-  wakeUp();
-});
-settingsBtn.addEventListener('click', event => {
-  event.stopPropagation();
-  window.api.openDashboard('settings');
-  wakeUp();
-});
-
-function updateQuickChatSide() {
-  quickChatPanel.classList.toggle('open-right', currentPetX < 310);
-}
-
-function openQuickChat() {
-  window.petAudio?.unlock();
-  updateQuickChatSide();
-  quickChatPanel.hidden = false;
-  quickChatBtn.setAttribute('aria-expanded', 'true');
-  document.body.classList.add('quick-chat-open');
-  quickChatReply.textContent = currentPet === 'cat' ? '¿Qué tienes en mente?' : '¡Cuéntame! ¿En qué te ayudo?';
-  setTimeout(() => quickChatInput.focus(), 0);
-}
-
-function closeQuickChat() {
-  quickChatPanel.hidden = true;
-  quickChatBtn.setAttribute('aria-expanded', 'false');
-  document.body.classList.remove('quick-chat-open');
-  hoveredInteractiveElements.delete(quickChatPanel);
-  updateMousePassthrough();
-}
-
-quickChatBtn.addEventListener('click', event => {
-  event.stopPropagation();
-  if (quickChatPanel.hidden) openQuickChat();
-  else closeQuickChat();
-  wakeUp();
-});
-quickChatClose.addEventListener('click', closeQuickChat);
-
-function scheduleSleep() {
+function scheduleSleep(delayMs = 45000) {
   if (sleepTimeout) clearTimeout(sleepTimeout);
-  sleepTimeout = setTimeout(goToSleep, SLEEP_DELAY_MS);
-}
-
-function goToSleep() {
-  if (isDragging) {
-    scheduleSleep();
-    return;
-  }
-  closeQuickChat();
-  speechBubble.classList.remove('visible');
-  setVisualState('sleeping');
-  window.api.setSleeping(true);
+  sleepTimeout = setTimeout(() => {
+    if (viewport && viewport.currentState === 'idle') {
+      viewport.setState('sleeping');
+      if (window.api?.setSleeping) window.api.setSleeping(true);
+    }
+  }, delayMs);
 }
 
 function wakeUp() {
-  const wasSleeping = currentVisualState === 'sleeping';
-  if (wasSleeping) {
-    setVisualState('idle');
-    window.api.setSleeping(false);
+  if (sleepTimeout) {
+    clearTimeout(sleepTimeout);
+    sleepTimeout = null;
   }
-  scheduleSleep();
+  if (viewport && viewport.currentState === 'sleeping') {
+    viewport.setState('idle');
+    if (window.api?.setSleeping) window.api.setSleeping(false);
+  }
 }
 
 function triggerHappyBounce() {
-  wakeUp();
-  petContainer.classList.remove('happy-bounce');
-  void petContainer.offsetWidth;
-  petContainer.classList.add('happy-bounce');
-  setTimeout(() => petContainer.classList.remove('happy-bounce'), 800);
+  const container = document.getElementById('pet-container');
+  if (!container) return;
+  container.classList.remove('landing-bounce');
+  void container.offsetWidth;
+  container.classList.add('landing-bounce');
+  setTimeout(() => container.classList.remove('landing-bounce'), 600);
 }
 
-function triggerLandingBounce() {
-  wakeUp();
-  petContainer.classList.remove('landing-bounce');
-  void petContainer.offsetWidth;
-  petContainer.classList.add('landing-bounce');
-  setTimeout(() => petContainer.classList.remove('landing-bounce'), 600);
-}
+function initQuickChat() {
+  const panel = document.getElementById('quick-chat-panel');
+  const btn = document.getElementById('quick-chat-btn');
+  const closeBtn = document.getElementById('quick-chat-close');
+  const input = document.getElementById('quick-chat-input');
+  const sendBtn = document.getElementById('quick-chat-send');
+  const reply = document.getElementById('quick-chat-reply');
 
-function cleanThinkingTags(text) {
-  return String(text || '').replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-}
+  if (!panel || !btn) return;
 
-// Wrapper que usa PetProtocol con el pet actual.
-function parsePetReply(reply) {
-  return window.PetProtocol.parsePetReply(reply, currentPet);
-}
-
-// Intenta extraer un JSON object de la respuesta. Acepta:
-// - JSON puro: {"emotion":"happy",...}
-// - JSON en markdown: ```json\n{...}\n```
-// - JSON con prosa alrededor: "...texto... {...} ...mas texto..."
-// - JSON con thinking antes: <think>...</think>{...}
-// Devuelve { parsed, error } donde error explica por qué falló si aplica.
-// (Implementado en PetProtocol, expuesto via window.PetProtocol)
-
-// Parsea respuesta de la IA. Intenta JSON, fallback a tags viejos, fallback a texto libre.
-// (Implementado en PetProtocol.parsePetReply)
-
-function inferSound(text) {
-  const normalized = String(text || '').toLowerCase();
-  if (currentPet === 'cat') {
-    if (normalized.includes('ronrone') || normalized.includes('purr')) return 'purr';
-    if (normalized.includes('miau')) return 'meow';
-  } else {
-    if (normalized.includes('guau') || normalized.includes('ladra')) return 'bark';
-    if (normalized.includes('olfatea') || normalized.includes('sniff')) return 'sniff';
-  }
-  return 'none';
-}
-
-function showSpeech(text, duration = 6000) {
-  if (speechTimeout) clearTimeout(speechTimeout);
-  const cleanedText = cleanThinkingTags(text);
-  if (!cleanedText) return;
-  speechText.textContent = cleanedText;
-  speechBubble.classList.add('visible');
-  speechTimeout = setTimeout(() => {
-    speechBubble.classList.remove('visible');
-    hoveredInteractiveElements.delete(speechBubble);
-    updateMousePassthrough();
-  }, duration);
-}
-
-/* === Track B — W1 silent mode + W2 retreat visuals === */
-
-let currentSilentMode = false;
-let currentRetreatActive = false;
-let currentRetreatSummary = '';
-let currentRetreatUntil = '';
-
-function applyPetSilentVisuals() {
-  currentSilentMode = true;
-  document.body.classList.add('pet--silent');
-  // Si hay un retreat activo, ese toma precedencia (es visual-only too,
-  // pero con speech bubble). Si no, el silent mode solo baja opacity.
-  if (!currentRetreatActive) {
-    petContainer.style.opacity = '0.7';
-    petContainer.style.filter = 'saturate(0.6)';
-  }
-}
-
-function clearPetSilentVisuals() {
-  currentSilentMode = false;
-  document.body.classList.remove('pet--silent');
-  if (!currentRetreatActive) {
-    petContainer.style.opacity = '';
-    petContainer.style.filter = '';
-  }
-}
-
-function applyPetRetreatVisuals(summary, until) {
-  currentRetreatActive = true;
-  currentRetreatSummary = summary || 'Reunion';
-  currentRetreatUntil = until || '';
-  document.body.classList.add('pet--retreat');
-  // El retreat SIEMPRE baja opacity/scale. La visual es mas fuerte que el
-  // silent mode (es la reunion activa, queremos que la mascota se "esconda").
-  petContainer.style.opacity = '0.5';
-  petContainer.style.transform = 'scale(0.7)';
-  // Speech bubble con el nombre del evento
-  if (summary) {
-    const untilText = until ? formatRetreatUntil(until) : '';
-    const msg = untilText
-      ? `🗓️ ${summary} hasta las ${untilText}`
-      : `🗓️ ${summary}`;
-    showSpeech(msg, 8000);
-  }
-}
-
-function clearPetRetreatVisuals() {
-  currentRetreatActive = false;
-  currentRetreatSummary = '';
-  currentRetreatUntil = '';
-  document.body.classList.remove('pet--retreat');
-  // Restaurar opacity/transform segun el silent mode flag
-  if (currentSilentMode) {
-    petContainer.style.opacity = '0.7';
-    petContainer.style.filter = 'saturate(0.6)';
-    petContainer.style.transform = '';
-  } else {
-    petContainer.style.opacity = '';
-    petContainer.style.filter = '';
-    petContainer.style.transform = '';
-  }
-}
-
-function formatRetreatUntil(iso) {
-  try {
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return '';
-    const h = String(d.getHours()).padStart(2, '0');
-    const m = String(d.getMinutes()).padStart(2, '0');
-    return `${h}:${m}`;
-  } catch (_e) {
-    return '';
-  }
-}
-
-// W1 — escuchar cambios de silent mode (broadcast desde main).
-window.petAPI?.onSilentModeChanged?.(({ silentMode }) => {
-  if (silentMode) applyPetSilentVisuals();
-  else clearPetSilentVisuals();
-});
-
-// W2 — escuchar cambios de retreat (broadcast desde main, cada 30s eval).
-window.petAPI?.onRetreatChanged?.(({ active, summary, until }) => {
-  if (active) applyPetRetreatVisuals(summary, until);
-  else clearPetRetreatVisuals();
-});
-
-// v2.2.0 — app-aware mascota: cuando cambia la foreground app (category),
-// actualizar el mood target y el wag target. El lerp M4 hace la transicion
-// gradual, no hay jumps. Tambien muestra el nombre de la app en la
-// speech bubble la primera vez que se detecta (luego se calla).
-const SEEN_APPS = new Set();
-const APP_GREETINGS = {
-  code: '¡Modo código! A romperla.',
-  creative: '¡A crear cosas!',
-  office: '¿Trabajo de oficina? Zzz...',
-  browser: '¿Navegando?',
-  social: '¡Asocializar!',
-  game: '¡A jugar!',
-  system: ''
-};
-window.petAPI?.onAppChanged?.(({ processName, windowTitle, category, mood, wagTargets }) => {
-  // Update wag targets (lerp M4 los interpola gradualmente).
-  if (wagTargets) {
-    tailWagSpeedTarget = wagTargets.speed;
-    tailWagAmplitudeTarget = wagTargets.amplitude;
-  }
-  // Mostrar saludo solo la primera vez que vemos esta category.
-  if (!SEEN_APPS.has(category)) {
-    SEEN_APPS.add(category);
-    const greeting = APP_GREETINGS[category] || '';
-    if (greeting) showSpeech(greeting);
-  }
-});
-
-window.api.onPetMoveState(data => {
-  if (!data || typeof data.state !== 'string') return;
-  if (data.state === 'walking') {
-    wakeUp();
-    setVisualState('walking', data.direction);
-    tailWagSpeedTarget = currentPet === 'cat' ? 0.06 : 0.12;
-    tailWagAmplitudeTarget = 1.1;
-  } else if (data.state === 'playing') {
-    wakeUp();
-    setVisualState('idle');
-    tailWagSpeedTarget = currentPet === 'cat' ? 0.08 : 0.16;
-    tailWagAmplitudeTarget = 1.3;
-    if (Math.random() < 0.025) {
-      triggerHappyBounce();
-      const messages = currentPet === 'cat'
-        ? ['¡Miau! ¿Qué hace tu cursor aquí?', '¡Te sigo, humano!', '¡Te tengo!', '¡Miau!']
-        : ['¡Guau! ¡Juguemos con el ratón!', '¡Te encontré!', '¿Me das un mimo?', '¡Guau!'];
-      showSpeech(messages[Math.floor(Math.random() * messages.length)], 3000);
-    }
-  } else if (currentVisualState !== 'sleeping') {
-    setVisualState('idle');
-    scheduleSleep();
-    tailWagSpeedTarget = currentPet === 'cat' ? 0.04 : 0.06;
-    tailWagAmplitudeTarget = 1;
-  }
-});
-
-window.api.onSettingsUpdated(settings => {
-  if (!settings) return;
-  soundEnabled = settings.soundEnabled !== false;
-  localStorage.setItem('soundEnabled', String(soundEnabled));
-  if (!['cat', 'dog'].includes(settings.pet) || settings.pet === currentPet) return;
-  localStorage.setItem(getQuickHistoryKey(), JSON.stringify(quickChatHistory.slice(-6)));
-  currentPet = settings.pet;
-  quickChatHistory = loadQuickChatHistory();
-  localStorage.setItem('pet', currentPet);
-  applyPetTheme();
-  currentVisualState = null;
-  setVisualState('idle', null, true);
-  const hello = currentPet === 'cat'
-    ? '¡Miau! Ahora soy Luna. ¡Vamos a trabajar tranquilos!'
-    : '¡Guau! ¡Soy Max, tu fiel compañero! ¡A darle con energía!';
-  handlePetAction({ type: 'speak', text: hello, emotion: 'excited', action: 'jump', sound: currentPet === 'cat' ? 'meow' : 'bark' });
-});
-
-function handlePetAction(data) {
-  if (!data || data.type !== 'speak') return;
-  wakeUp();
-  showSpeech(data.text);
-  const selectedSound = data.sound && data.sound !== 'none' ? data.sound : inferSound(data.text);
-  if (soundEnabled && selectedSound !== 'none') window.petAudio?.play(selectedSound);
-
-  if (data.emotion === 'excited') {
-    triggerHappyBounce();
-    tailWagSpeedTarget = currentPet === 'cat' ? 0.1 : 0.2;
-    tailWagAmplitudeTarget = 1.4;
-  } else if (data.emotion === 'calm') {
-    tailWagSpeedTarget = currentPet === 'cat' ? 0.02 : 0.04;
-    tailWagAmplitudeTarget = 0.7;
-  } else if (data.emotion === 'sad') {
-    tailWagSpeedTarget = 0.008;
-    tailWagAmplitudeTarget = 0.3;
-  } else if (data.emotion === 'sleepy') {
-    goToSleep();
+  function toggle(open) {
+    const isOpen = open !== undefined ? open : panel.hidden;
+    panel.hidden = !isOpen;
+    btn.setAttribute('aria-expanded', String(isOpen));
+    document.body.classList.toggle('quick-chat-open', isOpen);
+    if (isOpen && input) setTimeout(() => input.focus(), 50);
   }
 
-  if (data.action === 'jump') triggerHappyBounce();
-  else if (data.action === 'sleep') goToSleep();
-  else if (data.action === 'wag') {
-    tailWagSpeedTarget = currentPet === 'cat' ? 0.09 : 0.19;
-    tailWagAmplitudeTarget = 1.35;
-  } else if (data.action === 'sit') {
-    // M2 — sentada: cambia visual state. El state persiste hasta otro evento.
-    setVisualState('sitting', null, true);
-  } else if (data.action === 'lay') {
-    setVisualState('laying', null, true);
-  } else if (data.action === 'stretch') {
-    setVisualState('stretching', null, true);
-  }
-}
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggle();
+  });
 
-window.api.onPetAction(handlePetAction);
+  if (closeBtn) closeBtn.addEventListener('click', () => toggle(false));
 
-async function sendQuickChatMessage() {
-  const query = quickChatInput.value.trim();
-  if (!query || isQuickChatSending) return;
-  isQuickChatSending = true;
-  quickChatInput.value = '';
-  quickChatInput.disabled = true;
-  quickChatSend.disabled = true;
-  quickChatReply.textContent = currentPet === 'cat' ? 'Luna está pensando…' : 'Max está pensando…';
-  quickChatHistory.push({ role: 'user', content: query });
-
-  try {
-    const reply = await window.api.aiSendMessage({
-      petType: currentPet,
-      history: quickChatHistory.slice(0, -1),
-      userMessage: query
-    });
-    quickChatHistory.push({ role: 'assistant', content: reply });
-    quickChatHistory = quickChatHistory.slice(-6);
-    localStorage.setItem(getQuickHistoryKey(), JSON.stringify(quickChatHistory));
-    const reaction = parsePetReply(reply);
-    quickChatReply.textContent = reaction.content || 'Estoy contigo.';
-    const actionPayload = { type: 'speak', ...reaction };
-    handlePetAction(actionPayload);
-    window.api.triggerPetAction(actionPayload);
-  } catch (error) {
-    quickChatReply.textContent = error.message.includes('API Key')
-      ? 'Configura una nueva API Key desde Ajustes para poder conversar.'
-      : `No pude responder: ${error.message}`;
-  } finally {
-    isQuickChatSending = false;
-    quickChatInput.disabled = false;
-    quickChatSend.disabled = false;
-    quickChatInput.focus();
-  }
-}
-
-quickChatSend.addEventListener('click', sendQuickChatMessage);
-quickChatInput.addEventListener('keydown', event => {
-  if (event.key === 'Enter') sendQuickChatMessage();
-  else if (event.key === 'Escape') closeQuickChat();
-});
-
-window.api.onWindowModeBar(data => {
-  document.body.classList.remove('drag-mode');
-  document.body.classList.add('bar-mode');
-  currentPetX = Number(data?.petX) || 0;
-  document.documentElement.style.setProperty('--pet-x', `${currentPetX}px`);
-  document.documentElement.style.setProperty('--pet-y', '0px');
-  if (data?.bounce) triggerLandingBounce();
-});
-
-window.api.onWindowModeDrag(() => {
-  closeQuickChat();
-  document.body.classList.remove('bar-mode');
-  document.body.classList.add('drag-mode');
-});
-
-window.api.onUpdatePetPosition(data => {
-  if (!Number.isFinite(data?.x) || !Number.isFinite(data?.y)) return;
-  currentPetX = data.x;
-  document.documentElement.style.setProperty('--pet-x', `${currentPetX}px`);
-  document.documentElement.style.setProperty('--pet-y', `${data.y}px`);
-  if (!quickChatPanel.hidden) updateQuickChatSide();
-});
-
-window.api.onTriggerAutonomousTip(async () => {
-  if (currentVisualState === 'sleeping') return;
-  // Track B — W1: si silent mode (o retreat) esta activo, no disparamos
-  // autonomous tips. La mascota esta en modo "compania silenciosa" —
-  // solo visible, sin hablar.
-  if (currentSilentMode || currentRetreatActive) return;
-  try {
-    const tip = await window.api.aiQuickTip({ petType: currentPet, context: 'work_tip' });
-    if (tip) {
-      handlePetAction({
-        type: 'speak',
-        text: tip,
-        emotion: 'calm',
-        action: 'none',
-        sound: inferSound(tip)
-      });
-    }
-  } catch (error) {
-    console.error('Error triggering autonomous tip:', error);
-  }
-});
-
-// Eventos del sistema operativo (lock/unlock/suspend/resume) llegan desde
-// main via IPC `pet-system-event`. Reaccionamos igual que si el usuario
-// hubiera puesto a dormir a la mascota manualmente.
-window.api.onSystemEvent(data => {
-  if (!data || typeof data.event !== 'string') return;
-  if (data.event === 'lock' || data.event === 'suspend') {
-    // El main process ya seteó isSleeping=true y frena el movimiento.
-    // Solo tenemos que actualizar la visual.
-    if (sleepTimeout) {
-      clearTimeout(sleepTimeout);
-      sleepTimeout = null;
-    }
-    closeQuickChat();
-    speechBubble.classList.remove('visible');
-    setVisualState('sleeping');
-  } else if (data.event === 'unlock' || data.event === 'resume') {
-    // El main espera 5s antes de marcar isSleeping=false; nosotros
-    // podemos reflejar el wake visualmente alineados con eso usando el
-    // mismo delay para evitar un flash "despierto → durmiendo".
-    setTimeout(() => {
-      if (currentVisualState === 'sleeping') {
-        setVisualState('idle');
-        window.api.setSleeping(false);
+  async function handleSend() {
+    if (!input || !input.value.trim()) return;
+    const text = input.value.trim();
+    input.value = '';
+    if (reply) reply.textContent = 'Pensando...';
+    try {
+      if (window.api?.aiSendMessage) {
+        const res = await window.api.aiSendMessage({
+          userMessage: text,
+          petType: currentPet,
+          history: []
+        });
+        // B1 fix (commit chat-bugs-leak): raw LLM response viene envuelto en
+        // <think>...</think> + JSON. Sin cleanChatResponse, el chat mostraba
+        // el JSON crudo. Ver docs/plans/chat-bugs-leak-and-close-2026-08-25.md
+        const fallback = currentPet === 'cat' ? '¡Miau! Hola amigo.' : '¡Guau! Hola amigo.';
+        const resText = cleanChatResponse(res, currentPet, fallback);
+        if (reply) reply.textContent = resText;
+        if (speech) speech.show(resText);
+      } else {
+        const fallback = currentPet === 'cat' ? '¡Miau! ¿En qué te ayudo?' : '¡Guau! ¿Qué hacemos hoy?';
+        if (reply) reply.textContent = fallback;
+        if (speech) speech.show(fallback);
       }
-      scheduleSleep();
-    }, 5000);
-  } else if (data.event === 'idle-break') {
-    // A3 — el usuario lleva X min sin actividad. Mostrar tip.
-    if (typeof data.text === 'string' && data.text.length > 0) {
-      showSpeech(data.text);
+    } catch (_err) {
+      const fallback = currentPet === 'cat' ? '¡Miau! ¿Cómo estás hoy?' : '¡Guau! ¡Listo para trabajar!';
+      if (reply) reply.textContent = fallback;
+      if (speech) speech.show(fallback);
     }
   }
-});
 
-// I7 + I8 — daily briefing / evening summary. Muestra el texto como globo
-// de la mascota. Duracion extendida (8s) porque son frases mas largas que
-// los tips autonomos. Si el usuario estaba durmiendo, lo despierta primero.
-window.api.onMorningBriefing(data => {
-  if (!data || typeof data.text !== 'string' || data.text.length === 0) return;
-  if (typeof wakeUp === 'function') wakeUp();
-  showSpeech(data.text, 8000);
-});
-
-window.api.onEveningSummary(data => {
-  if (!data || typeof data.text !== 'string' || data.text.length === 0) return;
-  if (typeof wakeUp === 'function') wakeUp();
-  showSpeech(data.text, 8000);
-});
-
-// T6 — electron-updater status (main → renderer). El main process emite
-// { kind: 'available' | 'downloaded', version: 'X.Y.Z' } cuando:
-//   - 'available':  se detecto un update y se esta bajando (autoDownload=true)
-//   - 'downloaded': el update esta listo y se instalara al cerrar la app
-// El mensaje user-facing lo formatea el modulo pure (window.AutoUpdater)
-// para mantener una sola fuente de verdad. Duracion extendida (10s) porque
-// el texto es informativo y queremos que el usuario alcance a leerlo.
-window.api.onUpdateStatus(data => {
-  if (!data || typeof data.kind !== 'string' || typeof data.version !== 'string') return;
-  // Defensivo: si el modulo pure no se cargo (raro, pero pasa si hubo
-  // un error de <script>), caer a un string hardcodeado.
-  let text = '';
-  if (typeof window.AutoUpdater === 'object' && typeof window.AutoUpdater.formatUpdateMessage === 'function') {
-    text = window.AutoUpdater.formatUpdateMessage({
-      currentVersion: '',
-      newVersion: data.version,
-      kind: data.kind
+  if (sendBtn) sendBtn.addEventListener('click', handleSend);
+  if (input) {
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleSend();
+      if (e.key === 'Escape') toggle(false);
     });
-  } else {
-    const v = data.version ? `v${data.version}` : '';
-    if (data.kind === 'downloaded') text = `Update ${v} listo. Se instala al cerrar la app.`;
-    else text = `Update ${v} downloading...`;
   }
-  if (!text) return;
-  if (typeof wakeUp === 'function') wakeUp();
-  showSpeech(text, 10000);
-});
-
-function maybeTwitchEar() {
-  if (currentVisualState === 'sleeping' || isDragging) return;
-  // ~0.25% por frame => ~1 twitch cada ~6.6s a 60fps
-  if (Math.random() > 0.0025) return;
-  const side = Math.random() < 0.5 ? 'left' : 'right';
-  const ear = side === 'left' ? earLeftEl : earRightEl;
-  if (!ear || ear.classList.contains('ear-twitching')) return;
-  ear.classList.add('ear-twitching');
-  // Forzar reflow para reiniciar la animacion si ya estaba aplicada
-  void ear.offsetWidth;
-  setTimeout(() => ear.classList.remove('ear-twitching'), 500);
 }
 
-function animateTail(now) {
-  // M3 — look-at-cursor (re-aplicar cada frame para sobrevivir SVG swaps)
-  updateHeadRotation();
-
-  // M4 — mood affecting motion (lerp tail wag hacia los targets)
-  lerpTailTargets();
-
-  tailTime += tailWagSpeed;
-  maybeTwitchEar();
-  // T5 perf — usar refs cacheadas (init en cachePetElements) en vez de
-  // getElementById cada frame (60Hz × 2 lookups = 120 lookups/s).
-  const catTail = catTailEl;
-  const dogTail = dogTailEl;
-
-  if (catTail) {
-    const w1 = Math.sin(tailTime) * 12 * tailWagAmplitude;
-    const w2 = Math.sin(tailTime - 0.7) * 18 * tailWagAmplitude;
-    const w3 = Math.sin(tailTime - 1.4) * 22 * tailWagAmplitude;
-    if (currentVisualState === 'walking') {
-      catTail.setAttribute('d', `M 140,110 C ${160 + w1},100 ${170 + w2},75 ${175 + w3},55`);
-    } else {
-      catTail.setAttribute('d', `M 130,130 C ${148 + w1},120 ${160 + w2},92 ${165 + w3},70`);
-    }
-  }
-  if (dogTail) {
-    const w1 = Math.sin(tailTime * 2.5) * 8 * tailWagAmplitude;
-    const w2 = Math.sin(tailTime * 2.5 - 0.5) * 14 * tailWagAmplitude;
-    const w3 = Math.sin(tailTime * 2.5 - 1) * 18 * tailWagAmplitude;
-    if (currentVisualState === 'walking') {
-      dogTail.setAttribute('d', `M 138,110 C ${155 + w1},100 ${160 + w2},85 ${165 + w3},70`);
-    } else {
-      dogTail.setAttribute('d', `M 130,130 C ${145 + w1},118 ${151 + w2},100 ${157 + w3},84`);
-    }
-  }
-
-  // M2 — multi-frame cycle (walk 6fps, sit blink 0.4fps, lay breathe 0.33fps)
-  // v2.3.0 M1 — skipped when PIXI is active (PIXI.Ticker handles it via petPixiRenderer).
-  if (!window.petPixiRenderer?.isReady()) {
-    const rate = STATE_FRAME_RATE[currentVisualState];
-    if (Number.isFinite(rate) && now !== undefined && now - lastFrameSwap >= rate) {
-      const frames = getFramesForState(currentPet, currentVisualState);
-      if (frames && frames.length > 1) {
-        currentFrameIndex = (currentFrameIndex + 1) % frames.length;
-        // Swap directo (sin fade) entre frames del mismo state.
-        petSvgWrapper.innerHTML = frames[currentFrameIndex];
-        cachePetElements();
-        lastFrameSwap = now;
-      }
-    }
-  }
-
-  requestAnimationFrame(animateTail);
-}
-
-window.addEventListener('DOMContentLoaded', async () => {
-  setupInteraction();
-  initSettings();
-  // v2.3.0 M1 — init PIXI renderer BEFORE the first state load so loadMascotSVG
-  // sees isReady()=true and delegates to PIXI (no SVG flash on startup).
-  if (window.petPixiRenderer?.init) {
-    const ready = await window.petPixiRenderer.init();
-    if (!ready) console.warn('[renderer] PIXI init did not succeed; falling back to SVG path');
-  }
-  initMicroPresence();
-  // T5 perf — cache de elementos DESPUÉS de que cat.js / dog.js inyectaron los
-  // SVGs (initMicroPresence los crea via swapPetSvg según currentPet).
-  cachePetElements();
-  requestAnimationFrame(animateTail);
-  setTimeout(() => {
-    triggerHappyBounce();
-    showSpeech(currentPet === 'cat'
-      ? '¡Miau! Hola, soy Luna. Trabajemos juntos hoy. Haz doble clic en mí para charlar.'
-      : '¡Hola! ¡Soy Max! Hoy será un gran día de trabajo. Haz doble clic en mí.');
-  }, 2000);
-});
-
-/* === Micro presence (batch 1) === */
-/* Las funciones puras viven en src/core/pet-micro-presence.js pero el renderer
-   no tiene require; las reimplementamos minimalmente acá (mismas formulas).
-   En proxima iteracion se puede exponer via preload. */
-
-const PUPIL_MAX_RADIUS = 4;
-const YAWN_INTERVAL_MS = 5 * 60 * 1000;       // 5 min — estado normal
-const YAWN_INTERVAL_TIRED_MS = 2 * 60 * 1000; // 2 min — energy < 25 (M4 mood-aware)
-const YAWN_ENERGY_TIRED_THRESHOLD = 25;
-let lastYawnAt = new Date();
-let lastInteractionAt = Date.now();
-
-// M4 — mood-aware yawn: si la mascota está cansada, bosteza más seguido.
-// Reimplementacion local de getYawnIntervalMs (ver src/core/pet-micro-presence.js).
-function getYawnIntervalMsLocal(mood) {
-  if (mood && typeof mood.energy === 'number' && mood.energy < YAWN_ENERGY_TIRED_THRESHOLD) {
-    return YAWN_INTERVAL_TIRED_MS;
-  }
-  return YAWN_INTERVAL_MS;
-}
-
-function shouldPupilDilateLocal() {
-  const h = new Date().getHours();
-  return h >= 20 || h < 7;
-}
-
-function clampLocal(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
-
-function computePupilPositionLocal(eyeCenter, cursorPos) {
-  const dx = cursorPos.x - eyeCenter.x;
-  const dy = cursorPos.y - eyeCenter.y;
-  const dist = Math.sqrt(dx * dx + dy * dy);
-  if (dist <= PUPIL_MAX_RADIUS || dist === 0) {
-    return { x: eyeCenter.x, y: eyeCenter.y };
-  }
-  const scale = PUPIL_MAX_RADIUS / dist;
-  return { x: eyeCenter.x + dx * scale, y: eyeCenter.y + dy * scale };
-}
-
-function initMicroPresence() {
-  // M1 — agregar clase 'breathing' al wrapper
-  if (petSvgWrapper) petSvgWrapper.classList.add('breathing');
-
-  // M3 — pupil dilation
-  if (shouldPupilDilateLocal()) {
-    document.body.classList.add('pupils-dilated');
-  }
-  // Re-evaluar cada hora
-  setInterval(() => {
-    document.body.classList.toggle('pupils-dilated', shouldPupilDilateLocal());
-  }, 60 * 60 * 1000);
-
-  // M2 — eye tracking (mousemove)
-  document.addEventListener('mousemove', handlePupilTracking);
-  // Inicializar pupilas al centro
-  initPupilPositions();
-
-  // M4 — yawn trigger cada 5 min en idle
-  setInterval(checkYawn, 30 * 1000); // check cada 30s
-}
-
-function initPupilPositions() {
-  const pupils = document.querySelectorAll('.pet-pupil');
-  if (pupils.length === 0) return; // SVGs no tienen pupilas todavia
-  pupils.forEach(pupil => {
-    const cx = parseFloat(pupil.getAttribute('data-anchor-x') || pupil.getAttribute('cx') || '0');
-    const cy = parseFloat(pupil.getAttribute('data-anchor-y') || pupil.getAttribute('cy') || '0');
-    const r = shouldPupilDilateLocal() ? 3.2 : 2.0;
-    pupil.setAttribute('r', String(r));
-    pupil.setAttribute('cx', String(cx));
-    pupil.setAttribute('cy', String(cy));
+function initSettingsButton() {
+  const btn = document.getElementById('settings-btn');
+  if (!btn) return;
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (window.api?.openDashboard) window.api.openDashboard('pomodoro');
   });
 }
 
-function handlePupilTracking(event) {
-  lastInteractionAt = Date.now();
-  // T5 perf — usar pupils cacheadas (init en cachePetElements) en vez de
-  // querySelectorAll en cada mousemove (puede ser 100+/s en pantallas 60Hz).
-  const pupils = pupilEls;
-  if (pupils.length === 0) return;
-  const wrapper = petSvgWrapper;
-  if (!wrapper) return;
-  const wrapperRect = wrapper.getBoundingClientRect();
-  // Las coordenadas de la pupila estan en el sistema del SVG.
-  // Por ahora usamos una aproximacion: cursor en pixeles de pantalla
-  // contra el anchor del ojo (tambien en pixeles de pantalla via getBoundingClientRect).
-  // viewBox real de cat/dog SVGs es 0 0 200 200 (ver src/assets/cat.js, dog.js).
-  const SVG_VIEWBOX = 200;
-  const scale = wrapperRect.width / SVG_VIEWBOX;
-  const cursorSvg = {
-    x: (event.clientX - wrapperRect.left) / Math.max(scale, 0.01),
-    y: (event.clientY - wrapperRect.top) / Math.max(scale, 0.01)
-  };
-  for (let i = 0; i < pupils.length; i++) {
-    const pupil = pupils[i];
-    const anchorX = parseFloat(pupil.getAttribute('data-anchor-x') || '0');
-    const anchorY = parseFloat(pupil.getAttribute('data-anchor-y') || '0');
-    const newPos = computePupilPositionLocal({ x: anchorX, y: anchorY }, cursorSvg);
-    pupil.setAttribute('cx', newPos.x.toFixed(2));
-    pupil.setAttribute('cy', newPos.y.toFixed(2));
-  }
-}
+function setupIPCListeners() {
+  if (!window.api) return;
 
-async function checkYawn() {
-  const idleMs = Date.now() - lastInteractionAt;
-
-  // M4 — mood-aware: el intervalo depende de la energy actual.
-  // Si la IPC falla (main aún no inicializó), caemos al default (5 min).
-  let intervalMs = YAWN_INTERVAL_MS;
-  try {
-    if (window.api && typeof window.api.getMood === 'function') {
-      const mood = await window.api.getMood();
-      intervalMs = getYawnIntervalMsLocal(mood);
+  window.api.onWindowModeBar((data) => {
+    document.body.classList.add('bar-mode');
+    document.body.classList.remove('drag-mode');
+    if (data && typeof data.petX === 'number') {
+      document.documentElement.style.setProperty('--pet-x', `${data.petX}px`);
     }
-  } catch (_error) {
-    // IPC no disponible → default.
-  }
+  });
 
-  if (idleMs < intervalMs) return;
-  const elapsed = Date.now() - lastYawnAt.getTime();
-  if (elapsed < intervalMs) return;
-  triggerYawn();
-  lastYawnAt = new Date();
+  window.api.onWindowModeDrag(() => {
+    document.body.classList.add('drag-mode');
+    document.body.classList.remove('bar-mode');
+  });
+
+  window.api.onUpdatePetPosition((data) => {
+    if (data && typeof data.x === 'number') {
+      document.documentElement.style.setProperty('--pet-x', `${data.x}px`);
+    }
+    if (data && typeof data.y === 'number') {
+      document.documentElement.style.setProperty('--pet-y', `${data.y}px`);
+    }
+  });
+
+  window.api.onPetMoveState((data) => {
+    if (!data || typeof data.state !== 'string') return;
+    if (data.state === 'walking') {
+      wakeUp();
+      if (viewport) viewport.setState('walking', data.direction);
+    } else if (data.state === 'playing') {
+      wakeUp();
+      if (viewport) viewport.setState('idle');
+      if (Math.random() < 0.05) triggerHappyBounce();
+    } else if (viewport && viewport.currentState !== 'sleeping') {
+      viewport.setState('idle');
+      scheduleSleep();
+    }
+  });
+
+  window.api.onPomodoroTick((data) => {
+    if (pomodoro) pomodoro.update(data);
+  });
+
+  window.api.onPomodoroState((data) => {
+    if (pomodoro) pomodoro.update(data);
+  });
+
+  window.api.onPetSpeech((text) => {
+    if (speech) speech.show(text);
+  });
+
+  window.api.onSettingsUpdated((settings) => {
+    if (!settings) return;
+    if (settings.pet && settings.pet !== currentPet) {
+      currentPet = settings.pet;
+      if (viewport) viewport.setPetType(currentPet);
+    }
+    if (typeof settings.soundEnabled === 'boolean') {
+      soundEnabled = settings.soundEnabled;
+    }
+  });
 }
 
-function triggerYawn() {
-  if (!petSvgWrapper) return;
-  petSvgWrapper.classList.add('pet-yawn');
-  setTimeout(() => petSvgWrapper.classList.remove('pet-yawn'), 1700);
-  // Sugerir break via speech bubble (placeholder; en batch 1.5 lo conectamos a mood system)
-  showSpeech(currentPet === 'cat'
-    ? '*bosteza* ... ¿un descansito quizás?'
-    : '*bosteza* ... ¿salimos a estirar las patas?');
-}
+window.addEventListener('DOMContentLoaded', () => {
+  viewport = new window.PetViewport();
+  speech = new window.SpeechController();
+  interaction = new window.InteractionController();
+  pomodoro = new window.PomodoroUI();
+
+  viewport.init(currentPet);
+  interaction.init();
+  pomodoro.init();
+  if (window.eyeTracker) window.eyeTracker.init();
+
+  initQuickChat();
+  initSettingsButton();
+  setupIPCListeners();
+
+  // Ear twitch every 8-15 seconds in idle
+  earTwitchTimer = setInterval(() => {
+    if (Math.random() < 0.4) triggerEarTwitch();
+  }, 10000);
+
+  scheduleSleep();
+
+  setTimeout(() => {
+    triggerHappyBounce();
+    if (speech) {
+      speech.show(currentPet === 'cat'
+        ? '¡Miau! Hola, soy Luna. Trabajemos juntos hoy. Haz doble clic en mí para charlar.'
+        : '¡Hola! ¡Soy Max! Hoy será un gran día de trabajo. Haz doble clic en mí.');
+    }
+  }, 1500);
+});

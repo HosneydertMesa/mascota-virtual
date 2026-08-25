@@ -7,12 +7,8 @@
   <title>Mascota Virtual - Compañero de Escritorio</title>
   <link rel="stylesheet" href="styles.css">
   <style>
-    /* v2.3.0 M2 — el speech bubble (bottom:120 en styles.css) tapa la cabeza
-       cuando el pet window es 320x250 (tamaño real). Lo subimos para que
-       el bubble quede ARRIBA del canvas (que se extiende 35px arriba del
-       pet-container). 170 deja la cola del bubble justo arriba de las
-       orejas de la mascota. */
-    #speech-bubble { bottom: 170px !important; }
+    /* v2.3.0 M2 — speech bubble positioned nicely above the 200x200 pet */
+    #speech-bubble { bottom: 190px !important; }
   </style>
 </head>
 <body>
@@ -54,6 +50,12 @@
           <circle cx="12" cy="12" r="3"></circle>
         </svg>
       </button>
+
+      <!-- Mini Pomodoro Control Badge -->
+      <div id="pet-pomodoro-badge" class="interactive" title="Click para Iniciar/Pausar Pomodoro">
+        <span id="pet-pomodoro-icon">🍅</span>
+        <span id="pet-pomodoro-time">25:00</span>
+      </div>
       
       <!-- Zzz Sleeping Particles Container (animated via CSS keyframes) -->
       <div class="zzz-container">
@@ -63,13 +65,9 @@
       </div>
       
       <!-- SVG loaded dynamically inside this wrapper -->
-      <div id="pet-svg-wrapper" hidden></div>
-      <!-- v2.3.0 M1 — PIXI canvas (replaces pet-svg-wrapper for WebGL rendering).
-           Explicit 200x200 CSS size (matching original SVG viewBox). Absolute
-           positioning, centered in pet-container. The pet-container is 130x130
-           with overflow:visible, so the canvas extends past it (head/ears
-           above the speech bubble, like the old SVG layout). -->
-      <canvas id="pet-canvas" width="200" height="200" style="position: absolute; top: 50%; left: 50%; width: 200px; height: 200px; transform: translate(-50%, -50%); display: block; pointer-events: none;"></canvas>
+      <div id="pet-svg-wrapper"></div>
+      <!-- Full-body 200x200 canvas anchored to bottom -->
+      <canvas id="pet-canvas" width="200" height="200" style="position: absolute; bottom: 0; left: 0; width: 200px; height: 200px; display: none; pointer-events: none;"></canvas>
     </div>
   </div>
 
@@ -87,15 +85,18 @@
     </div>
   </div>
 
-  <!-- Scripts: Mascot Assets & Main Renderer Orchestrator -->
+  <!-- Scripts: Mascot Assets & Modular Renderer Pipeline -->
   <script src="assets/cat.js"></script>
   <script src="assets/dog.js"></script>
   <script src="core/pet-protocol.js"></script>
   <script src="core/auto-updater.js"></script>
   <script src="services/pet-audio.js"></script>
-  <!-- v2.3.0 M1: PIXI rendering (must load before renderer.js) -->
-  <script src="vendor/pixi.min.js"></script>
-  <script src="pet-renderer-pixi.js"></script>
+  <script src="renderer/pet-viewport.js"></script>
+  <script src="renderer/speech-controller.js"></script>
+  <script src="renderer/eye-tracker.js"></script>
+  <script src="renderer/interaction-controller.js"></script>
+  <script src="renderer/pomodoro-ui.js"></script>
+  <script src="renderer/chat-response.js"></script>
   <script src="renderer.js"></script>
   <script src="quick-capture-renderer.js"></script>
 </body>

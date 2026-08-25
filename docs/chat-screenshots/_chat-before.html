@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="../../src/styles/pet.css">
+  <style>
+    body { background: #0a3d2e; padding: 40px; font-family: sans-serif; }
+    #pet-window-container { position: relative; width: 400px; height: 400px; }
+    #pet-container { position: relative; width: 200px; height: 200px; }
+    .interactive { pointer-events: auto !important; }
+    #quick-chat-panel { max-height: none !important; }
+  </style>
+</head>
+<body>
+  <div id="pet-window-container">
+    <div id="pet-container" class="interactive">
+      <section id="quick-chat-panel" class="interactive" aria-label="Chat rápido">
+        <header class="quick-chat-header">
+          <div>
+            <strong id="quick-chat-title">Habla con Luna</strong>
+            <span id="quick-chat-subtitle">Tu compa&ntilde;era est&aacute; escuchando</span>
+          </div>
+          <button id="quick-chat-close" type="button" aria-label="Cerrar chat rápido">&times;</button>
+        </header>
+        <div id="quick-chat-reply" class="quick-chat-reply">Pensando...</div>
+        <div class="quick-chat-input-row">
+          <input id="quick-chat-input" type="text" maxlength="500">
+          <button id="quick-chat-send" type="button">Send</button>
+        </div>
+      </section>
+    </div>
+  </div>
+  <script>
+    // Simulate the BUG: dump the raw LLM response to the chat
+    document.getElementById('quick-chat-reply').textContent = '<think>\n{"emotion":"sleepy","action":"stretch","sound":"purr","intent":"rest_stretch","content":"Miau... hola. Me estaba estirando aca a tu lado."}\n</think>';
+  </script>
+</body>
+</html>
