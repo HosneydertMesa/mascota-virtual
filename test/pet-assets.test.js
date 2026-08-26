@@ -14,10 +14,12 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const {
-  catIdleSVG, catWalkSVG, catWalk1SVG, catWalk2SVG, catWalk3SVG, catWalk4SVG, catSleepSVG
+  catIdleSVG, catWalkSVG, catWalk1SVG, catWalk2SVG, catWalk3SVG, catWalk4SVG, catSleepSVG,
+  catSitSVG, catSitBlinkSVG, catLaySVG, catLayBreatheSVG, catStretchSVG
 } = require('../src/assets/cat');
 const {
-  dogIdleSVG, dogWalkSVG, dogWalk1SVG, dogWalk2SVG, dogWalk3SVG, dogWalk4SVG, dogSleepSVG
+  dogIdleSVG, dogWalkSVG, dogWalk1SVG, dogWalk2SVG, dogWalk3SVG, dogWalk4SVG, dogSleepSVG,
+  dogSitSVG, dogSitBlinkSVG, dogLaySVG, dogLayBreatheSVG, dogStretchSVG
 } = require('../src/assets/dog');
 
 /** Cuenta ocurrencias de `class="pet-pupil"` en un SVG string. */
@@ -168,57 +170,47 @@ test('dog walk frames: 4 patas con clase (back-foot-left/right + left-paw/right-
   }
 });
 
-// --- Walk cycle: el CSS debe tener animaciones que apunten a las 4 patas ---
-// Guard contra cambios accidentales en dashboard.css que desconecten la
-// animacion sideWalkSwingLeft/Right de las patas del SVG. Sin este CSS, las
-// patas tienen las clases correctas pero no se mueven.
+// --- sit / lay / stretch: exports distintos (no aliases de idle/sleep/walk) ---
+// Slice 1 MOTION: Designer entregará arte después. Hasta entonces el markup
+// se reusa, pero cada export DEBE ser un string distinto (data-pose) para
+// que PetViewport no pinte el mismo binding que idle/sleep/walk.
+
+test('cat sit/lay/stretch no son aliases de idle/sleep/walk', () => {
+  assert.notEqual(catSitSVG, catIdleSVG);
+  assert.notEqual(catSitBlinkSVG, catIdleSVG);
+  assert.notEqual(catLaySVG, catSleepSVG);
+  assert.notEqual(catLayBreatheSVG, catSleepSVG);
+  assert.notEqual(catStretchSVG, catWalk1SVG);
+  assert.match(catSitSVG, /data-pose="sit"/);
+  assert.match(catLaySVG, /data-pose="lay"/);
+  assert.match(catStretchSVG, /data-pose="stretch"/);
+});
+
+test('dog sit/lay/stretch no son aliases de idle/sleep/walk', () => {
+  assert.notEqual(dogSitSVG, dogIdleSVG);
+  assert.notEqual(dogSitBlinkSVG, dogIdleSVG);
+  assert.notEqual(dogLaySVG, dogSleepSVG);
+  assert.notEqual(dogLayBreatheSVG, dogSleepSVG);
+  assert.notEqual(dogStretchSVG, dogWalk1SVG);
+  assert.match(dogSitSVG, /data-pose="sit"/);
+  assert.match(dogLaySVG, /data-pose="lay"/);
+  assert.match(dogStretchSVG, /data-pose="stretch"/);
+});
+
+// --- Walk cycle CSS: canonical file is animations.css (not dashboard.css) ---
+// Slice 1 MOTION: dashboard.css y animations.css duplicaban catBodyWalk /
+// dogBodyWalk (dashboard ganaba por import order). Gait vive en UN archivo.
+// Luna y Max NO comparten sideWalkSwing*: cada uno tiene catWalkSwing* /
+// dogWalkSwing* con periodo, swing y bob distintos.
 
 const fs = require('fs');
 const path = require('path');
-const CSS_PATH = path.join(__dirname, '..', 'src', 'styles', 'dashboard.css');
+const ANIM_CSS_PATH = path.join(__dirname, '..', 'src', 'styles', 'animations.css');
+const DASH_CSS_PATH = path.join(__dirname, '..', 'src', 'styles', 'dashboard.css');
 
-test('dashboard.css: reglas .cat-walk + .dog-walk para las 4 patas (animation + transform-origin)', () => {
-  const css = fs.readFileSync(CSS_PATH, 'utf8');
-  const expected = [
-    '.cat-walk .back-foot-left',
-    '.cat-walk .left-paw',
-    '.cat-walk .back-foot-right',
-    '.cat-walk .right-paw',
-    '.dog-walk .back-foot-left',
-    '.dog-walk .left-paw',
-    '.dog-walk .back-foot-right',
-    '.dog-walk .right-paw'
-  ];
-  for (const sel of expected) {
-    assert.ok(css.includes(sel), `dashboard.css missing selector: ${sel}`);
-  }
-  // Sanity: las 8 reglas deben apuntar a una animacion sideWalkSwing*
-  const matches = css.match(/animation:\s*sideWalkSwing(Left|Right)\s+0\.\d+s/g) || [];
-  assert.ok(matches.length >= 8, `expected >=8 sideWalkSwing animation refs, got ${matches.length}`);
-});
-
-test('dashboard.css: transform-origin de las patas apunta a la cadera real del nuevo SVG', () => {
-  const css = fs.readFileSync(CSS_PATH, 'utf8');
-  // Cat: cadera (top of leg) y=132 para back, y=132 para front (nuevo SVG)
-  // Dog: cadera y=134 (nuevo SVG)
-  // Si alguien restaura los origins viejos (121/131/76/86 px, y=115), las patas
-  // rotan alrededor del cuerpo y se ven "despegadas".
-  const badOrigins = [
-    'transform-origin: 121px 115px',
-    'transform-origin: 131px 115px',
-    'transform-origin: 76px 115px',
-    'transform-origin: 86px 115px'
-  ];
-  for (const bad of badOrigins) {
-    assert.ok(!css.includes(bad), `dashboard.css still has OLD transform-origin: ${bad}`);
-  }
-});
-
-// --- Walk v2: amplitud del leg swing mas pronunciada para look "natural" ---
-// v2.3.0 walk enhancement: HOSNE pidio walk mas natural. La amplitud original
-// (-22deg a +18deg) era muy sutil. La nueva amplitud (-28deg a +24deg, 52deg
-// total) es visible sin ser caricaturesca. Si alguien reduce la amplitud de
-// vuelta, el test falla.
+function readCss(filePath) {
+  return fs.readFileSync(filePath, 'utf8');
+}
 
 /**
  * Extract the @keyframes block for a given name, handling nested braces.
@@ -229,7 +221,6 @@ function extractKeyframeBody(css, name) {
   if (idx === -1) return null;
   const braceStart = css.indexOf('{', idx);
   if (braceStart === -1) return null;
-  // Walk forward counting braces to find the matching close
   let depth = 1;
   let i = braceStart + 1;
   while (i < css.length && depth > 0) {
@@ -253,51 +244,164 @@ function findRotateAtStop(body, stop) {
   return rot ? parseFloat(rot[1]) : null;
 }
 
-test('dashboard.css: leg swing amplitude es >= 50deg (walk v2 enhancement)', () => {
-  const css = fs.readFileSync(CSS_PATH, 'utf8');
-  for (const name of ['sideWalkSwingLeft', 'sideWalkSwingRight']) {
-    const body = extractKeyframeBody(css, name);
-    assert.ok(body !== null, `${name} keyframe block not found`);
-    const start = findRotateAtStop(body, '0%, 100%');
-    const mid = findRotateAtStop(body, '50%');
-    assert.ok(start !== null, `${name} 0%/100% stop not found`);
-    assert.ok(mid !== null, `${name} 50% stop not found`);
-    const range = Math.abs(start - mid);
-    assert.ok(range >= 50,
-      `${name} swing range too small: ${range}deg (expected >= 50deg)`);
-  }
-});
-
-// --- Walk v2: body bob mas pronunciado ---
-test('dashboard.css: body bob translateY es >= 5px (walk v2 enhancement)', () => {
-  const css = fs.readFileSync(CSS_PATH, 'utf8');
-  for (const name of ['catBodyWalk', 'dogBodyWalk']) {
-    const body = extractKeyframeBody(css, name);
-    assert.ok(body !== null, `${name} keyframe block not found`);
-    // Find ALL translateY values across all stops
-    const tyValues = [];
-    const tyRe = /translateY\(([-\d.]+)(?:px)?\)/g;
-    let mm;
-    while ((mm = tyRe.exec(body)) !== null) {
-      tyValues.push(Math.abs(parseFloat(mm[1])));
-    }
-    assert.ok(tyValues.length > 0, `${name} has no translateY in any keyframe`);
-    const maxTy = Math.max(...tyValues);
-    assert.ok(maxTy >= 5,
-      `${name} body bob translateY too small: max=${maxTy}px (expected >= 5px)`);
-  }
-});
-
-// --- Walk v2: tail sway amplitud visible ---
-test('dashboard.css: tail sway amplitude es >= 30deg (walk v2 enhancement)', () => {
-  const css = fs.readFileSync(CSS_PATH, 'utf8');
-  const body = extractKeyframeBody(css, 'catTailWalk');
-  assert.ok(body !== null, 'catTailWalk keyframe block not found');
+function swingRange(css, name) {
+  const body = extractKeyframeBody(css, name);
+  assert.ok(body !== null, `${name} keyframe block not found in animations.css`);
   const start = findRotateAtStop(body, '0%, 100%');
   const mid = findRotateAtStop(body, '50%');
-  assert.ok(start !== null, 'catTailWalk 0%/100% stop not found');
-  assert.ok(mid !== null, 'catTailWalk 50% stop not found');
-  const range = Math.abs(start - mid);
-  assert.ok(range >= 30,
-    `cat tail sway range too small: ${range}deg (expected >= 30deg)`);
+  assert.ok(start !== null, `${name} 0%/100% stop not found`);
+  assert.ok(mid !== null, `${name} 50% stop not found`);
+  return Math.abs(start - mid);
+}
+
+function maxTranslateY(css, name) {
+  const body = extractKeyframeBody(css, name);
+  assert.ok(body !== null, `${name} keyframe block not found in animations.css`);
+  const tyValues = [];
+  const tyRe = /translateY\(([-\d.]+)(?:px)?\)/g;
+  let mm;
+  while ((mm = tyRe.exec(body)) !== null) {
+    tyValues.push(Math.abs(parseFloat(mm[1])));
+  }
+  assert.ok(tyValues.length > 0, `${name} has no translateY in any keyframe`);
+  return Math.max(...tyValues);
+}
+
+function animationPeriod(css, selector, keyframeName) {
+  const re = new RegExp(
+    selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') +
+    '[^}]*animation:\\s*' + keyframeName + '\\s+([0-9.]+)s',
+    'm'
+  );
+  const m = css.match(re);
+  return m ? parseFloat(m[1]) : null;
+}
+
+test('animations.css: reglas .cat-walk + .dog-walk para las 4 patas (animation + transform-origin)', () => {
+  const css = readCss(ANIM_CSS_PATH);
+  const expected = [
+    '.cat-walk .back-foot-left',
+    '.cat-walk .left-paw',
+    '.cat-walk .back-foot-right',
+    '.cat-walk .right-paw',
+    '.dog-walk .back-foot-left',
+    '.dog-walk .left-paw',
+    '.dog-walk .back-foot-right',
+    '.dog-walk .right-paw'
+  ];
+  for (const sel of expected) {
+    assert.ok(css.includes(sel), `animations.css missing selector: ${sel}`);
+  }
+});
+
+test('animations.css: Luna usa catWalkSwing* 0.65s; Max usa dogWalkSwing* 0.48s', () => {
+  const css = readCss(ANIM_CSS_PATH);
+  const catLeft = animationPeriod(css, '.cat-walk .back-foot-left', 'catWalkSwingLeft');
+  const catRight = animationPeriod(css, '.cat-walk .left-paw', 'catWalkSwingRight');
+  const dogLeft = animationPeriod(css, '.dog-walk .back-foot-left', 'dogWalkSwingLeft');
+  const dogRight = animationPeriod(css, '.dog-walk .left-paw', 'dogWalkSwingRight');
+  assert.equal(catLeft, 0.65, `cat back-foot-left period=${catLeft}`);
+  assert.equal(catRight, 0.65, `cat left-paw period=${catRight}`);
+  assert.equal(dogLeft, 0.48, `dog back-foot-left period=${dogLeft}`);
+  assert.equal(dogRight, 0.48, `dog left-paw period=${dogRight}`);
+  assert.equal(animationPeriod(css, '.walking-bob.cat-walk', 'catBodyWalk'), 0.65);
+  assert.equal(animationPeriod(css, '.walking-bob.dog-walk', 'dogBodyWalk'), 0.48);
+});
+
+test('animations.css: pairing contralateral diagonal (back-left+right-paw vs left-paw+back-right)', () => {
+  const css = readCss(ANIM_CSS_PATH);
+  assert.equal(animationPeriod(css, '.cat-walk .back-foot-left', 'catWalkSwingLeft'), 0.65);
+  assert.equal(animationPeriod(css, '.cat-walk .right-paw', 'catWalkSwingLeft'), 0.65);
+  assert.equal(animationPeriod(css, '.cat-walk .left-paw', 'catWalkSwingRight'), 0.65);
+  assert.equal(animationPeriod(css, '.cat-walk .back-foot-right', 'catWalkSwingRight'), 0.65);
+  assert.equal(animationPeriod(css, '.dog-walk .back-foot-left', 'dogWalkSwingLeft'), 0.48);
+  assert.equal(animationPeriod(css, '.dog-walk .right-paw', 'dogWalkSwingLeft'), 0.48);
+  assert.equal(animationPeriod(css, '.dog-walk .left-paw', 'dogWalkSwingRight'), 0.48);
+  assert.equal(animationPeriod(css, '.dog-walk .back-foot-right', 'dogWalkSwingRight'), 0.48);
+});
+
+test('animations.css: gait Luna ≠ Max (swing y bob de Luna mas contenidos)', () => {
+  const css = readCss(ANIM_CSS_PATH);
+  const catSwing = swingRange(css, 'catWalkSwingLeft');
+  const dogSwing = swingRange(css, 'dogWalkSwingLeft');
+  const catBob = maxTranslateY(css, 'catBodyWalk');
+  const dogBob = maxTranslateY(css, 'dogBodyWalk');
+  assert.ok(catSwing >= 30, `cat swing too small: ${catSwing}deg`);
+  assert.ok(dogSwing >= 50, `dog swing too small: ${dogSwing}deg`);
+  assert.ok(catSwing < dogSwing, `cat swing ${catSwing}deg should be < dog ${dogSwing}deg`);
+  assert.ok(catBob >= 4, `cat bob too small: ${catBob}px`);
+  assert.ok(dogBob >= 8, `dog bob too small: ${dogBob}px`);
+  assert.ok(catBob < dogBob, `cat bob ${catBob}px should be < dog ${dogBob}px`);
+});
+
+test('animations.css: transform-origin de las patas apunta a la cadera real del SVG', () => {
+  const css = readCss(ANIM_CSS_PATH);
+  const badOrigins = [
+    'transform-origin: 121px 115px',
+    'transform-origin: 131px 115px',
+    'transform-origin: 76px 115px',
+    'transform-origin: 86px 115px'
+  ];
+  for (const bad of badOrigins) {
+    assert.ok(!css.includes(bad), `animations.css still has OLD transform-origin: ${bad}`);
+  }
+  assert.match(css, /transform-origin:\s*58px\s+132px/);
+  assert.match(css, /transform-origin:\s*56px\s+134px/);
+});
+
+test('animations.css: tail sway amplitude es >= 30deg', () => {
+  const css = readCss(ANIM_CSS_PATH);
+  const range = swingRange(css, 'catTailWalk');
+  assert.ok(range >= 30, `cat tail sway range too small: ${range}deg`);
+});
+
+test('dashboard.css no redefine walk gait (un solo canonical: animations.css)', () => {
+  const dash = readCss(DASH_CSS_PATH);
+  const forbidden = [
+    '@keyframes catBodyWalk',
+    '@keyframes dogBodyWalk',
+    '@keyframes catWalkSwingLeft',
+    '@keyframes dogWalkSwingLeft',
+    '@keyframes sideWalkSwingLeft',
+    '@keyframes catTailWalk',
+    '@keyframes dogTailWalk'
+  ];
+  for (const token of forbidden) {
+    assert.ok(!dash.includes(token), `dashboard.css still defines ${token} (cascade fight)`);
+  }
+  assert.ok(!/\.cat-walk\s+\.back-foot-left/.test(dash),
+    'dashboard.css still has .cat-walk .back-foot-left (move gait to animations.css)');
+});
+
+test('animations.css: mood-* mueve cola, orejas y pet-body', () => {
+  const css = readCss(ANIM_CSS_PATH);
+  for (const mood of ['happy', 'calm', 'sleepy', 'sad', 'bored']) {
+    assert.ok(css.includes('#pet-container.mood-' + mood),
+      `animations.css missing #pet-container.mood-${mood}`);
+  }
+  assert.match(css, /mood-happy[\s\S]*anim-wag/);
+  assert.match(css, /mood-sleepy[\s\S]*pet-ear|mood-sad[\s\S]*pet-ear/);
+  assert.match(css, /mood-(sleepy|sad)[\s\S]*pet-body[\s\S]*translateY/);
+});
+
+test('pet-viewport.js: walking no reactiva el swap de 167ms', () => {
+  const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'pet-viewport.js'), 'utf8');
+  assert.match(src, /if \(this\.currentState === 'walking'\) return;/);
+  assert.doesNotMatch(src, /if \(this\.currentState === 'walking'\) \{\s*this\.currentFrameIndex/);
+});
+
+test('renderer.js dispara sitting, laying, stretching y sleeping (no desde chat)', () => {
+  const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer.js'), 'utf8');
+  assert.match(src, /setState\(\s*['"]sitting['"]/);
+  assert.match(src, /setState\(\s*['"]laying['"]/);
+  assert.match(src, /setState\(\s*['"]stretching['"]/);
+  assert.match(src, /setState\(\s*['"]sleeping['"]/);
+  assert.match(src, /getMood\s*\(/);
+  const chatIdx = src.indexOf('function initQuickChat');
+  const sitIdx = src.indexOf("setState('sitting'");
+  const sitIdx2 = src.indexOf('setState("sitting"');
+  const sitAt = sitIdx >= 0 ? sitIdx : sitIdx2;
+  assert.ok(sitAt >= 0, 'setState sitting not found');
+  assert.ok(chatIdx < 0 || sitAt < chatIdx || sitAt > src.indexOf('function initSettingsButton'),
+    'sitting should not be fired from initQuickChat');
 });

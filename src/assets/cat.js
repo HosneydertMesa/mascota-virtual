@@ -1001,11 +1001,15 @@ const catSleepSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w
     </g>
   </g>
 </svg>`;
-const catSitSVG = catIdleSVG;
-const catSitBlinkSVG = catIdleSVG;
-const catLaySVG = catSleepSVG;
-const catLayBreatheSVG = catSleepSVG;
-const catStretchSVG = catWalk1SVG;
+// Slice 1 MOTION: sit/lay/stretch must be distinct exports (not aliases).
+// Designer art comes later; reuse current markup with data-pose so tests
+// can assert these are not the same string as idle/sleep/walk.
+const catSitSVG = catIdleSVG.replace('<svg id="pet-svg"', '<svg id="pet-svg" data-pose="sit"');
+const catSitBlinkSVG = catIdleSVG.replace('<svg id="pet-svg"', '<svg id="pet-svg" data-pose="sit-blink"');
+const catLaySVG = catSleepSVG.replace('<svg id="pet-svg"', '<svg id="pet-svg" data-pose="lay"');
+const catLayBreatheSVG = catSleepSVG.replace('<svg id="pet-svg"', '<svg id="pet-svg" data-pose="lay-breathe"');
+const catStretchSVG = catWalk1SVG.replace('<svg id="pet-svg"', '<svg id="pet-svg" data-pose="stretch"');
+const catSVG = catIdleSVG;
 
 function getCatPartsForState(state) {
   const scope = typeof window !== "undefined" ? window : {};
@@ -1043,6 +1047,7 @@ if (typeof window !== "undefined") {
   window.catLaySVG = catLaySVG;
   window.catLayBreatheSVG = catLayBreatheSVG;
   window.catStretchSVG = catStretchSVG;
+  window.catSVG = catSVG;
   window.getCatPartsForState = getCatPartsForState;
 }
 
@@ -1061,6 +1066,7 @@ if (typeof module !== "undefined" && module.exports) {
     catLaySVG,
     catLayBreatheSVG,
     catStretchSVG,
+    catSVG,
     getCatPartsForState
   };
 }

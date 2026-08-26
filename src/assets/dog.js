@@ -633,11 +633,15 @@ const dogSleepSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w
     </g>
   </g>
 </svg>`;
-const dogSitSVG = dogIdleSVG;
-const dogSitBlinkSVG = dogIdleSVG;
-const dogLaySVG = dogSleepSVG;
-const dogLayBreatheSVG = dogSleepSVG;
-const dogStretchSVG = dogWalk1SVG;
+// Slice 1 MOTION: sit/lay/stretch must be distinct exports (not aliases).
+// Designer art comes later; reuse current markup with data-pose so tests
+// can assert these are not the same string as idle/sleep/walk.
+const dogSitSVG = dogIdleSVG.replace('<svg id="pet-svg"', '<svg id="pet-svg" data-pose="sit"');
+const dogSitBlinkSVG = dogIdleSVG.replace('<svg id="pet-svg"', '<svg id="pet-svg" data-pose="sit-blink"');
+const dogLaySVG = dogSleepSVG.replace('<svg id="pet-svg"', '<svg id="pet-svg" data-pose="lay"');
+const dogLayBreatheSVG = dogSleepSVG.replace('<svg id="pet-svg"', '<svg id="pet-svg" data-pose="lay-breathe"');
+const dogStretchSVG = dogWalk1SVG.replace('<svg id="pet-svg"', '<svg id="pet-svg" data-pose="stretch"');
+const dogSVG = dogIdleSVG;
 
 function getDogPartsForState(state) {
   const scope = typeof window !== "undefined" ? window : {};
@@ -675,6 +679,7 @@ if (typeof window !== "undefined") {
   window.dogLaySVG = dogLaySVG;
   window.dogLayBreatheSVG = dogLayBreatheSVG;
   window.dogStretchSVG = dogStretchSVG;
+  window.dogSVG = dogSVG;
   window.getDogPartsForState = getDogPartsForState;
 }
 
@@ -693,6 +698,7 @@ if (typeof module !== "undefined" && module.exports) {
     dogLaySVG,
     dogLayBreatheSVG,
     dogStretchSVG,
+    dogSVG,
     getDogPartsForState
   };
 }
