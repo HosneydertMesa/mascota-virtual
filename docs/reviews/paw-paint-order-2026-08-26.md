@@ -50,7 +50,7 @@ sería z-index mínimo **sin** tocar gait.
 - [x] Diff de assets es reorder de bloques (154/154 cat, 120/120 dog)
 - [x] Gait / Pixi / chat / AI no aparecen en el diff
 - [x] Plan en `docs/plans/`
-- [ ] `npm test` + `npm run check` (correr en GATE 1 post-push)
+- [x] `npm test` 897/897 + `npm run check` green (GATE 1)
 
 ## Veredicto
 
