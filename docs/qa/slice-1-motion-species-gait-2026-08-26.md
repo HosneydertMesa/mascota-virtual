@@ -36,13 +36,14 @@ node --test test/pet-assets.test.js test/idle-motion.test.js
 
 ```
 npm run check   # exit 0
-npm test        # 885 pass / 6 fail
+npm test        # 891/891 pass, 0 fail
 ```
 
-Los 6 fails son **preexistentes** en Linux: `test/app-detector.test.js`
-(`queryForegroundApp` short-circuit si `process.platform !== 'win32'`).
-No se tocó `src/services/app-detector.js`. En Windows esos tests siguen
-siendo el contrato de PowerShell.
+Los 6 fails de app-detector en Linux eran **preexistentes** (`queryForegroundApp`
+short-circuit si `process.platform !== 'win32'`). Este QA follow-up los
+cubre mockeando win32. Windows CI no expandía `test/*.test.js` en PowerShell;
+`scripts/run-tests.js` lista los archivos. Mood-tick flake: `now` y
+`lastDecayAt` ahora usan el mismo timestamp.
 
 ### Test 3 — lo que no se pudo dogfoodear aquí
 
