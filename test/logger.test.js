@@ -140,6 +140,19 @@ test('logger: stream errors no crashean el proceso', () => {
   assert.doesNotThrow(() => log.info('should be swallowed'));
 });
 
+function rmTmpDir(dir) {
+  let lastErr;
+  for (let i = 0; i < 8; i++) {
+    try {
+      fs.rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 20 });
+      return;
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr;
+}
+
 test('RotatingFileStream: crea archivo y escribe', () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mascota-log-'));
   const filePath = path.join(tmpDir, 'test.log');
@@ -149,15 +162,15 @@ test('RotatingFileStream: crea archivo y escribe', () => {
       try {
         const content = fs.readFileSync(filePath, 'utf8');
         assert.ok(content.includes('first line'), `expected 'first line' in: ${content}`);
-        fs.rmSync(tmpDir, { recursive: true, force: true });
+        rmTmpDir(tmpDir);
         resolve();
       } catch (e) {
-        fs.rmSync(tmpDir, { recursive: true, force: true });
+        rmTmpDir(tmpDir);
         reject(e);
       }
     });
     stream.on('error', err => {
-      fs.rmSync(tmpDir, { recursive: true, force: true });
+      rmTmpDir(tmpDir);
       reject(err);
     });
     stream.write('first line\n');
@@ -176,15 +189,15 @@ test('RotatingFileStream: rota cuando supera maxBytes', () => {
         const files = fs.readdirSync(tmpDir);
         assert.ok(files.includes('rotate.log'), `expected rotate.log, got: ${files.join(',')}`);
         assert.ok(files.includes('rotate.log.1'), `expected rotate.log.1, got: ${files.join(',')}`);
-        fs.rmSync(tmpDir, { recursive: true, force: true });
+        rmTmpDir(tmpDir);
         resolve();
       } catch (e) {
-        fs.rmSync(tmpDir, { recursive: true, force: true });
+        rmTmpDir(tmpDir);
         reject(e);
       }
     });
     stream.on('error', err => {
-      fs.rmSync(tmpDir, { recursive: true, force: true });
+      rmTmpDir(tmpDir);
       reject(err);
     });
     stream.write(big);
@@ -196,17 +209,25 @@ test('RotatingFileStream: rota cuando supera maxBytes', () => {
   });
 });
 
-test('createFileLogger: integra Logger + RotatingFileStream', () => {
+test('createFileLogger: integra Logger + RotatingFileStream', async () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mascota-log-'));
   const filePath = path.join(tmpDir, 'app.log');
   const log = createFileLogger({ filePath, maxBytes: 1024 * 1024, keep: 3 });
   log.info('integration test', { user: 'jorge' });
   log.error('with sensitive', { apiKey: 'sk-shouldnotappear' });
-  const content = fs.readFileSync(filePath, 'utf8');
-  assert.ok(content.includes('integration test'), `expected 'integration test' in: ${content}`);
-  assert.ok(!content.includes('sk-shouldnotappear'), 'api key should be redacted');
-  assert.ok(content.includes('[REDACTED]'), 'expected [REDACTED] marker');
-  fs.rmSync(tmpDir, { recursive: true, force: true });
+  await new Promise((resolve, reject) => {
+    log.stream.once('finish', resolve);
+    log.stream.once('error', reject);
+    log.stream.end();
+  });
+  try {
+    const content = fs.readFileSync(filePath, 'utf8');
+    assert.ok(content.includes('integration test'), `expected 'integration test' in: ${content}`);
+    assert.ok(!content.includes('sk-shouldnotappear'), 'api key should be redacted');
+    assert.ok(content.includes('[REDACTED]'), 'expected [REDACTED] marker');
+  } finally {
+    rmTmpDir(tmpDir);
+  }
 });
 
 test('logger singleton: usa minLevel=info por default', () => {
