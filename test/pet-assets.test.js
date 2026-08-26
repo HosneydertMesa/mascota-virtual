@@ -286,8 +286,9 @@ test('12 production poses: front paws paint after .pet-body and before .pet-head
   }
 });
 
-test('12 production poses: cascade is tail → back feet → body → front paws → head', () => {
+test('12 production poses: cascade is shadow → tail → back feet → body → front paws → head', () => {
   for (const [name, svg] of PRODUCTION_POSES) {
+    const shadow = firstClassIndex(svg, 'pet-shadow');
     const tail = firstClassIndex(svg, 'anim-wag');
     const backL = firstClassIndex(svg, 'back-foot-left');
     const backR = firstClassIndex(svg, 'back-foot-right');
@@ -295,8 +296,10 @@ test('12 production poses: cascade is tail → back feet → body → front paws
     const left = firstClassIndex(svg, 'left-paw');
     const right = firstClassIndex(svg, 'right-paw');
     const head = firstClassIndex(svg, 'pet-head');
-    assert.ok(tail < backL && backL < backR && backR < body && body < left && left < right && right < head,
-      `${name}: bad cascade tail=${tail} backL=${backL} backR=${backR} body=${body} left=${left} right=${right} head=${head}`);
+    assert.ok(
+      shadow >= 0 && shadow < tail && tail < backL && backL < backR && backR < body && body < left && left < right && right < head,
+      `${name}: bad cascade shadow=${shadow} tail=${tail} backL=${backL} backR=${backR} body=${body} left=${left} right=${right} head=${head}`
+    );
   }
 });
 

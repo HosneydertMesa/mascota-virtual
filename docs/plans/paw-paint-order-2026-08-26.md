@@ -1,6 +1,6 @@
 # Plan: front-paw SVG paint order (Luna idle depth)
 
-> **Status**: Open
+> **Status**: Implemented
 > **Date**: 2026-08-26
 > **Author**: Cloud agent (follow-up from main after PR #2)
 > **Branch**: `cursor/paw-z-order-6c0a`
