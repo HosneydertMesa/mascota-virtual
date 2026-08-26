@@ -299,17 +299,11 @@ function stripCssComments(css) {
 function extractKeyframeBodies(css, name) {
   css = stripCssComments(css);
   const bodies = [];
-  const token = '@keyframes ' + name;
-  let from = 0;
-  while (from < css.length) {
-    const idx = css.indexOf(token, from);
-    if (idx === -1) break;
-    const after = css[idx + token.length] || '';
-    if (/[A-Za-z0-9_-]/.test(after)) {
-      from = idx + token.length;
-      continue;
-    }
-    const braceStart = css.indexOf('{', idx);
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const re = new RegExp('@keyframes\\s+' + escaped + '(?![A-Za-z0-9_-])', 'g');
+  let m;
+  while ((m = re.exec(css)) !== null) {
+    const braceStart = css.indexOf('{', m.index);
     if (braceStart === -1) break;
     let depth = 1;
     let i = braceStart + 1;
@@ -320,7 +314,7 @@ function extractKeyframeBodies(css, name) {
     }
     if (depth !== 0) break;
     bodies.push(css.slice(braceStart + 1, i - 1));
-    from = i;
+    re.lastIndex = i;
   }
   return bodies;
 }
