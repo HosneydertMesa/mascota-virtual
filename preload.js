@@ -67,6 +67,15 @@ contextBridge.exposeInMainWorld('api', {
   pomodoroGetStats: () => ipcRenderer.invoke('pomodoro:get-stats'),
   pomodoroGetNextBreakKind: (params) => ipcRenderer.invoke('pomodoro:get-next-break-kind', params),
 
+  // Unified Pomodoro Engine APIs
+  pomodoroStart: (minutes, mode) => ipcRenderer.invoke('pomodoro:start', { minutes, mode }),
+  pomodoroPause: () => ipcRenderer.invoke('pomodoro:pause'),
+  pomodoroReset: (minutes) => ipcRenderer.invoke('pomodoro:reset', { minutes }),
+  pomodoroToggle: () => ipcRenderer.invoke('pomodoro:toggle'),
+  pomodoroGetState: () => ipcRenderer.invoke('pomodoro:get-state'),
+  onPomodoroTick: (callback) => subscribe('pomodoro:tick', callback),
+  onPomodoroCompleted: (callback) => subscribe('pomodoro:completed', callback),
+
   onSwitchTab: (callback) => subscribe('switch-tab', callback),
   onPetMoveState: (callback) => subscribe('pet-move-state', callback),
   onPetAction: (callback) => subscribe('pet-action', callback),

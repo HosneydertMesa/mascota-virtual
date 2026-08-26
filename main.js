@@ -3,7 +3,7 @@
 const { app, BrowserWindow, globalShortcut, ipcMain, powerMonitor, safeStorage, screen } = require('electron');
 const fs = require('fs');
 const path = require('path');
-const { getQuickTip, sendMessageToMiniMax } = require('./src/services/ai');
+const { getQuickTip, sendMessageToMiniMax, getPetResponse } = require('./src/services/ai');
 const { createPowerMonitor } = require('./src/services/power-monitor');
 const { createIdleMonitor } = require('./src/services/idle-monitor');
 // v2.2.0 — App-aware mascota: detecta foreground app para mood reactivo.
@@ -105,15 +105,15 @@ const {
 
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 
-const WINDOW_SIZE = Object.freeze({ width: 320, height: 250 });
+const WINDOW_SIZE = Object.freeze({ width: 340, height: 320 });
 const DASHBOARD_SIZE = Object.freeze({ width: 480, height: 650 });
-const PET_VISIBLE_SIZE = Object.freeze({ width: 130, height: 130 });
+const PET_VISIBLE_SIZE = Object.freeze({ width: 200, height: 200 });
 const MARGIN_SAFETY = 12;
 const BOTTOM_SAFETY = 45;
 const CURSOR_INTERACTION_DISTANCE = 165;
 const CURSOR_STANDOFF_DISTANCE = 115;
 const PET_OFFSETS = Object.freeze({
-  left: WINDOW_SIZE.width - PET_VISIBLE_SIZE.width,
+  left: Math.round((WINDOW_SIZE.width - PET_VISIBLE_SIZE.width) / 2),
   top: WINDOW_SIZE.height - PET_VISIBLE_SIZE.height
 });
 
@@ -631,6 +631,7 @@ function createPetWindow() {
     show: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
+      backgroundThrottling: false,
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true
@@ -687,6 +688,7 @@ function createDashboardWindow(defaultTab = 'pomodoro') {
     resizable: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
+      backgroundThrottling: false,
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true
@@ -882,7 +884,7 @@ ipcMain.handle('ai:send-message', async (event, payload) => {
     memoriesContext = formatMemoriesForPrompt(relevant);
   }
 
-  const reply = await sendMessageToMiniMax(
+  const reply = await getPetResponse(
     apiKey,
     petType,
     Array.isArray(payload?.history) ? payload.history : [],
@@ -1262,6 +1264,192 @@ ipcMain.handle('pomodoro:get-stats', event => {
   };
 });
 
+// ============================================================
+// Unified Pomodoro Engine (Main Process)
+// ============================================================
+let activePomodoroTimer = {
+  status: 'idle', // 'idle' | 'running' | 'paused'
+  mode: 'focus',   // 'focus' | 'break' | 'long_break'
+  totalDurationSec: 25 * 60,
+  remainingSec: 25 * 60,
+  endTimeMs: null,
+  startedAtMs: null,
+  focusBlocksCompleted: 0,
+  lastBreakWasLong: false
+};
+
+let pomodoroTickTimer = null;
+
+function broadcastPomodoroState(eventKind = 'tick') {
+  const payload = {
+    status: activePomodoroTimer.status,
+    mode: activePomodoroTimer.mode,
+    totalDurationSec: activePomodoroTimer.totalDurationSec,
+    remainingSec: activePomodoroTimer.remainingSec,
+    focusBlocksCompleted: activePomodoroTimer.focusBlocksCompleted,
+    lastBreakWasLong: activePomodoroTimer.lastBreakWasLong,
+    eventKind
+  };
+  broadcastToAllWindows('pomodoro:tick', payload);
+  if (eventKind === 'completed') {
+    broadcastToAllWindows('pomodoro:completed', payload);
+  }
+}
+
+function startPomodoroEngine(durationMinutes, mode = 'focus') {
+  if (activePomodoroTimer.status === 'running') return activePomodoroTimer;
+  
+  if (activePomodoroTimer.status === 'idle') {
+    const config = ensurePomodoroConfigLoaded();
+    const duration = durationMinutes || (mode === 'focus' ? (config.customFocusMin || 25) : (config.customBreakMin || 5));
+    activePomodoroTimer.mode = mode;
+    activePomodoroTimer.totalDurationSec = duration * 60;
+    activePomodoroTimer.remainingSec = activePomodoroTimer.totalDurationSec;
+    activePomodoroTimer.startedAtMs = Date.now();
+  }
+
+  activePomodoroTimer.status = 'running';
+  activePomodoroTimer.endTimeMs = Date.now() + (activePomodoroTimer.remainingSec * 1000);
+
+  if (pomodoroTickTimer) clearInterval(pomodoroTickTimer);
+  pomodoroTickTimer = setInterval(() => {
+    if (activePomodoroTimer.status !== 'running') {
+      clearInterval(pomodoroTickTimer);
+      return;
+    }
+    const now = Date.now();
+    const diffSec = Math.max(0, Math.ceil((activePomodoroTimer.endTimeMs - now) / 1000));
+    activePomodoroTimer.remainingSec = diffSec;
+    broadcastPomodoroState('tick');
+
+    if (diffSec <= 0) {
+      clearInterval(pomodoroTickTimer);
+      onPomodoroEngineCompleted();
+    }
+  }, 1000);
+
+  broadcastPomodoroState('started');
+  return activePomodoroTimer;
+}
+
+function pausePomodoroEngine() {
+  if (activePomodoroTimer.status !== 'running') return activePomodoroTimer;
+  if (pomodoroTickTimer) clearInterval(pomodoroTickTimer);
+  activePomodoroTimer.status = 'paused';
+  broadcastPomodoroState('paused');
+  return activePomodoroTimer;
+}
+
+function resetPomodoroEngine(minutes) {
+  if (pomodoroTickTimer) clearInterval(pomodoroTickTimer);
+  const config = ensurePomodoroConfigLoaded();
+  const focusMin = minutes || config.customFocusMin || 25;
+  activePomodoroTimer.status = 'idle';
+  activePomodoroTimer.mode = 'focus';
+  activePomodoroTimer.totalDurationSec = focusMin * 60;
+  activePomodoroTimer.remainingSec = activePomodoroTimer.totalDurationSec;
+  activePomodoroTimer.startedAtMs = null;
+  activePomodoroTimer.endTimeMs = null;
+  broadcastPomodoroState('reset');
+  return activePomodoroTimer;
+}
+
+function togglePomodoroEngine() {
+  if (activePomodoroTimer.status === 'running') {
+    return pausePomodoroEngine();
+  } else {
+    return startPomodoroEngine();
+  }
+}
+
+async function onPomodoroEngineCompleted() {
+  const finishedMode = activePomodoroTimer.mode;
+  const endedAt = Date.now();
+  activePomodoroTimer.status = 'idle';
+
+  try {
+    appendPomodoroSession({ userDataDir: app.getPath('userData') }, {
+      kind: finishedMode === 'focus' ? 'focus' : (activePomodoroTimer.lastBreakWasLong ? 'long_break' : 'short_break'),
+      durationSec: activePomodoroTimer.totalDurationSec,
+      startedAt: activePomodoroTimer.startedAtMs || (endedAt - activePomodoroTimer.totalDurationSec * 1000),
+      endedAt
+    });
+  } catch (e) {
+    logDebug('POMODORO SAVE SESSION ERR: ' + e.message);
+  }
+
+  if (finishedMode === 'focus') {
+    activePomodoroTimer.focusBlocksCompleted += 1;
+    const nextKind = nextBreakKind({
+      focusBlocksCompleted: activePomodoroTimer.focusBlocksCompleted,
+      lastBreakWasLong: activePomodoroTimer.lastBreakWasLong
+    });
+    activePomodoroTimer.lastBreakWasLong = (nextKind === 'long');
+    activePomodoroTimer.mode = (nextKind === 'long' ? 'long_break' : 'break');
+    const config = ensurePomodoroConfigLoaded();
+    const breakMin = nextKind === 'long' ? (config.customLongBreakMin || 15) : (config.customBreakMin || 5);
+    activePomodoroTimer.totalDurationSec = breakMin * 60;
+    activePomodoroTimer.remainingSec = activePomodoroTimer.totalDurationSec;
+  } else {
+    if (activePomodoroTimer.lastBreakWasLong) {
+      activePomodoroTimer.focusBlocksCompleted = 0;
+      activePomodoroTimer.lastBreakWasLong = false;
+    }
+    activePomodoroTimer.mode = 'focus';
+    const config = ensurePomodoroConfigLoaded();
+    activePomodoroTimer.totalDurationSec = (config.customFocusMin || 25) * 60;
+    activePomodoroTimer.remainingSec = activePomodoroTimer.totalDurationSec;
+  }
+
+  broadcastPomodoroState('completed');
+
+  try {
+    let apiKey = '';
+    try { apiKey = readEncryptedApiKey(); } catch (_) {}
+    const tipJson = await getQuickTip(apiKey, activePetType, finishedMode === 'focus' ? 'break_start' : 'focus_start');
+    let parsedTip;
+    try { parsedTip = JSON.parse(tipJson); } catch (_) { parsedTip = { content: tipJson, emotion: 'happy', action: 'jump' }; }
+    
+    const reaction = {
+      type: 'speak',
+      text: parsedTip.content || (finishedMode === 'focus' ? '¡Sesión de enfoque terminada! ¡Buen trabajo!' : '¡A enfocarse!'),
+      emotion: parsedTip.emotion || (finishedMode === 'focus' ? 'happy' : 'calm'),
+      action: parsedTip.action || (finishedMode === 'focus' ? 'jump' : 'sit'),
+      sound: parsedTip.sound || (activePetType === 'cat' ? 'purr' : 'bark'),
+      intent: parsedTip.intent || (finishedMode === 'focus' ? 'approach' : 'stay')
+    };
+    safeSend(petWindow, 'pet-action', reaction);
+    executePetBehavior(reaction);
+  } catch (err) {
+    logDebug('POMODORO COMPLETION AI REACTION ERR: ' + err.message);
+  }
+}
+
+ipcMain.handle('pomodoro:start', (event, payload) => {
+  if (!isKnownSender(event)) throw new Error('Solicitud no autorizada.');
+  return startPomodoroEngine(payload?.minutes, payload?.mode);
+});
+
+ipcMain.handle('pomodoro:pause', (event) => {
+  if (!isKnownSender(event)) throw new Error('Solicitud no autorizada.');
+  return pausePomodoroEngine();
+});
+
+ipcMain.handle('pomodoro:reset', (event, payload) => {
+  if (!isKnownSender(event)) throw new Error('Solicitud no autorizada.');
+  return resetPomodoroEngine(payload?.minutes);
+});
+
+ipcMain.handle('pomodoro:toggle', (event) => {
+  if (!isKnownSender(event)) throw new Error('Solicitud no autorizada.');
+  return togglePomodoroEngine();
+});
+
+ipcMain.handle('pomodoro:get-state', (event) => {
+  if (!isKnownSender(event)) throw new Error('Solicitud no autorizada.');
+  return activePomodoroTimer;
+});
+
 ipcMain.handle('quick-capture:list', (event, limit) => {
   if (!isKnownSender(event)) throw new Error('Solicitud no autorizada.');
   if (!capturesStore) return [];
@@ -1351,12 +1539,10 @@ let isDoNotDisturb = false;
 // "register / unregister" con manejo de errores.
 
 function handlePomodoroToggleShortcut() {
+  togglePomodoroEngine();
   if (dashboardWindow && !dashboardWindow.isDestroyed()) {
     safeSend(dashboardWindow, 'pomodoro-toggle');
-    if (typeof dashboardWindow.focus === 'function') dashboardWindow.focus();
-    return;
   }
-  createDashboardWindow('pomodoro');
 }
 
 function handlePetSleepShortcut() {

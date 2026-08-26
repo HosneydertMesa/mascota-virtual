@@ -274,8 +274,8 @@
         height: 200,
         backgroundColor: 0x000000,
         backgroundAlpha: 0,
-        resolution: window.devicePixelRatio || 1,
-        autoDensity: true,
+        resolution: 1,
+        autoDensity: false,
         antialias: true
       });
     } catch (err) {

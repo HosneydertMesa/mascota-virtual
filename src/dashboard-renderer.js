@@ -547,15 +547,31 @@ window.api.onSettingsUpdated(settings => {
   renderChatHistory();
 });
 
-function updateTimerUI() {
-  const minutes = Math.floor(timeLeft / 60).toString().padStart(2, '0');
-  const seconds = (timeLeft % 60).toString().padStart(2, '0');
+function updateTimerUI(data) {
+  const remaining = typeof data?.remainingSec === 'number' ? data.remainingSec : timeLeft;
+  const total = typeof data?.totalDurationSec === 'number' ? data.totalDurationSec : (totalDuration || 25 * 60);
+  const minutes = Math.floor(remaining / 60).toString().padStart(2, '0');
+  const seconds = (remaining % 60).toString().padStart(2, '0');
   timerTime.textContent = `${minutes}:${seconds}`;
-  timerProgress.style.strokeDashoffset = 502.6 * (1 - timeLeft / totalDuration);
-  const isFocus = timerMode === 'focus';
+  timerProgress.style.strokeDashoffset = 502.6 * (1 - remaining / total);
+  
+  const mode = data?.mode || timerMode;
+  const isFocus = mode === 'focus';
   timerStatus.textContent = isFocus ? 'Enfoque' : 'Descanso';
   timerStatus.style.color = isFocus ? 'var(--primary)' : 'var(--success)';
   timerProgress.style.stroke = isFocus ? 'var(--primary)' : 'var(--success)';
+
+  const status = data?.status || timerState;
+  if (status === 'running') {
+    timerToggleBtn.querySelector('span').textContent = 'Pausar';
+    timerToggleBtn.querySelector('svg').innerHTML = '<rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect>';
+  } else if (status === 'paused') {
+    timerToggleBtn.querySelector('span').textContent = 'Reanudar';
+    timerToggleBtn.querySelector('svg').innerHTML = '<polygon points="5 3 19 12 5 21 5 3"></polygon>';
+  } else {
+    timerToggleBtn.querySelector('span').textContent = 'Iniciar';
+    timerToggleBtn.querySelector('svg').innerHTML = '<polygon points="5 3 19 12 5 21 5 3"></polygon>';
+  }
 }
 
 function playNotification() {
@@ -571,132 +587,53 @@ function playNotification() {
     oscillator.start();
     oscillator.stop(context.currentTime + 0.45);
   } catch (_error) {
-    // Soft-fail: si el audio no esta disponible, el timer sigue funcionando.
-    // Para diagnosticar, agregar log dentro de este catch en dev.
+    // Soft-fail
   }
 }
 
-function startTimer() {
-  clearInterval(timerInterval);
-  // Track A — guardar el momento de inicio y duracion para registrar al terminar
-  const sessionStart = Date.now();
-  const sessionKind = timerMode; // 'focus' o 'break'
-  const sessionDuration = totalDuration;
-  pendingSessionInfo = { startedAt: sessionStart, durationSec: sessionDuration, kind: sessionKind };
-  timerInterval = setInterval(async () => {
-    timeLeft--;
-    updateTimerUI();
-    if (timeLeft > 0) return;
+timerToggleBtn.addEventListener('click', async () => {
+  if (window.api?.pomodoroToggle) {
+    const state = await window.api.pomodoroToggle();
+    updateTimerUI(state);
+  }
+});
 
-    clearInterval(timerInterval);
-    timerInterval = null;
-    timerState = 'idle';
-    timerToggleBtn.querySelector('span').textContent = 'Iniciar';
+timerResetBtn.addEventListener('click', async () => {
+  if (window.api?.pomodoroReset) {
+    const state = await window.api.pomodoroReset();
+    updateTimerUI(state);
+  }
+});
+
+if (window.api?.onPomodoroTick) {
+  window.api.onPomodoroTick((data) => {
+    timeLeft = data.remainingSec;
+    totalDuration = data.totalDurationSec;
+    timerMode = data.mode;
+    timerState = data.status;
+    updateTimerUI(data);
+  });
+}
+
+if (window.api?.onPomodoroCompleted) {
+  window.api.onPomodoroCompleted(() => {
     playNotification();
-
-    const finishedMode = timerMode;
-    const endedAt = Date.now();
-
-    // Track A — registrar la sesion completada en el store
-    if (pendingSessionInfo) {
-      try {
-        await window.api.pomodoroRegisterSession({
-          kind: finishedMode === 'focus' ? 'focus' : (lastBreakWasLong ? 'long_break' : 'short_break'),
-          durationSec: pendingSessionInfo.durationSec,
-          startedAt: pendingSessionInfo.startedAt,
-          endedAt
-        });
-      } catch (e) {
-        console.error('Error registering pomodoro session:', e);
-      }
-      pendingSessionInfo = null;
-    }
-
-    // Track A — I1 adaptive: despues de focus, decidir break kind
-    if (finishedMode === 'focus') {
-      focusBlocksCompleted += 1;
-      saveAdaptiveState();
-      try {
-        const next = await window.api.pomodoroGetNextBreakKind({
-          focusBlocksCompleted,
-          lastBreakWasLong
-        });
-        if (next && next.kind === 'long') {
-          // break largo
-          lastBreakWasLong = true;
-          breakDuration = (next.durationMin || 15) * 60;
-        } else {
-          lastBreakWasLong = false;
-          breakDuration = (next && next.durationMin) ? next.durationMin * 60 : 5 * 60;
-        }
-        saveAdaptiveState();
-      } catch (e) {
-        console.error('Error getting next break kind:', e);
-      }
-    } else {
-      // termino un break: reset del contador si fue long, sino resetea
-      if (lastBreakWasLong) {
-        focusBlocksCompleted = 0;
-        lastBreakWasLong = false;
-      }
-      saveAdaptiveState();
-    }
-
-    timerMode = finishedMode === 'focus' ? 'break' : 'focus';
-    totalDuration = timerMode === 'focus' ? focusDuration : breakDuration;
-    timeLeft = totalDuration;
-
-    try {
-      const tip = await window.api.aiQuickTip({
-        petType: currentPet,
-        context: finishedMode === 'focus' ? 'break_start' : 'focus_start'
-      });
-      if (tip) window.api.triggerPetAction({ type: 'speak', text: tip, emotion: 'calm', action: 'none', sound: 'none', intent: 'none' });
-    } catch (error) {
-      console.error('Error getting Pomodoro tip:', error);
-    }
-    updateTimerUI();
     refreshStats();
-  }, 1000);
+  });
 }
 
-timerToggleBtn.addEventListener('click', () => {
-  togglePomodoroTimer();
-});
-
-function togglePomodoroTimer() {
-  if (timerState === 'idle' || timerState === 'paused') {
-    timerState = 'running';
-    timerToggleBtn.querySelector('span').textContent = 'Pausar';
-    timerToggleBtn.querySelector('svg').innerHTML = '<rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect>';
-    startTimer();
-  } else {
-    timerState = 'paused';
-    timerToggleBtn.querySelector('span').textContent = 'Reanudar';
-    timerToggleBtn.querySelector('svg').innerHTML = '<polygon points="5 3 19 12 5 21 5 3"></polygon>';
-    clearInterval(timerInterval);
-    timerInterval = null;
-  }
+// Cargar estado inicial del timer al abrir dashboard
+if (window.api?.pomodoroGetState) {
+  window.api.pomodoroGetState().then(state => {
+    if (state) {
+      timeLeft = state.remainingSec;
+      totalDuration = state.totalDurationSec;
+      timerMode = state.mode;
+      timerState = state.status;
+      updateTimerUI(state);
+    }
+  }).catch(() => {});
 }
-
-// T4 — globalShortcut (Cmd/Ctrl+Shift+P) llega via IPC desde main.
-window.api.onPomodoroToggle(togglePomodoroTimer);
-
-timerResetBtn.addEventListener('click', () => {
-  clearInterval(timerInterval);
-  timerInterval = null;
-  timerState = 'idle';
-  timerMode = 'focus';
-  totalDuration = focusDuration;
-  timeLeft = focusDuration;
-  timerToggleBtn.querySelector('span').textContent = 'Iniciar';
-  timerToggleBtn.querySelector('svg').innerHTML = '<polygon points="5 3 19 12 5 21 5 3"></polygon>';
-  // Track A — el reset del timer no resetea el contador adaptive (la racha
-  // de focus blocks sobrevive a resets manuales — solo un long break o un
-  // cambio de sesion deberia resetearlo). Pero limpiamos pendingSessionInfo.
-  pendingSessionInfo = null;
-  updateTimerUI();
-});
 
 // Parsea respuesta de la IA via PetProtocol. Intenta JSON, fallback a tags viejos, fallback a texto libre.
 function parseReply(reply) {
