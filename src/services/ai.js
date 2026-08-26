@@ -3,6 +3,139 @@ const DEFAULT_MODEL = 'MiniMax-M3';
 const REQUEST_TIMEOUT_MS = 30000;
 
 /**
+ * Motor de Micro-IA Local (Offline) con personalidad y contratos de acción para la mascota.
+ */
+function generateLocalAIResponse(petType, userMessage, petName) {
+  const isCat = petType === 'cat';
+  const name = petName || (isCat ? 'Luna' : 'Max');
+  const msg = String(userMessage || '').toLowerCase().trim();
+
+  // 1. Saludos
+  if (/hola|buenos|buenas|hey|que tal|saludos/.test(msg)) {
+    if (isCat) {
+      return JSON.stringify({
+        emotion: "happy",
+        action: "jump",
+        sound: "meow",
+        intent: "approach",
+        content: `¡Miau! Hola, soy ${name}. Lista para acompañarte y concentrarnos juntos.`
+      });
+    } else {
+      return JSON.stringify({
+        emotion: "excited",
+        action: "jump",
+        sound: "bark",
+        intent: "approach",
+        content: `¡Guau! ¡Hola! ¡Soy ${name}! ¡Hoy será un día súper productivo juntos!`
+      });
+    }
+  }
+
+  // 2. Pomodoro y enfoque
+  if (/pomodoro|concentr|enfoque|estudi|trabaj|tarea|codigo|escribir/.test(msg)) {
+    if (isCat) {
+      return JSON.stringify({
+        emotion: "calm",
+        action: "sit",
+        sound: "purr",
+        intent: "rest_sit",
+        content: `Miau. Me siento a tu lado. Pon el Pomodoro y trabajemos sin distracciones.`
+      });
+    } else {
+      return JSON.stringify({
+        emotion: "excited",
+        action: "wag",
+        sound: "sniff",
+        intent: "approach",
+        content: `¡A darle con todo! ¡25 minutos de enfoque total y luego festejamos! ¡Guau!`
+      });
+    }
+  }
+
+  // 3. Descanso, pausa, cansancio
+  if (/descanso|pausa|cansad|dormir|sueno|sueño|agotad|break|relax/.test(msg)) {
+    if (isCat) {
+      return JSON.stringify({
+        emotion: "sleepy",
+        action: "stretch",
+        sound: "purr",
+        intent: "rest_stretch",
+        content: `*bosteza* Buen momento para estirarse y tomar un poco de agua. Me acuesto un ratito.`
+      });
+    } else {
+      return JSON.stringify({
+        emotion: "sleepy",
+        action: "lay",
+        sound: "whine",
+        intent: "rest_lay",
+        content: `¡Uff! Un merecido descanso. ¡Vamos a estirar las patas 5 minutos!`
+      });
+    }
+  }
+
+  // 4. Mimos, caricias, juego
+  if (/jugar|linda|lindo|buen chico|buena chica|te quiero|miau|guau|caricia|acariciar/.test(msg)) {
+    if (isCat) {
+      return JSON.stringify({
+        emotion: "happy",
+        action: "wag",
+        sound: "purr",
+        intent: "stay",
+        content: `*ronronea suavemente* Miau... me encanta trabajar contigo.`
+      });
+    } else {
+      return JSON.stringify({
+        emotion: "excited",
+        action: "jump",
+        sound: "bark",
+        intent: "play",
+        content: `¡Guau guau! ¡Muevo la colita de felicidad! ¡Gracias amigo!`
+      });
+    }
+  }
+
+  // 5. Ayuda / Consejos
+  if (/ayuda|consejo|tip|como voy|que hago|aburrid/.test(msg)) {
+    if (isCat) {
+      return JSON.stringify({
+        emotion: "calm",
+        action: "sit",
+        sound: "none",
+        intent: "rest_sit",
+        content: `Divide tus tareas grandes en pequeños pasos. Avanza paso a paso con calma.`
+      });
+    } else {
+      return JSON.stringify({
+        emotion: "happy",
+        action: "wag",
+        sound: "bark",
+        intent: "approach",
+        content: `¡Empieza por la tarea más difícil primero y sácatela de encima rápido!`
+      });
+    }
+  }
+
+  // 6. Respuesta reflexiva general
+  if (isCat) {
+    const catDefaults = [
+      { emotion: "calm", action: "sit", sound: "purr", intent: "stay", content: `Miau. Te escucho atentamente. Sigue adelante con tu trabajo.` },
+      { emotion: "happy", action: "none", sound: "meow", intent: "approach", content: `Aquí estoy contigo. Cualquier duda, avísame.` },
+      { emotion: "calm", action: "lay", sound: "purr", intent: "rest_lay", content: `Me quedo tranquilita aquí vigilando tu productividad.` }
+    ];
+    return JSON.stringify(catDefaults[Math.floor(Math.random() * catDefaults.length)]);
+  } else {
+    const dogDefaults = [
+      { emotion: "happy", action: "wag", sound: "bark", intent: "stay", content: `¡Aquí estoy listo para ayudarte en lo que necesites! ¡Guau!` },
+      { emotion: "excited", action: "jump", sound: "sniff", intent: "approach", content: `¡Sigamos avanzando! ¡Eres imparable hoy!` },
+      { emotion: "calm", action: "sit", sound: "none", intent: "rest_sit", content: `Sentado y atento. ¡Tú dale al teclado, yo te cuido la espalda!` }
+    ];
+    return JSON.stringify(dogDefaults[Math.floor(Math.random() * dogDefaults.length)]);
+  }
+}
+
+const { generateWithLocalLLM } = require('./local-llm');
+
+/**
  * Sends a message to the MiniMax API chat completions endpoint.
  * @param {string} apiKey - The user's MiniMax API Key.
  * @param {string} petType - The active pet ('cat' or 'dog').
@@ -15,23 +148,18 @@ async function sendMessageToMiniMax(apiKey, petType, history, userMessage, petNa
     throw new Error('API Key no configurada. Por favor, configúrala en Ajustes.');
   }
 
-  // petName es opcional; default Luna/Max segun petType
   const effectiveName = (typeof petName === 'string' && petName.trim().length > 0)
     ? petName.trim()
     : (petType === 'dog' ? 'Max' : 'Luna');
 
-  // moodContext es opcional; si esta, se agrega al system prompt
   const moodSection = (typeof moodContext === 'string' && moodContext.trim().length > 0)
     ? `\n\n${moodContext}\n`
     : '';
 
-  // P3 — memoriesContext es opcional; si esta, se agrega al system prompt
-  // para que la IA "sepa" cosas del usuario entre sesiones.
   const memoriesSection = (typeof memoriesContext === 'string' && memoriesContext.trim().length > 0)
     ? `\n\n${memoriesContext}\n`
     : '';
 
-  // Define system prompts based on pet personalities
   const systemPromptCat = `
 FORMATO OBLIGATORIO: Responde UNICAMENTE con un objeto JSON valido, sin texto antes ni despues, sin markdown, sin explicaciones.
 Si necesitas pensar, usa <think>...</think> en una linea ANTES del JSON. El JSON es lo UNICO que cuenta para la UI.
@@ -153,7 +281,6 @@ Personaje: ${effectiveName}, perrito companiero de trabajo virtual. Energetico, 
       .map(item => ({ role: item.role, content: item.content.slice(0, 4000) }))
     : [];
 
-  // Build the messages list (system prompt + history + current message)
   const messages = [
     { role: 'system', content: systemPrompt.trim() },
     ...safeHistory,
@@ -210,7 +337,6 @@ Personaje: ${effectiveName}, perrito companiero de trabajo virtual. Energetico, 
  */
 async function getQuickTip(apiKey, petType, context) {
   if (!apiKey) {
-    // Return local fallback tips if no key is configured
     return getFallbackTip(petType, context);
   }
 
@@ -247,4 +373,30 @@ function getFallbackTip(petType, context) {
   return tips[context] || '¡A trabajar con ganas!';
 }
 
-module.exports = { sendMessageToMiniMax, getQuickTip, getFallbackTip };
+/**
+ * Orquestador principal de respuesta: API remota -> Micro-LLM Neural -> Heurística local.
+ */
+async function getPetResponse(apiKey, petType, history, userMessage, petName, moodContext, memoriesContext) {
+  const effectiveName = (typeof petName === 'string' && petName.trim().length > 0)
+    ? petName.trim()
+    : (petType === 'dog' ? 'Max' : 'Luna');
+
+  if (apiKey && typeof apiKey === 'string' && apiKey.trim().length > 5) {
+    try {
+      return await sendMessageToMiniMax(apiKey, petType, history, userMessage, petName, moodContext, memoriesContext);
+    } catch (err) {
+      console.warn('[AI] MiniMax no disponible, usando motor local:', err.message);
+    }
+  }
+
+  // 1. Probar modelo neuronal local (SmolLM2-135M / Qwen)
+  try {
+    const neural = await generateWithLocalLLM(petType, userMessage, effectiveName);
+    if (neural) return neural;
+  } catch (_) {}
+
+  // 2. Fallback instantáneo con personalidad
+  return generateLocalAIResponse(petType, userMessage, effectiveName);
+}
+
+module.exports = { sendMessageToMiniMax, getQuickTip, getFallbackTip, generateLocalAIResponse, getPetResponse };

@@ -33,6 +33,7 @@
     "electron-builder": "^26.0.0"
   },
   "dependencies": {
+    "@huggingface/transformers": "^4.2.0",
     "electron-updater": "^6.6.2",
     "node-ical": "^0.27.1",
     "pixi.js": "^8.19.0"
