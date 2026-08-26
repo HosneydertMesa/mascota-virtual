@@ -155,12 +155,21 @@ class RotatingFileStream extends Writable {
     this._open();
   }
 
-  _destroy(cb) {
+  // Close the fd before 'finish' so Windows can delete the temp file.
+  _final(cb) {
     if (this.fd !== null) {
       try { fs.closeSync(this.fd); } catch (_e) {}
       this.fd = null;
     }
     cb();
+  }
+
+  _destroy(err, cb) {
+    if (this.fd !== null) {
+      try { fs.closeSync(this.fd); } catch (_e) {}
+      this.fd = null;
+    }
+    cb(err);
   }
 }
 

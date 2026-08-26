@@ -114,17 +114,12 @@ class PetViewport {
     const rate = STATE_FRAME_RATE[this.currentState];
     if (!Number.isFinite(rate)) return;
 
-    // v2.3.0 walk v2: during walking, the CSS animations (sideWalkSwing*,
-    // catBodyWalk, dogBodyWalk, catTailWalk) drive ALL the motion. The
-    // innerHTML swap every 167ms was TRUNCATING each CSS cycle to ~25%
-    // of its full range (because the swap recreates the elements and
-    // resets the animation). Result: visible swing range was only ~22deg
-    // even though the keyframe defines 52deg. Now we keep the SVG frame
-    // static during walk and let CSS handle the smooth motion. The 4
-    // walk frames (catWalk1..4 / dogWalk1..4) differ only by 1-3px in
-    // paw y-offset, which is barely visible compared to the CSS body bob.
-    // Verified by test/preview/walk-v2-verify.py: without this fix the
-    // observed swing was 22.6deg, with this fix it should be ~50deg.
+    // v2.3.0 walk v2 / slice 1 MOTION: during walking, the CSS animations
+    // (catWalkSwing* / dogWalkSwing*, catBodyWalk, dogBodyWalk, catTailWalk)
+    // drive ALL the motion. The innerHTML swap every 167ms was TRUNCATING
+    // each CSS cycle to ~25% of its full range (because the swap recreates
+    // the elements and resets the animation). Keep the SVG frame static
+    // during walk and let CSS handle the smooth motion.
     this.frameTimer = setInterval(() => {
       const frames = this.getFrames(this.currentPet, this.currentState);
       if (!frames || frames.length <= 1) return;

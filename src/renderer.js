@@ -4,6 +4,8 @@
    EyeTracker, Pomodoro, and IPC bridge.
    ============================================================ */
 
+const MOOD_CLASSES = ['mood-happy', 'mood-calm', 'mood-sleepy', 'mood-sad', 'mood-bored'];
+
 let viewport = null;
 let speech = null;
 let interaction = null;
@@ -11,9 +13,68 @@ let pomodoro = null;
 let soundEnabled = true;
 let currentPet = 'cat';
 let sleepTimeout = null;
+let sitTimeout = null;
+let stretchTimeout = null;
+let moodPollTimer = null;
 
 // Ear twitch idle timer
 let earTwitchTimer = null;
+
+function moodStateFromApi(mood) {
+  if (typeof window !== 'undefined' && window.PetMood && typeof window.PetMood.deriveState === 'function' && mood) {
+    return window.PetMood.deriveState(mood);
+  }
+  if (!mood || typeof mood !== 'object') return 'calm';
+  if (mood.energy < 25) return 'sleepy';
+  if (mood.happiness < 25) return 'sad';
+  if (mood.curiosity < 20 && mood.energy < 50) return 'bored';
+  if (mood.happiness >= 70 && mood.energy >= 50) return 'happy';
+  return 'calm';
+}
+
+function applyMoodClassTo(el, moodState) {
+  if (!el) return;
+  for (const cls of MOOD_CLASSES) el.classList.remove(cls);
+  const next = MOOD_CLASSES.includes('mood-' + moodState) ? 'mood-' + moodState : 'mood-calm';
+  el.classList.add(next);
+}
+
+function pickRestPose(moodState, random = Math.random) {
+  if (moodState === 'bored') return 'stretching';
+  if (moodState === 'sleepy') return random() < 0.5 ? 'laying' : 'sitting';
+  return 'sitting';
+}
+
+function pickSitDelayMs(random = Math.random) {
+  return 15000 + random() * 10000;
+}
+
+function pickStretchMs(random = Math.random) {
+  return 1200 + random() * 800;
+}
+
+function isRestableState(state) {
+  return state === 'idle' || state === 'sitting' || state === 'laying';
+}
+
+async function getMoodState() {
+  try {
+    if (typeof window === 'undefined' || !window.api || typeof window.api.getMood !== 'function') {
+      return 'calm';
+    }
+    const mood = await window.api.getMood();
+    return moodStateFromApi(mood);
+  } catch (_err) {
+    return 'calm';
+  }
+}
+
+async function refreshMoodClass() {
+  if (typeof document === 'undefined') return;
+  const el = document.getElementById('pet-container');
+  const state = await getMoodState();
+  applyMoodClassTo(el, state);
+}
 
 function triggerEarTwitch() {
   if (document.body.classList.contains('sleeping') || document.body.classList.contains('drag-mode')) return;
@@ -27,34 +88,94 @@ function triggerEarTwitch() {
   setTimeout(() => ear.classList.remove('ear-twitching'), 450);
 }
 
+function clearIdleTimers() {
+  if (sleepTimeout) {
+    clearTimeout(sleepTimeout);
+    sleepTimeout = null;
+  }
+  if (sitTimeout) {
+    clearTimeout(sitTimeout);
+    sitTimeout = null;
+  }
+  if (stretchTimeout) {
+    clearTimeout(stretchTimeout);
+    stretchTimeout = null;
+  }
+}
+
 function scheduleSleep(delayMs = 45000) {
   if (sleepTimeout) clearTimeout(sleepTimeout);
   sleepTimeout = setTimeout(() => {
-    if (viewport && viewport.currentState === 'idle') {
+    if (viewport && isRestableState(viewport.currentState)) {
       viewport.setState('sleeping');
       if (window.api?.setSleeping) window.api.setSleeping(true);
     }
   }, delayMs);
 }
 
-function wakeUp() {
+function scheduleIdleVariety() {
+  clearIdleTimers();
+  sitTimeout = setTimeout(() => {
+    void (async () => {
+      if (!viewport || viewport.currentState === 'walking') return;
+      const moodState = await getMoodState();
+      if (!viewport || viewport.currentState === 'walking') return;
+      const pose = pickRestPose(moodState);
+      if (pose === 'stretching') {
+        startStretchThenIdle();
+        return;
+      }
+      if (pose === 'laying') {
+        viewport.setState('laying');
+      } else {
+        viewport.setState('sitting');
+      }
+    })();
+  }, pickSitDelayMs());
+  scheduleSleep(45000);
+}
+
+function startStretchThenIdle() {
+  if (!viewport) return;
+  if (viewport.currentState === 'walking') return;
+  if (stretchTimeout) {
+    clearTimeout(stretchTimeout);
+    stretchTimeout = null;
+  }
+  viewport.setState('stretching');
+  stretchTimeout = setTimeout(() => {
+    stretchTimeout = null;
+    if (viewport && viewport.currentState === 'stretching') {
+      viewport.setState('idle');
+      scheduleIdleVariety();
+    }
+  }, pickStretchMs());
+}
+
+function wakeUp(opts = {}) {
   if (sleepTimeout) {
     clearTimeout(sleepTimeout);
     sleepTimeout = null;
   }
-  if (viewport && viewport.currentState === 'sleeping') {
-    viewport.setState('idle');
-    if (window.api?.setSleeping) window.api.setSleeping(false);
+  const wasSleeping = viewport && viewport.currentState === 'sleeping';
+  if (wasSleeping && window.api?.setSleeping) window.api.setSleeping(false);
+  if (opts.skipStretch) return;
+  if (wasSleeping) {
+    startStretchThenIdle();
   }
 }
 
 function triggerHappyBounce() {
   const container = document.getElementById('pet-container');
-  if (!container) return;
-  container.classList.remove('landing-bounce');
-  void container.offsetWidth;
-  container.classList.add('landing-bounce');
-  setTimeout(() => container.classList.remove('landing-bounce'), 600);
+  if (container) {
+    container.classList.remove('landing-bounce');
+    void container.offsetWidth;
+    container.classList.add('landing-bounce');
+    setTimeout(() => container.classList.remove('landing-bounce'), 600);
+  }
+  if (viewport && viewport.currentState !== 'walking') {
+    startStretchThenIdle();
+  }
 }
 
 function initQuickChat() {
@@ -159,15 +280,18 @@ function setupIPCListeners() {
   window.api.onPetMoveState((data) => {
     if (!data || typeof data.state !== 'string') return;
     if (data.state === 'walking') {
-      wakeUp();
+      wakeUp({ skipStretch: true });
+      clearIdleTimers();
       if (viewport) viewport.setState('walking', data.direction);
     } else if (data.state === 'playing') {
       wakeUp();
-      if (viewport) viewport.setState('idle');
+      if (viewport && viewport.currentState !== 'stretching') {
+        viewport.setState('idle');
+      }
       if (Math.random() < 0.05) triggerHappyBounce();
     } else if (viewport && viewport.currentState !== 'sleeping') {
       viewport.setState('idle');
-      scheduleSleep();
+      scheduleIdleVariety();
     }
   });
 
@@ -195,7 +319,7 @@ function setupIPCListeners() {
   });
 }
 
-window.addEventListener('DOMContentLoaded', () => {
+function bootPetRenderer() {
   viewport = new window.PetViewport();
   speech = new window.SpeechController();
   interaction = new window.InteractionController();
@@ -215,7 +339,9 @@ window.addEventListener('DOMContentLoaded', () => {
     if (Math.random() < 0.4) triggerEarTwitch();
   }, 10000);
 
-  scheduleSleep();
+  scheduleIdleVariety();
+  void refreshMoodClass();
+  moodPollTimer = setInterval(() => { void refreshMoodClass(); }, 8000);
 
   setTimeout(() => {
     triggerHappyBounce();
@@ -225,4 +351,25 @@ window.addEventListener('DOMContentLoaded', () => {
         : '¡Hola! ¡Soy Max! Hoy será un gran día de trabajo. Haz doble clic en mí.');
     }
   }, 1500);
-});
+}
+
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+  window.addEventListener('DOMContentLoaded', bootPetRenderer);
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    MOOD_CLASSES,
+    moodStateFromApi,
+    applyMoodClassTo,
+    pickRestPose,
+    pickSitDelayMs,
+    pickStretchMs,
+    isRestableState,
+    getMoodState,
+    refreshMoodClass,
+    scheduleIdleVariety,
+    startStretchThenIdle,
+    wakeUp
+  };
+}
