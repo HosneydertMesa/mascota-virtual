@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Mascota Virtual v2.1.0 — Pet Assets Preview</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #1a1b1e;
+      color: #e9ecef;
+      margin: 0;
+      padding: 24px;
+    }
+    h1 { margin: 0 0 4px; font-size: 20px; font-weight: 600; }
+    .subtitle { color: #adb5bd; font-size: 13px; margin-bottom: 16px; }
+    .tabs {
+      display: flex;
+      gap: 4px;
+      border-bottom: 2px solid #2c2e33;
+      margin-bottom: 24px;
+    }
+    .tab {
+      background: transparent;
+      border: 0;
+      color: #adb5bd;
+      padding: 10px 16px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+    }
+    .tab:hover { color: #e9ecef; }
+    .tab.active { color: #ffd8a8; border-bottom-color: #ff922b; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+    }
+    .card {
+      background: #2c2e33;
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+    .card svg { width: 160px; height: 160px; }
+    .card h3 {
+      font-size: 13px;
+      margin: 12px 0 4px;
+      color: #ffd8a8;
+    }
+    .card p {
+      font-size: 11px;
+      color: #adb5bd;
+      margin: 0;
+      line-height: 1.4;
+    }
+    .controls {
+      margin-top: 16px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    button {
+      background: #495057;
+      color: white;
+      border: 0;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    button:hover { background: #6c757d; }
+    button.primary { background: #ff922b; }
+    button.primary:hover { background: #fd7e14; }
+    .stage {
+      background: #2c2e33;
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .stage svg { width: 240px; height: 240px; }
+    .stage-row {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>🐾 Mascota Virtual v2.1.0 — Assets Preview</h1>
+  <p class="subtitle">feat/mascota-con-vida · 14 SVGs nuevos · walk con bone rotation + sit/lay/stretch estáticos</p>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="walk">Walk (cycle)</button>
+    <button class="tab" data-tab="sit">Sit</button>
+    <button class="tab" data-tab="lay">Lay</button>
+    <button class="tab" data-tab="stretch">Stretch</button>
+  </div>
+
+  <!-- WALK TAB -->
+  <div class="tab-content active" id="tab-walk">
+    <div class="stage">
+      <h2 style="margin: 0 0 12px; color: #ffd8a8;">Cat — Walk cycle demo</h2>
+      <div id="cat-walk-stage"></div>
+      <div class="controls">
+        <button class="primary" id="cat-walk-play">▶ Play cat cycle (6 fps)</button>
+        <button id="cat-walk-stop">⏸ Stop</button>
+      </div>
+    </div>
+
+    <div class="stage">
+      <h2 style="margin: 0 0 12px; color: #ffd8a8;">Dog — Walk cycle demo</h2>
+      <div id="dog-walk-stage"></div>
+      <div class="controls">
+        <button class="primary" id="dog-walk-play">▶ Play dog cycle (6 fps)</button>
+        <button id="dog-walk-stop">⏸ Stop</button>
+      </div>
+    </div>
+
+    <h3 style="margin: 24px 0 12px;">Cat — 4 frames estáticos (skeletal 2D)</h3>
+    <div class="grid" id="cat-walk-frames"></div>
+
+    <h3 style="margin: 24px 0 12px;">Dog — 4 frames estáticos (skeletal 2D)</h3>
+    <div class="grid" id="dog-walk-frames"></div>
+  </div>
+
+  <!-- SIT TAB -->
+  <div class="tab-content" id="tab-sit">
+    <h3 style="margin: 0 0 12px;">Cat — Sit + Sit blink</h3>
+    <div class="grid">
+      <div class="card" id="cat-sit-1"></div>
+      <div class="card" id="cat-sit-2"></div>
+    </div>
+    <h3 style="margin: 24px 0 12px;">Dog — Sit + Sit blink</h3>
+    <div class="grid">
+      <div class="card" id="dog-sit-1"></div>
+      <div class="card" id="dog-sit-2"></div>
+    </div>
+  </div>
+
+  <!-- LAY TAB -->
+  <div class="tab-content" id="tab-lay">
+    <h3 style="margin: 0 0 12px;">Cat — Lay + Lay breathe</h3>
+    <div class="grid">
+      <div class="card" id="cat-lay-1"></div>
+      <div class="card" id="cat-lay-2"></div>
+    </div>
+    <h3 style="margin: 24px 0 12px;">Dog — Lay + Lay breathe</h3>
+    <div class="grid">
+      <div class="card" id="dog-lay-1"></div>
+      <div class="card" id="dog-lay-2"></div>
+    </div>
+  </div>
+
+  <!-- STRETCH TAB -->
+  <div class="tab-content" id="tab-stretch">
+    <h3 style="margin: 0 0 12px;">Cat + Dog — Stretch</h3>
+    <div class="grid">
+      <div class="card" id="cat-stretch"></div>
+      <div class="card" id="dog-stretch"></div>
+    </div>
+  </div>
+
+  <script src="../../src/assets/cat.js"></script>
+  <script src="../../src/assets/dog.js"></script>
+  <link rel="stylesheet" href="../../src/styles/dashboard.css">
+  <script>
+    // === Tabs ===
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+      });
+    });
+
+    // === Walk cycle demos ===
+    function makeCycle(id, frames, speed = 167) {
+      const stage = document.getElementById(id);
+      let i = 0;
+      let timer = null;
+      function render() { stage.innerHTML = frames[i]; }
+      function next() { i = (i + 1) % frames.length; render(); }
+      function start() { stop(); timer = setInterval(next, speed); }
+      function stop() { if (timer) clearInterval(timer); timer = null; }
+      render();
+      return { start, stop, render };
+    }
+    const catWalk = makeCycle('cat-walk-stage', window.catWalkFrames);
+    const dogWalk = makeCycle('dog-walk-stage', window.dogWalkFrames);
+
+    // Aplica .walking-bob + .cat-walk / .dog-walk al stage para que las
+    // animaciones CSS de las patas (sideWalkSwingLeft/Right) se activen
+    // y se vea el balanceo real de las patas. Sin esto, el preview solo
+    // cicla frames estaticos y no se nota la animacion.
+    const catStage = document.getElementById('cat-walk-stage');
+    catStage.classList.add('walking-bob', 'cat-walk');
+    const dogStage = document.getElementById('dog-walk-stage');
+    dogStage.classList.add('walking-bob', 'dog-walk');
+
+    document.getElementById('cat-walk-play').onclick = catWalk.start;
+    document.getElementById('cat-walk-stop').onclick = catWalk.stop;
+    document.getElementById('dog-walk-play').onclick = dogWalk.start;
+    document.getElementById('dog-walk-stop').onclick = dogWalk.stop;
+
+    // === Static frames grids ===
+    const WALK_LABELS = [
+      'Frame 1 — Contact: front-left + back-right planted, others en aire',
+      'Frame 2 — Down: 4 patas plantadas, body squash',
+      'Frame 3 — Pass: front-right + back-left planted (la otra diagonal)',
+      'Frame 4 — Up: 4 patas cerca, body stretch'
+    ];
+    const grid = (id, frames, labels) => {
+      const el = document.getElementById(id);
+      frames.forEach((svg, i) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = svg + `<h3>${labels[i]}</h3>`;
+        el.appendChild(card);
+      });
+    };
+    grid('cat-walk-frames', window.catWalkFrames, WALK_LABELS);
+    grid('dog-walk-frames', window.dogWalkFrames, WALK_LABELS);
+
+    // === Sit ===
+    document.getElementById('cat-sit-1').innerHTML = window.catSitSVG + '<h3>Cat Sit</h3><p>Sentada, body vertical, collar+bell</p>';
+    document.getElementById('cat-sit-2').innerHTML = window.catSitBlinkSVG + '<h3>Cat Sit Blink</h3><p>Misma pose, ojo cerrado</p>';
+    document.getElementById('dog-sit-1').innerHTML = window.dogSitSVG + '<h3>Dog Sit</h3><p>Sentado, body vertical, collar+bone tag</p>';
+    document.getElementById('dog-sit-2').innerHTML = window.dogSitBlinkSVG + '<h3>Dog Sit Blink</h3><p>Misma pose, ojo cerrado</p>';
+
+    // === Lay ===
+    document.getElementById('cat-lay-1').innerHTML = window.catLaySVG + '<h3>Cat Lay</h3><p>Acostada panza abajo, patas estiradas</p>';
+    document.getElementById('cat-lay-2').innerHTML = window.catLayBreatheSVG + '<h3>Cat Lay Breathe</h3><p>Body un poco más inflado (respiración)</p>';
+    document.getElementById('dog-lay-1').innerHTML = window.dogLaySVG + '<h3>Dog Lay</h3><p>Acostado panza abajo, patas estiradas</p>';
+    document.getElementById('dog-lay-2').innerHTML = window.dogLayBreatheSVG + '<h3>Dog Lay Breathe</h3><p>Body un poco más inflado (respiración)</p>';
+
+    // === Stretch ===
+    document.getElementById('cat-stretch').innerHTML = window.catStretchSVG + '<h3>Cat Stretch</h3><p>Cuerpo extendido, patas adelante/atrás</p>';
+    document.getElementById('dog-stretch').innerHTML = window.dogStretchSVG + '<h3>Dog Stretch</h3><p>Cuerpo extendido, patas adelante/atrás</p>';
+  </script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+:root {
+  --font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --bg-dark: rgba(43, 27, 20, 0.92);
+  --bg-glass: rgba(67, 39, 27, 0.82);
+  --border-glass: rgba(255, 232, 205, 0.18);
+  --border-glow: rgba(217, 72, 15, 0.28);
+  --primary: #d9480f;
+  --primary-deep: #a83408;
+  --primary-rgb: 217, 72, 15;
+  --primary-glow: rgba(217, 72, 15, 0.34);
+  --secondary: #ffb45f;
+  --secondary-rgb: 255, 180, 95;
+  --secondary-glow: rgba(255, 180, 95, 0.3);
+  --success: #68a357;
+  --warning: #f2b84b;
+  --danger: #d95050;
+  
+  --text-main: #f3f4f6;
+  --text-muted: #9ca3af;
+  --text-glow: 0 0 8px rgba(243, 244, 246, 0.5);
+  
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body[data-pet="cat"] {
+  --bg-dark: rgba(43, 27, 20, 0.92);
+  --bg-glass: rgba(67, 39, 27, 0.82);
+  --border-glass: rgba(255, 232, 205, 0.18);
+  --border-glow: rgba(217, 72, 15, 0.28);
+  --primary: #d9480f;
+  --primary-deep: #a83408;
+  --primary-rgb: 217, 72, 15;
+  --primary-glow: rgba(217, 72, 15, 0.34);
+  --secondary: #ffb45f;
+  --secondary-rgb: 255, 180, 95;
+  --secondary-glow: rgba(255, 180, 95, 0.3);
+}
+
+body[data-pet="dog"] {
+  --bg-dark: rgba(18, 40, 39, 0.94);
+  --bg-glass: rgba(28, 63, 59, 0.84);
+  --border-glass: rgba(221, 244, 235, 0.17);
+  --border-glow: rgba(47, 143, 131, 0.3);
+  --primary: #2f8f83;
+  --primary-deep: #20665e;
+  --primary-rgb: 47, 143, 131;
+  --primary-glow: rgba(47, 143, 131, 0.36);
+  --secondary: #e7aa39;
+  --secondary-rgb: 231, 170, 57;
+  --secondary-glow: rgba(231, 170, 57, 0.28);
+}
+
+/* Global resets */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family);
+  user-select: none;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+body {
+  overflow: hidden;
+  background: transparent;
+  color: var(--text-main);
+  height: 100vh;
+  width: 100vw;
+}
+
+/* Scrollbars for Dashboard */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}

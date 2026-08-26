@@ -4,6 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; media-src 'self'; object-src 'none'; base-uri 'none'">
+  <!--
+    CSP estricta (security audit MEDIUM-1, batch 4):
+    - default-src 'self'        → solo recursos del mismo origen
+    - script-src 'self'         → no inline scripts (los <script src=> van a /src/core/*.js)
+    - style-src 'self' + 'unsafe-inline'  → styles inline en dashboard (boton de timer, etc)
+    - img-src 'self' data:      → sprites locales + data URIs
+    - connect-src 'none'        → MAS estricto que el sugerido (T6 updates se hacen desde main process via IPC)
+    - media-src 'self'          → no remote media (los sonidos son sintetizados en runtime)
+    - object-src 'none'         → no Flash, no plugins
+    - base-uri 'none'           → no <base> tag hijacking
+
+    Si en el futuro hay que llamar a una API desde el renderer (ej: fetch directo),
+    cambiar 'connect-src' a "'self' https://api.example.com" (lista blanca explicita,
+    NO usar '*').
+  -->
   <title>Panel de Control - Mascota Virtual</title>
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -29,6 +44,8 @@
         <button class="tab-btn active" data-tab="pomodoro">Pomodoro</button>
         <button class="tab-btn" data-tab="chat">Chatear</button>
         <button class="tab-btn" data-tab="settings">Ajustes</button>
+        <button class="tab-btn" data-tab="memories">Recuerdos</button>
+        <button class="tab-btn" data-tab="captures">Capturas</button>
       </div>
 
       <!-- TAB 1: POMODORO TIMER -->
@@ -54,6 +71,61 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
               <span>Reiniciar</span>
             </button>
+          </div>
+
+          <div class="weekly-report-section" style="width: 100%; margin-top: 18px;">
+            <button id="weekly-report-btn" class="btn btn-secondary" style="width: 100%;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3z"></path><path d="M3 9h18M9 21V9"></path></svg>
+              <span>Generar reporte semanal</span>
+            </button>
+            <pre id="weekly-report-output" class="weekly-report-output" hidden></pre>
+            <div id="weekly-report-actions" class="weekly-report-actions" hidden>
+              <button id="weekly-report-copy-btn" class="btn btn-compact" type="button">Copiar al portapapeles</button>
+            </div>
+          </div>
+
+          <!-- Track A — W4 Plantillas + I1 adaptive + W5 streak -->
+          <div class="pomodoro-config">
+            <label class="pomodoro-config-label" for="pomodoro-template-select">Plantilla</label>
+            <select id="pomodoro-template-select" class="template-select" aria-label="Plantilla de Pomodoro">
+              <option value="classic">Classic (25/5)</option>
+              <option value="long-focus">Long focus (50/10)</option>
+              <option value="deep-work">Deep work (90/20)</option>
+              <option value="custom">Custom</option>
+            </select>
+            <div id="custom-inputs" class="custom-inputs" hidden>
+              <label class="custom-input-label">Focus (min)
+                <input type="number" id="custom-focus-min" class="settings-input compact" min="5" max="120" value="25">
+              </label>
+              <label class="custom-input-label">Break (min)
+                <input type="number" id="custom-break-min" class="settings-input compact" min="1" max="30" value="5">
+              </label>
+              <label class="custom-input-label">Long break (min)
+                <input type="number" id="custom-longbreak-min" class="settings-input compact" min="5" max="60" value="15">
+              </label>
+              <label class="custom-input-label">Long cada
+                <input type="number" id="custom-longbreak-every" class="settings-input compact" min="2" max="10" value="4">
+              </label>
+              <button id="pomodoro-apply-btn" class="btn btn-primary btn-compact" type="button">Aplicar</button>
+              <p id="pomodoro-config-status" class="pomodoro-config-status"></p>
+            </div>
+          </div>
+
+          <div class="pomodoro-stats" aria-live="polite">
+            <span class="pomodoro-stat">
+              <span class="pomodoro-stat-num" id="stat-focus-today">0</span>
+              <span class="pomodoro-stat-label">focus hoy</span>
+            </span>
+            <span class="pomodoro-stat-sep">·</span>
+            <span class="pomodoro-stat">
+              <span class="pomodoro-stat-num" id="stat-week-total">0</span>
+              <span class="pomodoro-stat-label">esta semana</span>
+            </span>
+            <span class="pomodoro-stat-sep">·</span>
+            <span class="pomodoro-stat">
+              <span class="pomodoro-stat-num" id="stat-streak">0</span>
+              <span class="pomodoro-stat-label">días de racha</span>
+            </span>
           </div>
         </div>
       </div>
@@ -123,10 +195,144 @@
             </label>
           </div>
 
+          <div class="settings-group sound-setting-row">
+            <div>
+              <label class="settings-label" for="briefing-enabled-input">Briefing diario</label>
+              <span>Saludo al abrir la app y resumen al cerrarla (1 vez por dia).</span>
+            </div>
+            <label class="switch-control">
+              <input id="briefing-enabled-input" type="checkbox" checked>
+              <span></span>
+            </label>
+          </div>
+
+          <!-- Track B — W1 silent mode + W2 calendar .ics -->
+          <div class="settings-group sound-setting-row">
+            <div>
+              <label class="settings-label" for="silent-mode-input">Modo compania silenciosa</label>
+              <span>La mascota aparece visible pero no inicia chat, no reacciona a mood ni dispara tips/DND/briefing. Atajo: <kbd>Ctrl/Cmd+Shift+M</kbd>.</span>
+            </div>
+            <label class="switch-control">
+              <input id="silent-mode-input" type="checkbox">
+              <span></span>
+            </label>
+          </div>
+
+          <div class="settings-group">
+            <label class="settings-label" for="calendar-path-input">Ruta al archivo .ics</label>
+            <input type="text" id="calendar-path-input" class="settings-input" placeholder="C:\Users\vos\cal.ics" autocomplete="off">
+            <p class="settings-hint">Exporta tu calendario de Outlook / Apple Calendar / Google Calendar como .ics y pega la ruta. Cuando detecte una reunion en los proximos 5 min, la mascota entra en modo retiro (opacity reducida + speech bubble).</p>
+            <div style="display: flex; gap: 8px; margin-top: 6px;">
+              <button id="calendar-test-btn" class="btn btn-compact btn-secondary" type="button">Probar</button>
+              <button id="calendar-clear-btn" class="btn btn-compact btn-danger" type="button">Limpiar</button>
+            </div>
+            <div id="calendar-test-result" class="calendar-test-result" aria-live="polite"></div>
+            <div id="retreat-indicator" class="retreat-indicator" hidden></div>
+          </div>
+
+          <div class="settings-group">
+            <label class="settings-label" for="pet-name-input">Nombre de la mascota</label>
+            <input type="text" id="pet-name-input" class="settings-input" placeholder="Luna / Max (o el que vos quieras)" maxlength="24" autocomplete="off">
+            <p class="settings-hint" id="pet-name-status">Cargando...</p>
+          </div>
+
+          <div class="settings-group">
+            <label class="settings-label">Estado de ánimo</label>
+            <div class="mood-card">
+              <div id="mood-chip" class="mood-chip mood-state-calm" data-state="calm" role="status" aria-live="polite">
+                <span class="mood-chip-emoji" id="mood-chip-emoji" aria-hidden="true">😌</span>
+                <span class="mood-chip-text" id="mood-chip-text">Calmada</span>
+              </div>
+              <div class="mood-stats" id="mood-stats">
+                <div class="mood-stat">
+                  <div class="mood-stat-head">
+                    <span class="mood-stat-label">Energía</span>
+                    <span class="mood-stat-value" id="mood-stat-energy-value">--</span>
+                  </div>
+                  <div class="mood-stat-bar"><span id="mood-stat-energy-bar" class="mood-stat-bar-fill"></span></div>
+                </div>
+                <div class="mood-stat">
+                  <div class="mood-stat-head">
+                    <span class="mood-stat-label">Felicidad</span>
+                    <span class="mood-stat-value" id="mood-stat-happiness-value">--</span>
+                  </div>
+                  <div class="mood-stat-bar"><span id="mood-stat-happiness-bar" class="mood-stat-bar-fill"></span></div>
+                </div>
+                <div class="mood-stat">
+                  <div class="mood-stat-head">
+                    <span class="mood-stat-label">Curiosidad</span>
+                    <span class="mood-stat-value" id="mood-stat-curiosity-value">--</span>
+                  </div>
+                  <div class="mood-stat-bar"><span id="mood-stat-curiosity-bar" class="mood-stat-bar-fill"></span></div>
+                </div>
+                <div class="mood-stat">
+                  <div class="mood-stat-head">
+                    <span class="mood-stat-label">Hambre</span>
+                    <span class="mood-stat-value" id="mood-stat-hunger-value">--</span>
+                  </div>
+                  <div class="mood-stat-bar"><span id="mood-stat-hunger-bar" class="mood-stat-bar-fill"></span></div>
+                </div>
+              </div>
+            </div>
+            <p class="settings-hint">Las estadísticas decaen solas. Hablale a tu mascota o jugá con ella para mantenerlas arriba.</p>
+          </div>
+
           <div class="settings-group" style="margin-top: 10px;">
             <button id="save-settings-btn" class="btn btn-primary" style="width: 100%;">Guardar Ajustes</button>
           </div>
 
+        </div>
+      </div>
+
+      <!-- TAB 4: MEMORIES (P3 recuerdos persistentes) -->
+      <div class="tab-panel" id="tab-memories">
+        <div class="settings-section">
+          <div class="settings-group">
+            <div class="memories-header">
+              <label class="settings-label">Recuerdos persistentes</label>
+              <span id="memories-count" class="memories-count">0/50</span>
+            </div>
+            <p class="settings-hint">Cosas que tu mascota aprendio sobre vos. Maximo 50. Se usan automaticamente para personalizar futuras conversaciones.</p>
+            <div id="memories-list" class="memories-list" aria-live="polite">
+              <div class="memories-empty">Aun no hay recuerdos. Hablale a tu mascota y los ira guardando automaticamente.</div>
+            </div>
+          </div>
+
+          <div class="settings-group memories-pii-row">
+            <div>
+              <label class="settings-label" for="memories-redact-input">Redactar PII (emails, telefonos, tarjetas)</label>
+              <span id="memories-redact-hint" class="settings-hint-inline">ON: los nuevos recuerdos se redactan antes de guardar. Al activarlo, los existentes tambien se redactan.</span>
+            </div>
+            <label class="switch-control">
+              <input id="memories-redact-input" type="checkbox" checked>
+              <span></span>
+            </label>
+          </div>
+
+          <div class="settings-group" style="margin-top: 10px;">
+            <button id="memories-clear-btn" class="btn btn-danger btn-compact" type="button">Borrar todos los recuerdos</button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- TAB 5: CAPTURES (I2 quick capture) -->
+      <div class="tab-panel" id="tab-captures">
+        <div class="settings-section">
+          <div class="settings-group">
+            <div class="memories-header">
+              <label class="settings-label">Capturas rapidas</label>
+              <span id="captures-count" class="memories-count">0/100</span>
+            </div>
+            <p class="settings-hint">Ideas que capturaste con Ctrl/Cmd+Shift+Q sobre la mascota. Maximo 100. PII redactada si el toggle esta ON en Recuerdos.</p>
+            <ul id="captures-list" class="captures-list" aria-live="polite">
+              <li class="captures-empty">Aun no hay capturas. Apreta Ctrl/Cmd+Shift+Q sobre la mascota para agregar una.</li>
+            </ul>
+          </div>
+
+          <div class="settings-group" style="margin-top: 10px;">
+            <button id="clear-captures-btn" class="btn btn-danger btn-compact" type="button">Borrar todas las capturas</button>
+          </div>
         </div>
       </div>
 
@@ -137,6 +343,14 @@
   <script src="assets/cat.js"></script>
   <script src="assets/dog.js"></script>
   <script src="core/pet-protocol.js"></script>
+  <script src="core/pet-mood.js"></script>
+  <script src="core/pet-mood-labels.js"></script>
+  <script src="core/pet-memories.js"></script>
+  <script src="core/context-awareness.js"></script>
+  <script src="core/pomodoro-templates.js"></script>
+  <script src="core/pomodoro-adaptive.js"></script>
+  <script src="core/pomodoro-streak.js"></script>
+  <script src="core/silent-mode.js"></script>
   <script src="dashboard-renderer.js"></script>
 </body>
 </html>

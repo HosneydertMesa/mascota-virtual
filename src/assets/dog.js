@@ -1,255 +1,698 @@
-const dogIdleSVG = `
-<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+/* Mascot Dog Assets - Shiba Chibi 2D Anime Illustration */
+const dogIdleSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="dog-skin" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ffd43b" />
-      <stop offset="100%" stop-color="#e67e22" />
+    <linearGradient id="dog-fur" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F59E0B" />
+      <stop offset="50%" stop-color="#D97706" />
+      <stop offset="100%" stop-color="#B45309" />
     </linearGradient>
-    <linearGradient id="dog-patch" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#d35400" />
-      <stop offset="100%" stop-color="#a04000" />
+    <linearGradient id="dog-white" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#FFFBEB" />
     </linearGradient>
-    <linearGradient id="dog-collar" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#e74c3c" />
-      <stop offset="100%" stop-color="#c0392b" />
+    <linearGradient id="dog-ear-inner" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FECDD3" />
+      <stop offset="100%" stop-color="#FDA4AF" />
+    </linearGradient>
+    <linearGradient id="dog-eye-iris" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2D150B" />
+      <stop offset="40%" stop-color="#1A0C06" />
+      <stop offset="85%" stop-color="#78350F" />
+      <stop offset="100%" stop-color="#92400E" />
+    </linearGradient>
+    <linearGradient id="cushion-grad-green" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#047857" />
     </linearGradient>
   </defs>
+  <ellipse cx="100" cy="172" rx="55" ry="7" fill="#28140B" opacity="0.22" class="pet-shadow" />
 
-  <!-- Tail (Procedural Waving) -->
-  <path id="dog-tail" d="M 130,130 C 145,118 151,100 157,84" fill="none" stroke="url(#dog-skin)" stroke-width="16" stroke-linecap="round" />
-
-  <!-- Feet (Back) -->
-  <ellipse cx="75" cy="178" rx="14" ry="10" fill="#f1f3f5" class="back-foot-left" />
-  <ellipse cx="125" cy="178" rx="14" ry="10" fill="#f1f3f5" class="back-foot-right" />
-
-  <!-- Body (Breathing) -->
-  <g class="anim-breath" style="transform-origin: 100px 180px;">
-    <ellipse cx="100" cy="138" rx="43" ry="46" fill="url(#dog-skin)" />
-    
-    <!-- Dalmatian Spots on Body -->
-    <circle cx="76" cy="135" r="9" fill="url(#dog-patch)" opacity="0.9" />
-    <circle cx="124" cy="148" r="7" fill="url(#dog-patch)" opacity="0.9" />
-    <circle cx="78" cy="155" r="6" fill="url(#dog-patch)" opacity="0.9" />
-    
-    <!-- Chest Patch (White belly) -->
-    <path d="M 82,120 Q 100,146 118,120 Q 100,128 82,120 Z" fill="#ffffff" />
-    
-    <!-- Shadow under chin -->
-    <ellipse cx="100" cy="108" rx="26" ry="4" fill="#000000" opacity="0.12" />
-
-    <!-- Collar -->
-    <rect x="74" y="106" width="52" height="6" rx="3" fill="url(#dog-collar)" />
-    
-    <!-- Hanging Bone Tag -->
-    <path d="M 95,115 L 105,115 L 105,124 L 95,124 Z" fill="none" /> <!-- placeholder spacing -->
-    <path d="M 94,115 Q 94,112 96,112 Q 98,112 98,115 L 102,115 Q 102,112 104,112 Q 106,112 106,115 L 106,119 Q 106,122 104,122 Q 102,122 102,119 L 98,119 Q 98,122 96,122 Q 94,122 94,119 Z" 
-          fill="#ffffff" 
-          stroke="#cbd5e1" 
-          stroke-width="0.8" />
+  <g id="dog-tail" class="anim-wag" style="transform-origin: 70px 142px; transform: rotate(0deg);">
+    <path d="M 72,142 C 54,144 34,130 30,105 C 28,85 42,70 54,76 C 60,78 58,90 50,96 C 44,102 48,120 64,132 Z" 
+          fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+    <path d="M 42,85 C 36,92 34,100 36,108" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" fill="none" />
   </g>
 
-  <!-- Head Group -->
-  <g class="anim-breath" style="transform-origin: 100px 180px;">
-    <!-- Head Base -->
-    <circle cx="100" cy="78" r="42" fill="url(#dog-skin)" />
-    
-    <!-- Eye Patch (Left) -->
-    <path d="M 70,78 A 16,16 0 1,1 92,62 A 42,42 0 0,1 70,78 Z" fill="url(#dog-patch)" opacity="0.85" />
-    
-    <!-- Spot on head top right -->
-    <circle cx="120" cy="56" r="8" fill="url(#dog-patch)" opacity="0.85" />
+  <g class="pet-hind-legs">
+    <g class="back-foot-left">
+      <path d="M 56,134 C 47,143 47,158 54,166 C 59,171 68,171 74,168 C 77,164 76,148 71,138 Z"
+            fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+      <ellipse cx="54" cy="168" rx="8" ry="4.5" fill="url(#dog-white)" stroke="#3B1E12" stroke-width="1.8" />
+    </g>
+    <g class="back-foot-right">
+      <path d="M 144,134 C 153,143 153,158 146,166 C 141,171 132,171 126,168 C 123,164 124,148 129,138 Z"
+            fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+      <ellipse cx="146" cy="168" rx="8" ry="4.5" fill="url(#dog-white)" stroke="#3B1E12" stroke-width="1.8" />
+    </g>
+  </g>
 
-    <!-- Left Floppy Ear (wrapped for ear-twitch animation) -->
-    <g class="pet-ear pet-ear-left" style="transform-origin: 50px 90px;">
-      <path d="M 62,60 C 50,60 40,85 46,105 C 50,115 62,110 60,80 Z" fill="url(#dog-patch)" />
-      <path d="M 59,64 C 52,65 46,84 49,98 C 52,104 59,102 58,80 Z" fill="#7e2d00" opacity="0.15" />
+  <g class="anim-breath pet-body" style="transform-origin: 100px 170px; transform: translateY(0px) rotate(0deg);">
+    <path d="M 68,106 C 63,124 65,150 74,166 C 83,170 117,170 126,166 C 135,150 137,124 132,106 Z" 
+          fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+    
+    <path d="M 82,96 C 75,111 72,124 80,135 C 86,142 93,148 100,150 C 107,148 114,142 120,135 C 128,124 125,111 118,96 C 111,106 89,106 82,96 Z" 
+          fill="url(#dog-white)" stroke="#3B1E12" stroke-width="1.8" stroke-linejoin="round" />
+
+    <g class="pet-front-paws">
+      <path d="M 76,134 L 75,158 C 75,164 78,168 83,168 C 88,168 91,164 91,158 L 90,134 Z" 
+            fill="url(#dog-white)" stroke="#3B1E12" stroke-width="2" stroke-linejoin="round" />
+      <ellipse cx="83" cy="166" rx="10" ry="6" fill="url(#dog-white)" stroke="#3B1E12" stroke-width="2" />
+      <path d="M 79,164 L 79,170" stroke="#3B1E12" stroke-width="1.6" stroke-linecap="round" />
+      <path d="M 86,164 L 86,170" stroke="#3B1E12" stroke-width="1.6" stroke-linecap="round" />
+
+      <path d="M 110,134 L 109,158 C 109,164 112,168 117,168 C 122,168 125,164 125,158 L 124,134 Z" 
+            fill="url(#dog-white)" stroke="#3B1E12" stroke-width="2" stroke-linejoin="round" />
+      <ellipse cx="117" cy="166" rx="10" ry="6" fill="url(#dog-white)" stroke="#3B1E12" stroke-width="2" />
+      <path d="M 113,164 L 113,170" stroke="#3B1E12" stroke-width="1.6" stroke-linecap="round" />
+      <path d="M 120,164 L 120,170" stroke="#3B1E12" stroke-width="1.6" stroke-linecap="round" />
+    </g>
+  </g>
+
+  <g class="pet-head anim-breath" style="transform-origin: 100px 105px; transform: translateY(0px) rotate(0deg);">
+    <g class="pet-ear pet-ear-left" style="transform-origin: 58px 52px;">
+      <path d="M 60,54 C 42,54 32,70 34,92 C 36,104 46,108 52,98 C 58,88 64,74 62,54 Z" fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" />
+      <path d="M 48,64 C 42,72 40,84 44,92" stroke="url(#dog-ear-inner)" stroke-width="4" stroke-linecap="round" fill="none" />
     </g>
 
-    <!-- Right Floppy Ear -->
-    <g class="pet-ear pet-ear-right" style="transform-origin: 150px 90px;">
-      <path d="M 138,60 C 150,60 160,85 154,105 C 150,115 138,110 140,80 Z" fill="url(#dog-patch)" />
-      <path d="M 141,64 C 148,65 154,84 151,98 C 148,104 141,102 142,80 Z" fill="#7e2d00" opacity="0.15" />
+    <g class="pet-ear pet-ear-right" style="transform-origin: 142px 52px;">
+      <path d="M 140,54 C 158,54 168,70 166,92 C 164,104 154,108 148,98 C 142,88 136,74 138,54 Z" fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" />
+      <path d="M 152,64 C 158,72 160,84 156,92" stroke="url(#dog-ear-inner)" stroke-width="4" stroke-linecap="round" fill="none" />
     </g>
 
-    <!-- Glossy Highlight on Head Top -->
-    <path d="M 78,48 Q 100,38 122,48" stroke="#ffffff" stroke-width="2.5" fill="none" opacity="0.35" stroke-linecap="round" />
+    <path d="M 54,62 C 48,50 68,36 100,36 C 132,36 152,50 146,62 C 158,70 162,84 154,95 C 148,105 136,112 100,112 C 64,112 52,105 46,95 C 38,84 42,70 54,62 Z" 
+          fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
 
-    <!-- Eyes (Blinking Group) -->
+    <path d="M 94,38 C 96,55 92,68 84,78 C 84,78 100,82 100,82 C 100,82 116,78 116,78 C 108,68 104,55 106,38 Z" fill="url(#dog-white)" />
+
+    <ellipse cx="100" cy="88" rx="18" ry="13" fill="url(#dog-white)" stroke="#3B1E12" stroke-width="1.8" />
+    <ellipse cx="100" cy="80" rx="6" ry="4.2" fill="#1C1917" />
+    <circle cx="98" cy="78.5" r="1.5" fill="#FFFFFF" />
+
+    <path d="M 94,85 Q 100,88 100,85 Q 100,88 106,85" stroke="#3B1E12" stroke-width="1.8" fill="none" stroke-linecap="round" />
+    <path d="M 96,86 C 96,95 104,95 104,86 Z" fill="#FB7185" stroke="#3B1E12" stroke-width="1.2" />
+
+    <ellipse cx="64" cy="90" rx="8" ry="4.5" fill="#FB7185" opacity="0.45" />
+    <ellipse cx="136" cy="90" rx="8" ry="4.5" fill="#FB7185" opacity="0.45" />
+
     <g class="anim-blink">
-      <circle cx="80" cy="74" r="7.2" fill="#1e1e24" />
-      <circle cx="77.5" cy="71.5" r="2.5" fill="#ffffff" />
-      <circle cx="120" cy="74" r="7.2" fill="#1e1e24" />
-      <circle cx="117.5" cy="71.5" r="2.5" fill="#ffffff" />
-    </g>
+      <ellipse cx="80" cy="74" rx="12.5" ry="14.5" fill="url(#dog-eye-iris)" stroke="#3B1E12" stroke-width="2.2" />
+      <ellipse cx="80" cy="74" rx="8.5" ry="10.5" fill="#0A0503" />
+      <circle class="pet-pupil" data-anchor-x="80" data-anchor-y="74" cx="80" cy="74" r="5" fill="#000000" />
+      <circle cx="76" cy="68" r="4.2" fill="#FFFFFF" />
+      <circle cx="85" cy="79" r="1.8" fill="#FFFFFF" />
 
-    <!-- Muzzle / Nose area -->
-    <ellipse cx="100" cy="90" rx="14" ry="10" fill="#ffffff" />
-    <ellipse cx="100" cy="84" rx="6.5" ry="4.5" fill="#1e1e24" />
-    <!-- Snout highlight -->
-    <circle cx="98.5" cy="82.5" r="1.5" fill="#ffffff" />
-
-    <!-- Cute Tongue Hanging Out -->
-    <path d="M 97,91 Q 100,94 103,91" stroke="#212529" stroke-width="1.6" fill="none" stroke-linecap="round" />
-    <path d="M 98,92 Q 100,92 102,92 L 102,99 C 102,102 98,102 98,99 Z" fill="#ff6b6b" />
-    <line x1="100" y1="92" x2="100" y2="97" stroke="#c92a2a" stroke-width="0.8" />
-
-    <!-- Cute Cheeks -->
-    <ellipse cx="70" cy="85" rx="6" ry="3" fill="#ffa8a8" opacity="0.5" />
-    <ellipse cx="130" cy="85" rx="6" ry="3" fill="#ffa8a8" opacity="0.5" />
-  </g>
-
-  <!-- Front Paws -->
-  <ellipse cx="90" cy="180" rx="10" ry="7" fill="#ffffff" class="left-paw" />
-  <ellipse cx="110" cy="180" rx="10" ry="7" fill="#ffffff" class="right-paw" />
-</svg>
-`;
-
-const dogWalkSVG = `
-<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="dog-skin" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ffd43b" />
-      <stop offset="100%" stop-color="#e67e22" />
-    </linearGradient>
-    <linearGradient id="dog-patch" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#d35400" />
-      <stop offset="100%" stop-color="#a04000" />
-    </linearGradient>
-  </defs>
-
-  <!-- Tail (Procedural Waving) -->
-  <path id="dog-tail" d="M 138,110 C 155,100 160,85 165,70" fill="none" stroke="url(#dog-skin)" stroke-width="16" stroke-linecap="round" />
-
-  <!-- Back Left Leg (Inside) -->
-  <g class="back-foot-left">
-    <rect x="115" y="115" width="12" height="60" rx="6" fill="#a04000" />
-    <ellipse cx="121" cy="175" rx="8" ry="5" fill="#f1f3f5" />
-    <!-- Pink pad -->
-    <circle cx="121" cy="176" r="3.2" fill="#ffa8a8" />
-  </g>
-
-  <!-- Front Left Leg (Inside) -->
-  <g class="left-paw">
-    <rect x="70" y="115" width="12" height="60" rx="6" fill="#a04000" />
-    <ellipse cx="76" cy="175" rx="8" ry="5" fill="#f1f3f5" />
-    <circle cx="76" cy="176" r="3.2" fill="#ffa8a8" />
-  </g>
-
-  <!-- Body -->
-  <ellipse cx="100" cy="115" rx="46" ry="34" fill="url(#dog-skin)" />
-  
-  <!-- Dalmatian Spots on side -->
-  <circle cx="98" cy="110" r="8" fill="url(#dog-patch)" opacity="0.85" />
-  <circle cx="120" cy="120" r="6" fill="url(#dog-patch)" opacity="0.85" />
-
-  <!-- Chest fluff side -->
-  <path d="M 58,96 Q 48,115 63,128 Z" fill="#ffffff" />
-
-  <!-- Head Group (Profile) -->
-  <g style="transform-origin: 55px 80px;">
-    <circle cx="55" cy="80" r="30" fill="url(#dog-skin)" />
-
-    <!-- Snout profile (Left facing) -->
-    <path d="M 40,85 L 20,85 L 20,74 Q 30,68 40,72 Z" fill="url(#dog-skin)" />
-    <ellipse cx="20" cy="76" rx="3.5" ry="3" fill="#1e1e24" />
-
-    <!-- Eye Patch (Left side) -->
-    <ellipse cx="44" cy="74" rx="10" ry="8" fill="url(#dog-patch)" opacity="0.85" />
-    
-    <!-- Floppy Ear (Hanging down) -->
-    <path d="M 68,68 Q 80,72 76,105 Q 65,115 58,95 Z" fill="url(#dog-patch)" />
-
-    <!-- Eye (Looking side/profile) -->
-    <ellipse cx="42" cy="76" rx="4" ry="5.5" fill="#1e1e24" />
-    <circle cx="40.5" cy="74" r="1.5" fill="#ffffff" />
-
-    <!-- Blush profile -->
-    <ellipse cx="46" cy="84" rx="5" ry="2.5" fill="#ff8787" opacity="0.55" />
-  </g>
-
-  <!-- Back Right Leg (Foreground) -->
-  <g class="back-foot-right">
-    <rect x="125" y="115" width="12" height="60" rx="6" fill="url(#dog-skin)" />
-    <ellipse cx="131" cy="175" rx="8" ry="5" fill="#ffffff" />
-    <circle cx="131" cy="176" r="3.2" fill="#ffa8a8" />
-  </g>
-
-  <!-- Front Right Leg (Foreground) -->
-  <g class="right-paw">
-    <rect x="80" y="115" width="12" height="60" rx="6" fill="url(#dog-skin)" />
-    <ellipse cx="86" cy="175" rx="8" ry="5" fill="#ffffff" />
-    <circle cx="86" cy="176" r="3.2" fill="#ffa8a8" />
-  </g>
-</svg>
-`;
-
-const dogSleepSVG = `
-<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="dog-skin" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ffd43b" />
-      <stop offset="100%" stop-color="#e67e22" />
-    </linearGradient>
-    <linearGradient id="dog-patch" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#d35400" />
-      <stop offset="100%" stop-color="#a04000" />
-    </linearGradient>
-  </defs>
-
-  <!-- Soft Sleeping Mat with Lace Border -->
-  <ellipse cx="100" cy="160" rx="66" ry="16" fill="#ffffff" opacity="0.75" stroke="#fed7aa" stroke-width="1.5" stroke-dasharray="4,4" />
-  <ellipse cx="100" cy="160" rx="60" ry="13" fill="#ffedd5" opacity="0.6" />
-
-  <!-- Shadow under dog on mat -->
-  <ellipse cx="98" cy="150" rx="46" ry="8" fill="#ea580c" opacity="0.18" />
-
-  <g class="anim-breath" style="transform-origin: 100px 160px;">
-    <!-- Curled Tail wrapped around -->
-    <path d="M 140,130 C 148,142 122,154 95,154 C 68,154 58,143 58,138" 
-          stroke="url(#dog-skin)" 
-          stroke-width="12" 
-          fill="none" 
-          stroke-linecap="round" />
-    <path d="M 124,147 C 120,150 110,151 106,151" stroke="url(#dog-patch)" stroke-width="2.5" fill="none" stroke-linecap="round" />
-
-    <!-- Curled Body -->
-    <ellipse cx="102" cy="126" rx="50" ry="36" fill="url(#dog-skin)" />
-    
-    <!-- Dalmatian spots on sleeping body -->
-    <circle cx="108" cy="108" r="8" fill="url(#dog-patch)" opacity="0.85" />
-    <circle cx="126" cy="115" r="6" fill="url(#dog-patch)" opacity="0.85" />
-
-    <!-- Sleeping Head resting on paws -->
-    <g style="transform-origin: 72px 122px;">
-      <circle cx="72" cy="122" r="26" fill="url(#dog-skin)" />
-
-      <!-- Floppy ear folded cozily -->
-      <path d="M 68,108 Q 50,112 55,138 Q 65,145 72,130 Z" fill="url(#dog-patch)" />
-      
-      <!-- Spot on sleeping head -->
-      <circle cx="82" cy="112" r="5" fill="url(#dog-patch)" opacity="0.85" />
-
-      <!-- Closed Eyes (sleeping ^^ curves) -->
-      <path d="M 58,122 Q 62,126 66,122" stroke="#1e1e24" stroke-width="2.2" fill="none" stroke-linecap="round" />
-      
-      <!-- Cozy Muzzle / Nose resting -->
-      <ellipse cx="80" cy="128" rx="8" ry="6" fill="#ffffff" />
-      <ellipse cx="82" cy="125" rx="3" ry="2" fill="#1e1e24" />
-
-      <!-- Blush -->
-      <ellipse cx="60" cy="128" rx="4.5" ry="2.2" fill="#ff8787" opacity="0.4" />
+      <ellipse cx="120" cy="74" rx="12.5" ry="14.5" fill="url(#dog-eye-iris)" stroke="#3B1E12" stroke-width="2.2" />
+      <ellipse cx="120" cy="74" rx="8.5" ry="10.5" fill="#0A0503" />
+      <circle class="pet-pupil" data-anchor-x="120" data-anchor-y="74" cx="120" cy="74" r="5" fill="#000000" />
+      <circle cx="116" cy="68" r="4.2" fill="#FFFFFF" />
+      <circle cx="125" cy="79" r="1.8" fill="#FFFFFF" />
     </g>
   </g>
-</svg>
-`;
+</svg>`;
+const dogWalk1SVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="dog-fur" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F59E0B" />
+      <stop offset="50%" stop-color="#D97706" />
+      <stop offset="100%" stop-color="#B45309" />
+    </linearGradient>
+    <linearGradient id="dog-white" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#FFFBEB" />
+    </linearGradient>
+    <linearGradient id="dog-ear-inner" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FECDD3" />
+      <stop offset="100%" stop-color="#FDA4AF" />
+    </linearGradient>
+    <linearGradient id="dog-eye-iris" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2D150B" />
+      <stop offset="40%" stop-color="#1A0C06" />
+      <stop offset="85%" stop-color="#78350F" />
+      <stop offset="100%" stop-color="#92400E" />
+    </linearGradient>
+    <linearGradient id="cushion-grad-green" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+  </defs>
+  <ellipse cx="100" cy="172" rx="55" ry="7" fill="#28140B" opacity="0.22" class="pet-shadow" />
 
-const dogSVG = dogIdleSVG; // Compatibility alias
+  <g id="dog-tail" class="" style="transform-origin: 70px 142px; transform: rotate(10deg);">
+    <path d="M 72,142 C 54,144 34,130 30,105 C 28,85 42,70 54,76 C 60,78 58,90 50,96 C 44,102 48,120 64,132 Z" 
+          fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+    <path d="M 42,85 C 36,92 34,100 36,108" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" fill="none" />
+  </g>
 
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { dogIdleSVG, dogWalkSVG, dogSleepSVG, dogSVG };
-} else {
+  <g class="pet-hind-legs">
+    <g class="back-foot-left">
+      <path d="M 56,134 C 47,143 47,158 54,166 C 59,171 68,171 74,168 C 77,164 76,148 71,138 Z"
+            fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+      <ellipse cx="54" cy="170" rx="8" ry="4.5" fill="url(#dog-white)" stroke="#3B1E12" stroke-width="1.8" />
+    </g>
+    <g class="back-foot-right">
+      <path d="M 144,134 C 153,143 153,158 146,166 C 141,171 132,171 126,168 C 123,164 124,148 129,138 Z"
+            fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+      <ellipse cx="146" cy="164" rx="8" ry="4.5" fill="url(#dog-white)" stroke="#3B1E12" stroke-width="1.8" />
+    </g>
+  </g>
+
+  <g class=" pet-body" style="transform-origin: 100px 170px; transform: translateY(-1px) rotate(-2deg);">
+    <path d="M 68,106 C 63,124 65,150 74,166 C 83,170 117,170 126,166 C 135,150 137,124 132,106 Z" 
+          fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+    
+    <path d="M 82,96 C 75,111 72,124 80,135 C 86,142 93,148 100,150 C 107,148 114,142 120,135 C 128,124 125,111 118,96 C 111,106 89,106 82,96 Z" 
+          fill="url(#dog-white)" stroke="#3B1E12" stroke-width="1.8" stroke-linejoin="round" />
+
+    <g class="pet-front-paws">
+      <g class="left-paw">
+        <path d="M 76,134 L 75,158 C 75,164 78,168 83,168 C 88,168 91,164 91,158 L 90,134 Z"
+              fill="url(#dog-white)" stroke="#3B1E12" stroke-width="2" stroke-linejoin="round" />
+        <ellipse cx="83" cy="160" rx="10" ry="6" fill="url(#dog-white)" stroke="#3B1E12" stroke-width="2" />
+        <path d="M 79,158 L 79,164" stroke="#3B1E12" stroke-width="1.6" stroke-linecap="round" />
+        <path d="M 86,158 L 86,164" stroke="#3B1E12" stroke-width="1.6" stroke-linecap="round" />
+      </g>
+      <g class="right-paw">
+        <path d="M 110,134 L 109,158 C 109,164 112,168 117,168 C 122,168 125,164 125,158 L 124,134 Z"
+              fill="url(#dog-white)" stroke="#3B1E12" stroke-width="2" stroke-linejoin="round" />
+        <ellipse cx="117" cy="168" rx="10" ry="6" fill="url(#dog-white)" stroke="#3B1E12" stroke-width="2" />
+        <path d="M 113,166 L 113,172" stroke="#3B1E12" stroke-width="1.6" stroke-linecap="round" />
+        <path d="M 120,166 L 120,172" stroke="#3B1E12" stroke-width="1.6" stroke-linecap="round" />
+      </g>
+    </g>
+  </g>
+
+  <g class="pet-head " style="transform-origin: 100px 105px; transform: translateY(-1px) rotate(-1.4deg);">
+    <g class="pet-ear pet-ear-left" style="transform-origin: 58px 52px;">
+      <path d="M 60,54 C 42,54 32,70 34,92 C 36,104 46,108 52,98 C 58,88 64,74 62,54 Z" fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" />
+      <path d="M 48,64 C 42,72 40,84 44,92" stroke="url(#dog-ear-inner)" stroke-width="4" stroke-linecap="round" fill="none" />
+    </g>
+
+    <g class="pet-ear pet-ear-right" style="transform-origin: 142px 52px;">
+      <path d="M 140,54 C 158,54 168,70 166,92 C 164,104 154,108 148,98 C 142,88 136,74 138,54 Z" fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" />
+      <path d="M 152,64 C 158,72 160,84 156,92" stroke="url(#dog-ear-inner)" stroke-width="4" stroke-linecap="round" fill="none" />
+    </g>
+
+    <path d="M 54,62 C 48,50 68,36 100,36 C 132,36 152,50 146,62 C 158,70 162,84 154,95 C 148,105 136,112 100,112 C 64,112 52,105 46,95 C 38,84 42,70 54,62 Z" 
+          fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+
+    <path d="M 94,38 C 96,55 92,68 84,78 C 84,78 100,82 100,82 C 100,82 116,78 116,78 C 108,68 104,55 106,38 Z" fill="url(#dog-white)" />
+
+    <ellipse cx="100" cy="88" rx="18" ry="13" fill="url(#dog-white)" stroke="#3B1E12" stroke-width="1.8" />
+    <ellipse cx="100" cy="80" rx="6" ry="4.2" fill="#1C1917" />
+    <circle cx="98" cy="78.5" r="1.5" fill="#FFFFFF" />
+
+    <path d="M 94,85 Q 100,88 100,85 Q 100,88 106,85" stroke="#3B1E12" stroke-width="1.8" fill="none" stroke-linecap="round" />
+    <path d="M 96,86 C 96,95 104,95 104,86 Z" fill="#FB7185" stroke="#3B1E12" stroke-width="1.2" />
+
+    <ellipse cx="64" cy="90" rx="8" ry="4.5" fill="#FB7185" opacity="0.45" />
+    <ellipse cx="136" cy="90" rx="8" ry="4.5" fill="#FB7185" opacity="0.45" />
+
+    <g class="">
+      <ellipse cx="80" cy="74" rx="12.5" ry="14.5" fill="url(#dog-eye-iris)" stroke="#3B1E12" stroke-width="2.2" />
+      <ellipse cx="80" cy="74" rx="8.5" ry="10.5" fill="#0A0503" />
+      <circle class="pet-pupil" data-anchor-x="80" data-anchor-y="74" cx="80" cy="74" r="5" fill="#000000" />
+      <circle cx="76" cy="68" r="4.2" fill="#FFFFFF" />
+      <circle cx="85" cy="79" r="1.8" fill="#FFFFFF" />
+
+      <ellipse cx="120" cy="74" rx="12.5" ry="14.5" fill="url(#dog-eye-iris)" stroke="#3B1E12" stroke-width="2.2" />
+      <ellipse cx="120" cy="74" rx="8.5" ry="10.5" fill="#0A0503" />
+      <circle class="pet-pupil" data-anchor-x="120" data-anchor-y="74" cx="120" cy="74" r="5" fill="#000000" />
+      <circle cx="116" cy="68" r="4.2" fill="#FFFFFF" />
+      <circle cx="125" cy="79" r="1.8" fill="#FFFFFF" />
+    </g>
+  </g>
+</svg>`;
+const dogWalk2SVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="dog-fur" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F59E0B" />
+      <stop offset="50%" stop-color="#D97706" />
+      <stop offset="100%" stop-color="#B45309" />
+    </linearGradient>
+    <linearGradient id="dog-white" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#FFFBEB" />
+    </linearGradient>
+    <linearGradient id="dog-ear-inner" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FECDD3" />
+      <stop offset="100%" stop-color="#FDA4AF" />
+    </linearGradient>
+    <linearGradient id="dog-eye-iris" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2D150B" />
+      <stop offset="40%" stop-color="#1A0C06" />
+      <stop offset="85%" stop-color="#78350F" />
+      <stop offset="100%" stop-color="#92400E" />
+    </linearGradient>
+    <linearGradient id="cushion-grad-green" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+  </defs>
+  <ellipse cx="100" cy="172" rx="55" ry="7" fill="#28140B" opacity="0.22" class="pet-shadow" />
+
+  <g id="dog-tail" class="" style="transform-origin: 70px 142px; transform: rotate(0deg);">
+    <path d="M 72,142 C 54,144 34,130 30,105 C 28,85 42,70 54,76 C 60,78 58,90 50,96 C 44,102 48,120 64,132 Z" 
+          fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+    <path d="M 42,85 C 36,92 34,100 36,108" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" fill="none" />
+  </g>
+
+  <g class="pet-hind-legs">
+    <g class="back-foot-left">
+      <path d="M 56,134 C 47,143 47,158 54,166 C 59,171 68,171 74,168 C 77,164 76,148 71,138 Z"
+            fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+      <ellipse cx="54" cy="168" rx="8" ry="4.5" fill="url(#dog-white)" stroke="#3B1E12" stroke-width="1.8" />
+    </g>
+    <g class="back-foot-right">
+      <path d="M 144,134 C 153,143 153,158 146,166 C 141,171 132,171 126,168 C 123,164 124,148 129,138 Z"
+            fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+      <ellipse cx="146" cy="168" rx="8" ry="4.5" fill="url(#dog-white)" stroke="#3B1E12" stroke-width="1.8" />
+    </g>
+  </g>
+
+  <g class=" pet-body" style="transform-origin: 100px 170px; transform: translateY(-3px) rotate(0deg);">
+    <path d="M 68,106 C 63,124 65,150 74,166 C 83,170 117,170 126,166 C 135,150 137,124 132,106 Z" 
+          fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+    
+    <path d="M 82,96 C 75,111 72,124 80,135 C 86,142 93,148 100,150 C 107,148 114,142 120,135 C 128,124 125,111 118,96 C 111,106 89,106 82,96 Z" 
+          fill="url(#dog-white)" stroke="#3B1E12" stroke-width="1.8" stroke-linejoin="round" />
+
+    <g class="pet-front-paws">
+      <g class="left-paw">
+        <path d="M 76,134 L 75,158 C 75,164 78,168 83,168 C 88,168 91,164 91,158 L 90,134 Z"
+              fill="url(#dog-white)" stroke="#3B1E12" stroke-width="2" stroke-linejoin="round" />
+        <ellipse cx="83" cy="163" rx="10" ry="6" fill="url(#dog-white)" stroke="#3B1E12" stroke-width="2" />
+        <path d="M 79,161 L 79,167" stroke="#3B1E12" stroke-width="1.6" stroke-linecap="round" />
+        <path d="M 86,161 L 86,167" stroke="#3B1E12" stroke-width="1.6" stroke-linecap="round" />
+      </g>
+      <g class="right-paw">
+        <path d="M 110,134 L 109,158 C 109,164 112,168 117,168 C 122,168 125,164 125,158 L 124,134 Z"
+              fill="url(#dog-white)" stroke="#3B1E12" stroke-width="2" stroke-linejoin="round" />
+        <ellipse cx="117" cy="165" rx="10" ry="6" fill="url(#dog-white)" stroke="#3B1E12" stroke-width="2" />
+        <path d="M 113,163 L 113,169" stroke="#3B1E12" stroke-width="1.6" stroke-linecap="round" />
+        <path d="M 120,163 L 120,169" stroke="#3B1E12" stroke-width="1.6" stroke-linecap="round" />
+      </g>
+    </g>
+  </g>
+
+  <g class="pet-head " style="transform-origin: 100px 105px; transform: translateY(-3px) rotate(0deg);">
+    <g class="pet-ear pet-ear-left" style="transform-origin: 58px 52px;">
+      <path d="M 60,54 C 42,54 32,70 34,92 C 36,104 46,108 52,98 C 58,88 64,74 62,54 Z" fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" />
+      <path d="M 48,64 C 42,72 40,84 44,92" stroke="url(#dog-ear-inner)" stroke-width="4" stroke-linecap="round" fill="none" />
+    </g>
+
+    <g class="pet-ear pet-ear-right" style="transform-origin: 142px 52px;">
+      <path d="M 140,54 C 158,54 168,70 166,92 C 164,104 154,108 148,98 C 142,88 136,74 138,54 Z" fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" />
+      <path d="M 152,64 C 158,72 160,84 156,92" stroke="url(#dog-ear-inner)" stroke-width="4" stroke-linecap="round" fill="none" />
+    </g>
+
+    <path d="M 54,62 C 48,50 68,36 100,36 C 132,36 152,50 146,62 C 158,70 162,84 154,95 C 148,105 136,112 100,112 C 64,112 52,105 46,95 C 38,84 42,70 54,62 Z" 
+          fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+
+    <path d="M 94,38 C 96,55 92,68 84,78 C 84,78 100,82 100,82 C 100,82 116,78 116,78 C 108,68 104,55 106,38 Z" fill="url(#dog-white)" />
+
+    <ellipse cx="100" cy="88" rx="18" ry="13" fill="url(#dog-white)" stroke="#3B1E12" stroke-width="1.8" />
+    <ellipse cx="100" cy="80" rx="6" ry="4.2" fill="#1C1917" />
+    <circle cx="98" cy="78.5" r="1.5" fill="#FFFFFF" />
+
+    <path d="M 94,85 Q 100,88 100,85 Q 100,88 106,85" stroke="#3B1E12" stroke-width="1.8" fill="none" stroke-linecap="round" />
+    <path d="M 96,86 C 96,95 104,95 104,86 Z" fill="#FB7185" stroke="#3B1E12" stroke-width="1.2" />
+
+    <ellipse cx="64" cy="90" rx="8" ry="4.5" fill="#FB7185" opacity="0.45" />
+    <ellipse cx="136" cy="90" rx="8" ry="4.5" fill="#FB7185" opacity="0.45" />
+
+    <g class="">
+      <ellipse cx="80" cy="74" rx="12.5" ry="14.5" fill="url(#dog-eye-iris)" stroke="#3B1E12" stroke-width="2.2" />
+      <ellipse cx="80" cy="74" rx="8.5" ry="10.5" fill="#0A0503" />
+      <circle class="pet-pupil" data-anchor-x="80" data-anchor-y="74" cx="80" cy="74" r="5" fill="#000000" />
+      <circle cx="76" cy="68" r="4.2" fill="#FFFFFF" />
+      <circle cx="85" cy="79" r="1.8" fill="#FFFFFF" />
+
+      <ellipse cx="120" cy="74" rx="12.5" ry="14.5" fill="url(#dog-eye-iris)" stroke="#3B1E12" stroke-width="2.2" />
+      <ellipse cx="120" cy="74" rx="8.5" ry="10.5" fill="#0A0503" />
+      <circle class="pet-pupil" data-anchor-x="120" data-anchor-y="74" cx="120" cy="74" r="5" fill="#000000" />
+      <circle cx="116" cy="68" r="4.2" fill="#FFFFFF" />
+      <circle cx="125" cy="79" r="1.8" fill="#FFFFFF" />
+    </g>
+  </g>
+</svg>`;
+const dogWalk3SVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="dog-fur" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F59E0B" />
+      <stop offset="50%" stop-color="#D97706" />
+      <stop offset="100%" stop-color="#B45309" />
+    </linearGradient>
+    <linearGradient id="dog-white" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#FFFBEB" />
+    </linearGradient>
+    <linearGradient id="dog-ear-inner" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FECDD3" />
+      <stop offset="100%" stop-color="#FDA4AF" />
+    </linearGradient>
+    <linearGradient id="dog-eye-iris" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2D150B" />
+      <stop offset="40%" stop-color="#1A0C06" />
+      <stop offset="85%" stop-color="#78350F" />
+      <stop offset="100%" stop-color="#92400E" />
+    </linearGradient>
+    <linearGradient id="cushion-grad-green" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+  </defs>
+  <ellipse cx="100" cy="172" rx="55" ry="7" fill="#28140B" opacity="0.22" class="pet-shadow" />
+
+  <g id="dog-tail" class="" style="transform-origin: 70px 142px; transform: rotate(-10deg);">
+    <path d="M 72,142 C 54,144 34,130 30,105 C 28,85 42,70 54,76 C 60,78 58,90 50,96 C 44,102 48,120 64,132 Z" 
+          fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+    <path d="M 42,85 C 36,92 34,100 36,108" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" fill="none" />
+  </g>
+
+  <g class="pet-hind-legs">
+    <g class="back-foot-left">
+      <path d="M 56,134 C 47,143 47,158 54,166 C 59,171 68,171 74,168 C 77,164 76,148 71,138 Z"
+            fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+      <ellipse cx="54" cy="164" rx="8" ry="4.5" fill="url(#dog-white)" stroke="#3B1E12" stroke-width="1.8" />
+    </g>
+    <g class="back-foot-right">
+      <path d="M 144,134 C 153,143 153,158 146,166 C 141,171 132,171 126,168 C 123,164 124,148 129,138 Z"
+            fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+      <ellipse cx="146" cy="170" rx="8" ry="4.5" fill="url(#dog-white)" stroke="#3B1E12" stroke-width="1.8" />
+    </g>
+  </g>
+
+  <g class=" pet-body" style="transform-origin: 100px 170px; transform: translateY(-1px) rotate(2deg);">
+    <path d="M 68,106 C 63,124 65,150 74,166 C 83,170 117,170 126,166 C 135,150 137,124 132,106 Z" 
+          fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+    
+    <path d="M 82,96 C 75,111 72,124 80,135 C 86,142 93,148 100,150 C 107,148 114,142 120,135 C 128,124 125,111 118,96 C 111,106 89,106 82,96 Z" 
+          fill="url(#dog-white)" stroke="#3B1E12" stroke-width="1.8" stroke-linejoin="round" />
+
+    <g class="pet-front-paws">
+      <g class="left-paw">
+        <path d="M 76,134 L 75,158 C 75,164 78,168 83,168 C 88,168 91,164 91,158 L 90,134 Z"
+              fill="url(#dog-white)" stroke="#3B1E12" stroke-width="2" stroke-linejoin="round" />
+        <ellipse cx="83" cy="168" rx="10" ry="6" fill="url(#dog-white)" stroke="#3B1E12" stroke-width="2" />
+        <path d="M 79,166 L 79,172" stroke="#3B1E12" stroke-width="1.6" stroke-linecap="round" />
+        <path d="M 86,166 L 86,172" stroke="#3B1E12" stroke-width="1.6" stroke-linecap="round" />
+      </g>
+      <g class="right-paw">
+        <path d="M 110,134 L 109,158 C 109,164 112,168 117,168 C 122,168 125,164 125,158 L 124,134 Z"
+              fill="url(#dog-white)" stroke="#3B1E12" stroke-width="2" stroke-linejoin="round" />
+        <ellipse cx="117" cy="160" rx="10" ry="6" fill="url(#dog-white)" stroke="#3B1E12" stroke-width="2" />
+        <path d="M 113,158 L 113,164" stroke="#3B1E12" stroke-width="1.6" stroke-linecap="round" />
+        <path d="M 120,158 L 120,164" stroke="#3B1E12" stroke-width="1.6" stroke-linecap="round" />
+      </g>
+    </g>
+  </g>
+
+  <g class="pet-head " style="transform-origin: 100px 105px; transform: translateY(-1px) rotate(1.4deg);">
+    <g class="pet-ear pet-ear-left" style="transform-origin: 58px 52px;">
+      <path d="M 60,54 C 42,54 32,70 34,92 C 36,104 46,108 52,98 C 58,88 64,74 62,54 Z" fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" />
+      <path d="M 48,64 C 42,72 40,84 44,92" stroke="url(#dog-ear-inner)" stroke-width="4" stroke-linecap="round" fill="none" />
+    </g>
+
+    <g class="pet-ear pet-ear-right" style="transform-origin: 142px 52px;">
+      <path d="M 140,54 C 158,54 168,70 166,92 C 164,104 154,108 148,98 C 142,88 136,74 138,54 Z" fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" />
+      <path d="M 152,64 C 158,72 160,84 156,92" stroke="url(#dog-ear-inner)" stroke-width="4" stroke-linecap="round" fill="none" />
+    </g>
+
+    <path d="M 54,62 C 48,50 68,36 100,36 C 132,36 152,50 146,62 C 158,70 162,84 154,95 C 148,105 136,112 100,112 C 64,112 52,105 46,95 C 38,84 42,70 54,62 Z" 
+          fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+
+    <path d="M 94,38 C 96,55 92,68 84,78 C 84,78 100,82 100,82 C 100,82 116,78 116,78 C 108,68 104,55 106,38 Z" fill="url(#dog-white)" />
+
+    <ellipse cx="100" cy="88" rx="18" ry="13" fill="url(#dog-white)" stroke="#3B1E12" stroke-width="1.8" />
+    <ellipse cx="100" cy="80" rx="6" ry="4.2" fill="#1C1917" />
+    <circle cx="98" cy="78.5" r="1.5" fill="#FFFFFF" />
+
+    <path d="M 94,85 Q 100,88 100,85 Q 100,88 106,85" stroke="#3B1E12" stroke-width="1.8" fill="none" stroke-linecap="round" />
+    <path d="M 96,86 C 96,95 104,95 104,86 Z" fill="#FB7185" stroke="#3B1E12" stroke-width="1.2" />
+
+    <ellipse cx="64" cy="90" rx="8" ry="4.5" fill="#FB7185" opacity="0.45" />
+    <ellipse cx="136" cy="90" rx="8" ry="4.5" fill="#FB7185" opacity="0.45" />
+
+    <g class="">
+      <ellipse cx="80" cy="74" rx="12.5" ry="14.5" fill="url(#dog-eye-iris)" stroke="#3B1E12" stroke-width="2.2" />
+      <ellipse cx="80" cy="74" rx="8.5" ry="10.5" fill="#0A0503" />
+      <circle class="pet-pupil" data-anchor-x="80" data-anchor-y="74" cx="80" cy="74" r="5" fill="#000000" />
+      <circle cx="76" cy="68" r="4.2" fill="#FFFFFF" />
+      <circle cx="85" cy="79" r="1.8" fill="#FFFFFF" />
+
+      <ellipse cx="120" cy="74" rx="12.5" ry="14.5" fill="url(#dog-eye-iris)" stroke="#3B1E12" stroke-width="2.2" />
+      <ellipse cx="120" cy="74" rx="8.5" ry="10.5" fill="#0A0503" />
+      <circle class="pet-pupil" data-anchor-x="120" data-anchor-y="74" cx="120" cy="74" r="5" fill="#000000" />
+      <circle cx="116" cy="68" r="4.2" fill="#FFFFFF" />
+      <circle cx="125" cy="79" r="1.8" fill="#FFFFFF" />
+    </g>
+  </g>
+</svg>`;
+const dogWalk4SVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="dog-fur" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F59E0B" />
+      <stop offset="50%" stop-color="#D97706" />
+      <stop offset="100%" stop-color="#B45309" />
+    </linearGradient>
+    <linearGradient id="dog-white" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#FFFBEB" />
+    </linearGradient>
+    <linearGradient id="dog-ear-inner" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FECDD3" />
+      <stop offset="100%" stop-color="#FDA4AF" />
+    </linearGradient>
+    <linearGradient id="dog-eye-iris" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2D150B" />
+      <stop offset="40%" stop-color="#1A0C06" />
+      <stop offset="85%" stop-color="#78350F" />
+      <stop offset="100%" stop-color="#92400E" />
+    </linearGradient>
+    <linearGradient id="cushion-grad-green" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+  </defs>
+  <ellipse cx="100" cy="172" rx="55" ry="7" fill="#28140B" opacity="0.22" class="pet-shadow" />
+
+  <g id="dog-tail" class="" style="transform-origin: 70px 142px; transform: rotate(0deg);">
+    <path d="M 72,142 C 54,144 34,130 30,105 C 28,85 42,70 54,76 C 60,78 58,90 50,96 C 44,102 48,120 64,132 Z" 
+          fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+    <path d="M 42,85 C 36,92 34,100 36,108" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" fill="none" />
+  </g>
+
+  <g class="pet-hind-legs">
+    <g class="back-foot-left">
+      <path d="M 56,134 C 47,143 47,158 54,166 C 59,171 68,171 74,168 C 77,164 76,148 71,138 Z"
+            fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+      <ellipse cx="54" cy="168" rx="8" ry="4.5" fill="url(#dog-white)" stroke="#3B1E12" stroke-width="1.8" />
+    </g>
+    <g class="back-foot-right">
+      <path d="M 144,134 C 153,143 153,158 146,166 C 141,171 132,171 126,168 C 123,164 124,148 129,138 Z"
+            fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+      <ellipse cx="146" cy="168" rx="8" ry="4.5" fill="url(#dog-white)" stroke="#3B1E12" stroke-width="1.8" />
+    </g>
+  </g>
+
+  <g class=" pet-body" style="transform-origin: 100px 170px; transform: translateY(-3px) rotate(0deg);">
+    <path d="M 68,106 C 63,124 65,150 74,166 C 83,170 117,170 126,166 C 135,150 137,124 132,106 Z" 
+          fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+    
+    <path d="M 82,96 C 75,111 72,124 80,135 C 86,142 93,148 100,150 C 107,148 114,142 120,135 C 128,124 125,111 118,96 C 111,106 89,106 82,96 Z" 
+          fill="url(#dog-white)" stroke="#3B1E12" stroke-width="1.8" stroke-linejoin="round" />
+
+    <g class="pet-front-paws">
+      <g class="left-paw">
+        <path d="M 76,134 L 75,158 C 75,164 78,168 83,168 C 88,168 91,164 91,158 L 90,134 Z"
+              fill="url(#dog-white)" stroke="#3B1E12" stroke-width="2" stroke-linejoin="round" />
+        <ellipse cx="83" cy="165" rx="10" ry="6" fill="url(#dog-white)" stroke="#3B1E12" stroke-width="2" />
+        <path d="M 79,163 L 79,169" stroke="#3B1E12" stroke-width="1.6" stroke-linecap="round" />
+        <path d="M 86,163 L 86,169" stroke="#3B1E12" stroke-width="1.6" stroke-linecap="round" />
+      </g>
+      <g class="right-paw">
+        <path d="M 110,134 L 109,158 C 109,164 112,168 117,168 C 122,168 125,164 125,158 L 124,134 Z"
+              fill="url(#dog-white)" stroke="#3B1E12" stroke-width="2" stroke-linejoin="round" />
+        <ellipse cx="117" cy="163" rx="10" ry="6" fill="url(#dog-white)" stroke="#3B1E12" stroke-width="2" />
+        <path d="M 113,161 L 113,167" stroke="#3B1E12" stroke-width="1.6" stroke-linecap="round" />
+        <path d="M 120,161 L 120,167" stroke="#3B1E12" stroke-width="1.6" stroke-linecap="round" />
+      </g>
+    </g>
+  </g>
+
+  <g class="pet-head " style="transform-origin: 100px 105px; transform: translateY(-3px) rotate(0deg);">
+    <g class="pet-ear pet-ear-left" style="transform-origin: 58px 52px;">
+      <path d="M 60,54 C 42,54 32,70 34,92 C 36,104 46,108 52,98 C 58,88 64,74 62,54 Z" fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" />
+      <path d="M 48,64 C 42,72 40,84 44,92" stroke="url(#dog-ear-inner)" stroke-width="4" stroke-linecap="round" fill="none" />
+    </g>
+
+    <g class="pet-ear pet-ear-right" style="transform-origin: 142px 52px;">
+      <path d="M 140,54 C 158,54 168,70 166,92 C 164,104 154,108 148,98 C 142,88 136,74 138,54 Z" fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" />
+      <path d="M 152,64 C 158,72 160,84 156,92" stroke="url(#dog-ear-inner)" stroke-width="4" stroke-linecap="round" fill="none" />
+    </g>
+
+    <path d="M 54,62 C 48,50 68,36 100,36 C 132,36 152,50 146,62 C 158,70 162,84 154,95 C 148,105 136,112 100,112 C 64,112 52,105 46,95 C 38,84 42,70 54,62 Z" 
+          fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+
+    <path d="M 94,38 C 96,55 92,68 84,78 C 84,78 100,82 100,82 C 100,82 116,78 116,78 C 108,68 104,55 106,38 Z" fill="url(#dog-white)" />
+
+    <ellipse cx="100" cy="88" rx="18" ry="13" fill="url(#dog-white)" stroke="#3B1E12" stroke-width="1.8" />
+    <ellipse cx="100" cy="80" rx="6" ry="4.2" fill="#1C1917" />
+    <circle cx="98" cy="78.5" r="1.5" fill="#FFFFFF" />
+
+    <path d="M 94,85 Q 100,88 100,85 Q 100,88 106,85" stroke="#3B1E12" stroke-width="1.8" fill="none" stroke-linecap="round" />
+    <path d="M 96,86 C 96,95 104,95 104,86 Z" fill="#FB7185" stroke="#3B1E12" stroke-width="1.2" />
+
+    <ellipse cx="64" cy="90" rx="8" ry="4.5" fill="#FB7185" opacity="0.45" />
+    <ellipse cx="136" cy="90" rx="8" ry="4.5" fill="#FB7185" opacity="0.45" />
+
+    <g class="">
+      <ellipse cx="80" cy="74" rx="12.5" ry="14.5" fill="url(#dog-eye-iris)" stroke="#3B1E12" stroke-width="2.2" />
+      <ellipse cx="80" cy="74" rx="8.5" ry="10.5" fill="#0A0503" />
+      <circle class="pet-pupil" data-anchor-x="80" data-anchor-y="74" cx="80" cy="74" r="5" fill="#000000" />
+      <circle cx="76" cy="68" r="4.2" fill="#FFFFFF" />
+      <circle cx="85" cy="79" r="1.8" fill="#FFFFFF" />
+
+      <ellipse cx="120" cy="74" rx="12.5" ry="14.5" fill="url(#dog-eye-iris)" stroke="#3B1E12" stroke-width="2.2" />
+      <ellipse cx="120" cy="74" rx="8.5" ry="10.5" fill="#0A0503" />
+      <circle class="pet-pupil" data-anchor-x="120" data-anchor-y="74" cx="120" cy="74" r="5" fill="#000000" />
+      <circle cx="116" cy="68" r="4.2" fill="#FFFFFF" />
+      <circle cx="125" cy="79" r="1.8" fill="#FFFFFF" />
+    </g>
+  </g>
+</svg>`;
+const dogWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="dog-fur" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F59E0B" />
+      <stop offset="50%" stop-color="#D97706" />
+      <stop offset="100%" stop-color="#B45309" />
+    </linearGradient>
+    <linearGradient id="dog-white" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#FFFBEB" />
+    </linearGradient>
+    <linearGradient id="dog-ear-inner" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FECDD3" />
+      <stop offset="100%" stop-color="#FDA4AF" />
+    </linearGradient>
+    <linearGradient id="dog-eye-iris" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2D150B" />
+      <stop offset="40%" stop-color="#1A0C06" />
+      <stop offset="85%" stop-color="#78350F" />
+      <stop offset="100%" stop-color="#92400E" />
+    </linearGradient>
+    <linearGradient id="cushion-grad-green" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+  </defs>
+  <ellipse cx="100" cy="172" rx="56" ry="6.5" fill="#28140B" opacity="0.22" class="pet-shadow" />
+  <circle class="pet-pupil" data-anchor-x="42" data-anchor-y="76" cx="42" cy="76" r="4" fill="#000000" />
+</svg>`;
+const dogWalkFrames = [dogWalk1SVG, dogWalk2SVG, dogWalk3SVG, dogWalk4SVG];
+const dogSleepSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="dog-fur" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F59E0B" />
+      <stop offset="50%" stop-color="#D97706" />
+      <stop offset="100%" stop-color="#B45309" />
+    </linearGradient>
+    <linearGradient id="dog-white" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#FFFBEB" />
+    </linearGradient>
+    <linearGradient id="dog-ear-inner" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FECDD3" />
+      <stop offset="100%" stop-color="#FDA4AF" />
+    </linearGradient>
+    <linearGradient id="dog-eye-iris" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2D150B" />
+      <stop offset="40%" stop-color="#1A0C06" />
+      <stop offset="85%" stop-color="#78350F" />
+      <stop offset="100%" stop-color="#92400E" />
+    </linearGradient>
+    <linearGradient id="cushion-grad-green" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+  </defs>
+  <ellipse cx="100" cy="178" rx="68" ry="10" fill="#1E293B" opacity="0.25" />
+  <path d="M 36,154 Q 100,138 164,154 Q 148,176 100,178 Q 52,176 36,154 Z" fill="url(#cushion-grad-green)" stroke="#065F46" stroke-width="2.2" />
+
+  <g class="anim-breath" style="transform-origin: 100px 150px;">
+    <path d="M 140,132 C 152,145 128,163 96,163 C 72,163 56,150 60,138" stroke="url(#dog-fur)" stroke-width="15" fill="none" stroke-linecap="round" />
+    <ellipse cx="102" cy="128" rx="44" ry="32" fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" />
+
+    <g class="pet-head" style="transform-origin: 74px 124px;">
+      <circle cx="74" cy="124" r="25" fill="url(#dog-fur)" stroke="#3B1E12" stroke-width="2.2" />
+      <path d="M 63,122 Q 68,117 73,122" stroke="#3B1E12" stroke-width="2.5" stroke-linecap="round" fill="none" />
+      <path d="M 78,122 Q 83,117 88,122" stroke="#3B1E12" stroke-width="2.5" stroke-linecap="round" fill="none" />
+      <ellipse cx="76" cy="128" rx="3" ry="2" fill="#1C1917" />
+      <ellipse cx="64" cy="130" rx="5" ry="2.8" fill="#FB7185" opacity="0.5" />
+    </g>
+  </g>
+</svg>`;
+const dogSitSVG = dogIdleSVG;
+const dogSitBlinkSVG = dogIdleSVG;
+const dogLaySVG = dogSleepSVG;
+const dogLayBreatheSVG = dogSleepSVG;
+const dogStretchSVG = dogWalk1SVG;
+
+function getDogPartsForState(state) {
+  const scope = typeof window !== "undefined" ? window : {};
+  const STATE_TO_FRAMES = {
+    idle: ["Idle"],
+    walking: ["Walk1", "Walk2", "Walk3", "Walk4"],
+    sleeping: ["Sleep"],
+    sitting: ["Sit", "SitBlink"],
+    laying: ["Lay", "LayBreathe"],
+    stretching: ["Stretch"],
+  };
+  const frames = STATE_TO_FRAMES[state] || ["Idle"];
+  return frames.map(name => ({
+    head: null,
+    body: scope["dog" + name + "SVG"] || (name === "Idle" || name === "Sit" || name === "SitBlink" ? dogIdleSVG : name === "Sleep" || name === "Lay" || name === "LayBreathe" ? dogSleepSVG : dogWalk1SVG),
+    tail: null,
+    backLegLeft: null,
+    backLegRight: null,
+    frontLegLeft: null,
+    frontLegRight: null,
+  }));
+}
+
+if (typeof window !== "undefined") {
   window.dogIdleSVG = dogIdleSVG;
   window.dogWalkSVG = dogWalkSVG;
+  window.dogWalk1SVG = dogWalk1SVG;
+  window.dogWalk2SVG = dogWalk2SVG;
+  window.dogWalk3SVG = dogWalk3SVG;
+  window.dogWalk4SVG = dogWalk4SVG;
+  window.dogWalkFrames = dogWalkFrames;
   window.dogSleepSVG = dogSleepSVG;
-  window.dogSVG = dogSVG;
+  window.dogSitSVG = dogSitSVG;
+  window.dogSitBlinkSVG = dogSitBlinkSVG;
+  window.dogLaySVG = dogLaySVG;
+  window.dogLayBreatheSVG = dogLayBreatheSVG;
+  window.dogStretchSVG = dogStretchSVG;
+  window.getDogPartsForState = getDogPartsForState;
+}
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = {
+    dogIdleSVG,
+    dogWalkSVG,
+    dogWalk1SVG,
+    dogWalk2SVG,
+    dogWalk3SVG,
+    dogWalk4SVG,
+    dogWalkFrames,
+    dogSleepSVG,
+    dogSitSVG,
+    dogSitBlinkSVG,
+    dogLaySVG,
+    dogLayBreatheSVG,
+    dogStretchSVG,
+    getDogPartsForState
+  };
 }

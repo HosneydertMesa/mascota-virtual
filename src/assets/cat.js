@@ -1,289 +1,1066 @@
-const catIdleSVG = `
-<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+/* Mascot Cat Assets - Chibi 2D Anime Illustration */
+const catIdleSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="cat-skin" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ffd8a8" />
-      <stop offset="100%" stop-color="#ff922b" />
+    <linearGradient id="cat-fur" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#EAA663" />
+      <stop offset="50%" stop-color="#D08842" />
+      <stop offset="100%" stop-color="#A85F28" />
     </linearGradient>
-    <linearGradient id="cat-ear" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#ffdeeb" />
-      <stop offset="100%" stop-color="#faa2c1" />
+    <linearGradient id="cat-fur-dark" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#8C461A" />
+      <stop offset="100%" stop-color="#602E0E" />
     </linearGradient>
-    <linearGradient id="cat-collar" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#06b6d4" />
-      <stop offset="100%" stop-color="#0891b2" />
+    <linearGradient id="cat-stripes" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#4E240F" />
+      <stop offset="100%" stop-color="#341507" />
     </linearGradient>
-    <linearGradient id="gold-bell" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#fef08a" />
-      <stop offset="50%" stop-color="#facc15" />
-      <stop offset="100%" stop-color="#ca8a04" />
+    <linearGradient id="cat-cream" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFDF9" />
+      <stop offset="50%" stop-color="#FFF5E6" />
+      <stop offset="100%" stop-color="#FDE8CE" />
+    </linearGradient>
+    <linearGradient id="cat-ear-inner" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFBEB8" />
+      <stop offset="100%" stop-color="#FFAAA3" />
+    </linearGradient>
+    <linearGradient id="cat-eye-iris" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1F0D05" />
+      <stop offset="45%" stop-color="#3D1A0A" />
+      <stop offset="85%" stop-color="#7A3912" />
+      <stop offset="100%" stop-color="#A4551E" />
+    </linearGradient>
+    <linearGradient id="cushion-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6" />
+      <stop offset="100%" stop-color="#1D4ED8" />
     </linearGradient>
   </defs>
+  <!-- Sombra en suelo suave -->
+  <ellipse cx="100" cy="170" rx="55" ry="7" fill="#28140B" opacity="0.22" class="pet-shadow" />
 
-  <!-- Tail (Procedural Waving) -->
-  <path id="cat-tail" d="M 130,130 C 148,120 160,92 165,70" fill="none" stroke="url(#cat-skin)" stroke-width="14" stroke-linecap="round" />
-
-  <!-- Feet (Back) -->
-  <ellipse cx="75" cy="178" rx="14" ry="10" fill="#f1f3f5" class="back-foot-left" />
-  <ellipse cx="125" cy="178" rx="14" ry="10" fill="#f1f3f5" class="back-foot-right" />
-
-  <!-- Body Group (Breathing) -->
-  <g class="anim-breath" style="transform-origin: 100px 180px;">
-    <ellipse cx="100" cy="138" rx="42" ry="48" fill="url(#cat-skin)" />
-    
-    <!-- Tabby Stripes on Body -->
-    <path d="M 60,132 Q 72,133 78,136" stroke="#d9480f" stroke-width="4.5" fill="none" stroke-linecap="round" />
-    <path d="M 61,146 Q 73,147 79,150" stroke="#d9480f" stroke-width="4.5" fill="none" stroke-linecap="round" />
-    <path d="M 140,132 Q 128,133 122,136" stroke="#d9480f" stroke-width="4.5" fill="none" stroke-linecap="round" />
-    <path d="M 139,146 Q 127,147 121,150" stroke="#d9480f" stroke-width="4.5" fill="none" stroke-linecap="round" />
-    
-    <!-- Chest Fluff (White belly patch) -->
-    <path d="M 76,122 Q 100,146 124,122 Q 100,130 76,122 Z" fill="#ffffff" />
-    
-    <!-- Shadow under chin -->
-    <ellipse cx="100" cy="104" rx="28" ry="4" fill="#000000" opacity="0.1" />
-
-    <!-- Collar -->
-    <rect x="74" y="102" width="52" height="6" rx="3" fill="url(#cat-collar)" />
-    <!-- Gold Bell Tag -->
-    <circle cx="100" cy="112" r="7" fill="url(#gold-bell)" stroke="#eab308" stroke-width="0.8" />
-    <circle cx="98" cy="110" r="1.8" fill="#ffffff" opacity="0.8" />
-    <line x1="96" y1="113" x2="104" y2="113" stroke="#854d0e" stroke-width="1" />
+  <!-- Cola Esponjosa con Rayas (Atrás Izquierda) -->
+  <g id="cat-tail" class="anim-wag" style="transform-origin: 70px 140px; transform: rotate(0deg);">
+    <path d="M 72,140 C 52,145 34,130 30,108 C 26,88 38,72 52,76 C 56,78 54,90 48,96 C 42,104 46,120 60,126 C 66,129 71,133 75,138 Z" 
+          fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+    <path d="M 36,90 C 42,94 46,100 46,106" stroke="url(#cat-stripes)" stroke-width="3.5" stroke-linecap="round" fill="none" />
+    <path d="M 40,108 C 47,112 51,118 49,124" stroke="url(#cat-stripes)" stroke-width="3.5" stroke-linecap="round" fill="none" />
+    <path d="M 52,124 C 58,128 62,133 58,137" stroke="url(#cat-stripes)" stroke-width="3.5" stroke-linecap="round" fill="none" />
   </g>
 
-  <!-- Head Group (Breathing & Head Bob) -->
-  <g class="anim-breath" style="transform-origin: 100px 180px;">
-    <!-- Left Ear (wrapped for ear-twitch animation) -->
-    <g class="pet-ear pet-ear-left" style="transform-origin: 60px 65px;">
-      <path d="M 60,68 L 45,25 Q 75,40 75,55 Z" fill="url(#cat-skin)" />
-      <path d="M 62,64 L 50,34 Q 71,46 72,54 Z" fill="url(#cat-ear)" />
+  <!-- Muslos traseros redondeados con patitas apoyadas en suelo -->
+  <g class="pet-hind-legs">
+    <g class="back-foot-left">
+      <!-- Muslo Izquierdo -->
+      <path d="M 58,132 C 48,142 48,156 55,164 C 60,168 68,168 74,165 C 77,161 76,146 71,136 Z"
+            fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+      <path d="M 50,146 Q 58,148 63,152" stroke="url(#cat-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
+      <path d="M 52,154 Q 60,156 65,159" stroke="url(#cat-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
+      <ellipse cx="54" cy="165" rx="8" ry="4.5" fill="url(#cat-cream)" stroke="#34180C" stroke-width="1.8" />
+    </g>
+    <g class="back-foot-right">
+      <!-- Muslo Derecho -->
+      <path d="M 142,132 C 152,142 152,156 145,164 C 140,168 132,168 126,165 C 123,161 124,146 129,136 Z"
+            fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+      <path d="M 150,146 Q 142,148 137,152" stroke="url(#cat-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
+      <path d="M 148,154 Q 140,156 135,159" stroke="url(#cat-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
+      <ellipse cx="146" cy="165" rx="8" ry="4.5" fill="url(#cat-cream)" stroke="#34180C" stroke-width="1.8" />
+    </g>
+  </g>
+
+  <!-- Torso & Pecho Esponjoso en Capas -->
+  <g class="anim-breath pet-body" style="transform-origin: 100px 165px; transform: translateY(0px) rotate(0deg);">
+    <!-- Cuerpo Base Atigrado -->
+    <path d="M 68,105 C 63,122 65,148 74,163 C 83,167 117,167 126,163 C 135,148 137,122 132,105 Z" 
+          fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+
+    <path d="M 70,120 Q 78,123 82,127" stroke="url(#cat-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+    <path d="M 71,132 Q 79,134 84,138" stroke="url(#cat-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+    <path d="M 130,120 Q 122,123 118,127" stroke="url(#cat-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+    <path d="M 129,132 Q 121,134 116,138" stroke="url(#cat-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+
+    <!-- Pechera Esponjosa en Capas Suaves (Cascada de Mechones) -->
+    <path d="M 80,94 C 74,108 72,122 79,132 C 84,138 92,144 100,146 C 108,144 116,138 121,132 C 128,122 126,108 120,94 C 112,104 88,104 80,94 Z" 
+          fill="url(#cat-cream)" stroke="#34180C" stroke-width="1.8" stroke-linejoin="round" />
+    <path d="M 88,128 C 94,136 106,136 112,128" stroke="#34180C" stroke-width="1.4" fill="none" />
+
+    <!-- Patas delanteras redonditas y carnosas con deditos -->
+    <g class="pet-front-paws">
+      <!-- Pata Delantera Izquierda -->
+      <path d="M 76,132 L 75,155 C 75,161 78,165 83,165 C 88,165 91,161 91,155 L 90,132 Z" 
+            fill="url(#cat-cream)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
+      <ellipse cx="83" cy="164" rx="9.5" ry="5.5" fill="url(#cat-cream)" stroke="#34180C" stroke-width="2" />
+      <path d="M 79,162 L 79,167" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
+      <path d="M 86,162 L 86,167" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
+
+      <!-- Pata Delantera Derecha -->
+      <path d="M 110,132 L 109,155 C 109,161 112,165 117,165 C 122,165 125,161 125,155 L 124,132 Z" 
+            fill="url(#cat-cream)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
+      <ellipse cx="117" cy="164" rx="9.5" ry="5.5" fill="url(#cat-cream)" stroke="#34180C" stroke-width="2" />
+      <path d="M 113,162 L 113,167" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
+      <path d="M 120,162 L 120,167" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
+    </g>
+  </g>
+
+  <!-- Cabeza Expresiva Chibi Anime -->
+  <g class="pet-head anim-breath" style="transform-origin: 100px 105px; transform: translateY(0px) rotate(0deg);">
+    <!-- Oreja Izquierda -->
+    <g class="pet-ear pet-ear-left" style="transform-origin: 64px 55px;">
+      <path d="M 60,58 L 46,26 C 60,29 76,42 76,56 Z" fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+      <path d="M 56,54 L 49,33 C 58,36 68,45 66,54 Z" fill="url(#cat-ear-inner)" />
+      <path d="M 52,48 Q 57,44 62,51" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" fill="none" />
     </g>
 
-    <!-- Right Ear -->
-    <g class="pet-ear pet-ear-right" style="transform-origin: 140px 65px;">
-      <path d="M 140,68 L 155,25 Q 125,40 125,55 Z" fill="url(#cat-skin)" />
-      <path d="M 138,64 L 150,34 Q 129,46 128,54 Z" fill="url(#cat-ear)" />
+    <!-- Oreja Derecha -->
+    <g class="pet-ear pet-ear-right" style="transform-origin: 136px 55px;">
+      <path d="M 140,58 L 154,26 C 140,29 124,42 124,56 Z" fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+      <path d="M 144,54 L 151,33 C 142,36 132,45 134,54 Z" fill="url(#cat-ear-inner)" />
+      <path d="M 148,48 Q 143,44 138,51" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" fill="none" />
     </g>
 
-    <!-- Head Base -->
-    <circle cx="100" cy="74" r="44" fill="url(#cat-skin)" />
+    <!-- Silueta de la Cabeza con 3 Mechones en cada Mejilla -->
+    <path d="M 56,62 C 50,52 68,38 100,38 C 132,38 150,52 144,62 
+             C 154,66 159,74 152,80 
+             C 159,84 161,93 150,97 
+             C 154,101 148,109 137,109 
+             C 126,115 74,115 63,109 
+             C 52,109 46,101 50,97 
+             C 39,93 41,84 48,80 
+             C 41,74 46,66 56,62 Z" 
+          fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
 
-    <!-- Forehead Tabby Stripes -->
-    <path d="M 94,36 Q 98,46 96,52" stroke="#d9480f" stroke-width="3" fill="none" stroke-linecap="round" />
-    <path d="M 100,34 Q 100,47 100,54" stroke="#d9480f" stroke-width="3.5" fill="none" stroke-linecap="round" />
-    <path d="M 106,36 Q 102,46 104,52" stroke="#d9480f" stroke-width="3" fill="none" stroke-linecap="round" />
+    <!-- Rayas atigradas de la frente -->
+    <path d="M 100,40 L 100,54" stroke="url(#cat-stripes)" stroke-width="3.8" stroke-linecap="round" />
+    <path d="M 91,44 Q 93,52 88,56" stroke="url(#cat-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
+    <path d="M 109,44 Q 107,52 112,56" stroke="url(#cat-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
+    <path d="M 82,49 Q 86,56 81,60" stroke="url(#cat-stripes)" stroke-width="2.6" stroke-linecap="round" fill="none" />
+    <path d="M 118,49 Q 114,56 119,60" stroke="url(#cat-stripes)" stroke-width="2.6" stroke-linecap="round" fill="none" />
 
-    <!-- Cheek Tabby Stripes -->
-    <path d="M 60,78 Q 68,80 72,79" stroke="#d9480f" stroke-width="2.5" fill="none" stroke-linecap="round" />
-    <path d="M 61,84 Q 69,85 73,83" stroke="#d9480f" stroke-width="2.5" fill="none" stroke-linecap="round" />
-    <path d="M 140,78 Q 132,80 128,79" stroke="#d9480f" stroke-width="2.5" fill="none" stroke-linecap="round" />
-    <path d="M 139,84 Q 131,85 127,83" stroke="#d9480f" stroke-width="2.5" fill="none" stroke-linecap="round" />
+    <!-- Rayitas en mejillas -->
+    <path d="M 54,74 Q 63,76 67,74" stroke="url(#cat-stripes)" stroke-width="2.5" stroke-linecap="round" fill="none" />
+    <path d="M 52,83 Q 61,83 67,82" stroke="url(#cat-stripes)" stroke-width="2.5" stroke-linecap="round" fill="none" />
+    <path d="M 146,74 Q 137,76 133,74" stroke="url(#cat-stripes)" stroke-width="2.5" stroke-linecap="round" fill="none" />
+    <path d="M 148,83 Q 139,83 133,82" stroke="url(#cat-stripes)" stroke-width="2.5" stroke-linecap="round" fill="none" />
 
-    <!-- Whiskers -->
-    <line x1="55" y1="80" x2="25" y2="76" stroke="#f1f3f5" stroke-width="1.8" stroke-linecap="round" />
-    <line x1="53" y1="85" x2="20" y2="85" stroke="#f1f3f5" stroke-width="1.8" stroke-linecap="round" />
-    <line x1="55" y1="90" x2="25" y2="94" stroke="#f1f3f5" stroke-width="1.8" stroke-linecap="round" />
-    <line x1="145" y1="80" x2="175" y2="76" stroke="#f1f3f5" stroke-width="1.8" stroke-linecap="round" />
-    <line x1="147" y1="85" x2="180" y2="85" stroke="#f1f3f5" stroke-width="1.8" stroke-linecap="round" />
-    <line x1="145" y1="90" x2="175" y2="94" stroke="#f1f3f5" stroke-width="1.8" stroke-linecap="round" />
+    <!-- Bigotes Blancos Finos -->
+    <path d="M 54,86 Q 38,84 28,81" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.95" />
+    <path d="M 52,91 Q 36,93 26,97" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.95" />
+    <path d="M 146,86 Q 162,84 172,81" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.95" />
+    <path d="M 148,91 Q 164,93 174,97" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.95" />
 
-    <!-- Glossy Highlight on Head -->
-    <path d="M 72,46 Q 100,36 128,46" stroke="#ffffff" stroke-width="2.5" fill="none" opacity="0.35" stroke-linecap="round" />
+    <!-- Hocico Crema Redondito -->
+    <ellipse cx="100" cy="86" rx="14" ry="10" fill="url(#cat-cream)" stroke="#34180C" stroke-width="1.5" />
+    <!-- Nariz Rosita -->
+    <path d="M 97,80 L 103,80 L 100,83 Z" fill="#FF8585" stroke="#34180C" stroke-width="1" stroke-linejoin="round" />
+    <!-- Boquita Abierta Feliz con Lengüita -->
+    <path d="M 95,84 Q 100,87 100,84 Q 100,87 105,84" stroke="#34180C" stroke-width="1.8" fill="none" stroke-linecap="round" />
+    <path d="M 97,85 Q 100,91 103,85 Z" fill="#FF7675" stroke="#34180C" stroke-width="1" />
 
-    <!-- Eyes (Blinking Group) -->
+    <!-- Rubor en Mejillas -->
+    <ellipse cx="64" cy="86" rx="7" ry="4" fill="#FF7675" opacity="0.45" />
+    <ellipse cx="136" cy="86" rx="7" ry="4" fill="#FF7675" opacity="0.45" />
+
+    <!-- Ojos Anime Grandes y Brillantes -->
     <g class="anim-blink">
-      <!-- Outer eye -->
-      <circle cx="82" cy="72" r="7" fill="#1e1e24" />
-      <circle cx="118" cy="72" r="7" fill="#1e1e24" />
-      <!-- Pupil highlights -->
-      <circle cx="80" cy="70" r="2.5" fill="#ffffff" />
-      <circle cx="83" cy="74" r="0.9" fill="#ffffff" />
-      <circle cx="116" cy="70" r="2.5" fill="#ffffff" />
-      <circle cx="119" cy="74" r="0.9" fill="#ffffff" />
-    </g>
+      <ellipse cx="82" cy="72" rx="13" ry="15" fill="url(#cat-eye-iris)" stroke="#34180C" stroke-width="2.2" />
+      <ellipse cx="82" cy="72" rx="9" ry="11" fill="#0E0502" />
+      <circle class="pet-pupil" data-anchor-x="82" data-anchor-y="72" cx="82" cy="72" r="5" fill="#000000" />
+      <circle cx="78" cy="66" r="4.5" fill="#FFFFFF" />
+      <circle cx="87" cy="77" r="2" fill="#FFFFFF" />
+      <circle cx="77" cy="75" r="1.2" fill="#FFFFFF" opacity="0.75" />
 
-    <!-- Cute Cheeks -->
-    <ellipse cx="70" cy="80" rx="7" ry="3.5" fill="#ffa8a8" opacity="0.65" />
-    <ellipse cx="130" cy="80" rx="7" ry="3.5" fill="#ffa8a8" opacity="0.65" />
-
-    <!-- Nose & Mouth -->
-    <polygon points="100,79 96,75 104,75" fill="#ff8787" />
-    <path d="M 96,82 Q 100,85 100,82 Q 100,85 104,82" stroke="#212529" stroke-width="1.6" fill="none" stroke-linecap="round" />
-  </g>
-
-  <!-- Front Paws -->
-  <ellipse cx="90" cy="180" rx="10" ry="7" fill="#ffffff" class="left-paw" />
-  <ellipse cx="110" cy="180" rx="10" ry="7" fill="#ffffff" class="right-paw" />
-</svg>
-`;
-
-const catWalkSVG = `
-<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="cat-skin" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ffd8a8" />
-      <stop offset="100%" stop-color="#ff922b" />
-    </linearGradient>
-    <linearGradient id="cat-ear" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#ffdeeb" />
-      <stop offset="100%" stop-color="#faa2c1" />
-    </linearGradient>
-  </defs>
-
-  <!-- Tail (Procedural Waving) -->
-  <path id="cat-tail" d="M 140,110 C 160,100 170,75 175,55" fill="none" stroke="url(#cat-skin)" stroke-width="14" stroke-linecap="round" />
-
-  <!-- Back Left Leg (Inside) -->
-  <g class="back-foot-left">
-    <rect x="115" y="115" width="12" height="60" rx="6" fill="#d9480f" />
-    <ellipse cx="121" cy="175" rx="8" ry="5" fill="#f1f3f5" />
-    <!-- Paw pads -->
-    <circle cx="121" cy="176" r="3.2" fill="#ffa8a8" />
-  </g>
-
-  <!-- Front Left Leg (Inside) -->
-  <g class="left-paw">
-    <rect x="70" y="115" width="12" height="60" rx="6" fill="#d9480f" />
-    <ellipse cx="76" cy="175" rx="8" ry="5" fill="#f1f3f5" />
-    <circle cx="76" cy="176" r="3.2" fill="#ffa8a8" />
-  </g>
-
-  <!-- Body -->
-  <ellipse cx="100" cy="115" rx="45" ry="32" fill="url(#cat-skin)" />
-  
-  <!-- Tabby Stripes on Side Body -->
-  <path d="M 94,92 L 91,105" stroke="#d9480f" stroke-width="4.5" stroke-linecap="round" />
-  <path d="M 106,92 L 102,107" stroke="#d9480f" stroke-width="4.5" stroke-linecap="round" />
-  <path d="M 118,94 L 114,109" stroke="#d9480f" stroke-width="4.5" stroke-linecap="round" />
-
-  <!-- Chest fluff side -->
-  <path d="M 60,95 Q 50,115 65,130 Z" fill="#ffffff" />
-
-  <!-- Head Group (Profile) -->
-  <g style="transform-origin: 55px 80px;">
-    <!-- Left Ear (Facing profile left) -->
-    <path d="M 40,55 L 30,25 Q 50,38 52,50 Z" fill="url(#cat-skin)" />
-    <path d="M 42,52 L 34,31 Q 48,41 49,49 Z" fill="url(#cat-ear)" />
-    <!-- Right Ear (Slightly behind) -->
-    <path d="M 52,55 L 48,22 Q 62,35 60,48 Z" fill="url(#cat-skin)" />
-
-    <circle cx="55" cy="80" r="30" fill="url(#cat-skin)" />
-
-    <!-- Forehead stripes in profile -->
-    <path d="M 58,54 Q 53,60 48,64" stroke="#d9480f" stroke-width="3" fill="none" stroke-linecap="round" />
-    <path d="M 64,54 Q 61,62 55,67" stroke="#d9480f" stroke-width="3.5" fill="none" stroke-linecap="round" />
-    
-    <!-- Cheek stripe profile -->
-    <path d="M 70,82 Q 64,84 60,83" stroke="#d9480f" stroke-width="2.5" fill="none" stroke-linecap="round" />
-
-    <!-- Eye (Looking side/profile) -->
-    <ellipse cx="42" cy="78" rx="4" ry="5.5" fill="#1e1e24" />
-    <circle cx="40.5" cy="76" r="1.6" fill="#ffffff" />
-
-    <!-- Whiskers -->
-    <line x1="28" y1="84" x2="10" y2="82" stroke="#f1f3f5" stroke-width="1.8" stroke-linecap="round" />
-    <line x1="28" y1="89" x2="6" y2="89" stroke="#f1f3f5" stroke-width="1.8" stroke-linecap="round" />
-    <line x1="28" y1="94" x2="10" y2="96" stroke="#f1f3f5" stroke-width="1.8" stroke-linecap="round" />
-
-    <!-- Blush profile -->
-    <ellipse cx="46" cy="86" rx="5" ry="2.5" fill="#ff8787" opacity="0.65" />
-
-    <!-- Nose / Mouth profile -->
-    <polygon points="26,80 22,83 26,84" fill="#ff8787" />
-    <path d="M 26,86 Q 22,89 25,92" stroke="#212529" stroke-width="1.2" fill="none" stroke-linecap="round" />
-  </g>
-
-  <!-- Back Right Leg (Foreground) -->
-  <g class="back-foot-right">
-    <rect x="125" y="115" width="12" height="60" rx="6" fill="url(#cat-skin)" />
-    <ellipse cx="131" cy="175" rx="8" ry="5" fill="#ffffff" />
-    <!-- Paw pads -->
-    <circle cx="131" cy="176" r="3.2" fill="#ffa8a8" />
-  </g>
-
-  <!-- Front Right Leg (Foreground) -->
-  <g class="right-paw">
-    <rect x="80" y="115" width="12" height="60" rx="6" fill="url(#cat-skin)" />
-    <ellipse cx="86" cy="175" rx="8" ry="5" fill="#ffffff" />
-    <circle cx="86" cy="176" r="3.2" fill="#ffa8a8" />
-  </g>
-</svg>
-`;
-
-const catSleepSVG = `
-<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="cat-skin" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ffd8a8" />
-      <stop offset="100%" stop-color="#ff922b" />
-    </linearGradient>
-    <linearGradient id="cat-ear" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#ffdeeb" />
-      <stop offset="100%" stop-color="#faa2c1" />
-    </linearGradient>
-  </defs>
-
-  <!-- Soft Sleeping Mat with Lace Border -->
-  <ellipse cx="100" cy="160" rx="66" ry="16" fill="#ffffff" opacity="0.75" stroke="#d8b4fe" stroke-width="1.5" stroke-dasharray="4,4" />
-  <ellipse cx="100" cy="160" rx="60" ry="13" fill="#e9d5ff" opacity="0.6" />
-
-  <!-- Shadow under cat on mat -->
-  <ellipse cx="98" cy="150" rx="46" ry="8" fill="#a855f7" opacity="0.25" />
-
-  <g class="anim-breath" style="transform-origin: 100px 160px;">
-    <!-- Curled Tail wrapped around body -->
-    <path d="M 140,132 C 150,145 125,156 95,156 C 65,156 55,145 55,140" 
-          stroke="url(#cat-skin)" 
-          stroke-width="12" 
-          fill="none" 
-          stroke-linecap="round" />
-    <!-- Tail ring stripes -->
-    <path d="M 126,149 C 122,152 112,153 108,153" stroke="#d9480f" stroke-width="2.5" fill="none" stroke-linecap="round" />
-    <path d="M 142,139 C 138,144 130,148 126,149" stroke="#d9480f" stroke-width="2.5" fill="none" stroke-linecap="round" />
-
-    <!-- Curled Body -->
-    <ellipse cx="102" cy="126" rx="48" ry="38" fill="url(#cat-skin)" />
-    
-    <!-- Tabby stripes on sleeping body -->
-    <path d="M 98,102 Q 106,94 114,102" stroke="#d9480f" stroke-width="4.5" fill="none" stroke-linecap="round" />
-    <path d="M 112,106 Q 118,99 125,107" stroke="#d9480f" stroke-width="4.5" fill="none" stroke-linecap="round" />
-    <path d="M 123,115 Q 128,110 134,118" stroke="#d9480f" stroke-width="4.5" fill="none" stroke-linecap="round" />
-
-    <!-- Sleeping Head resting on paws -->
-    <g style="transform-origin: 72px 122px;">
-      <!-- Ears folded slightly back -->
-      <path d="M 52,108 L 38,94 L 58,102 Z" fill="url(#cat-skin)" />
-      <path d="M 78,104 L 72,90 L 84,102 Z" fill="url(#cat-skin)" />
-
-      <circle cx="72" cy="122" r="26" fill="url(#cat-skin)" />
-
-      <!-- Head stripes in sleep -->
-      <path d="M 68,104 Q 72,98 70,102" stroke="#d9480f" stroke-width="2.5" fill="none" stroke-linecap="round" />
-      <path d="M 74,104 Q 76,98 75,102" stroke="#d9480f" stroke-width="2.5" fill="none" stroke-linecap="round" />
-
-      <!-- Closed Eyes (sleeping ^^ curves) -->
-      <path d="M 58,122 Q 62,126 66,122" stroke="#1e1e24" stroke-width="2" fill="none" stroke-linecap="round" />
-      <path d="M 78,122 Q 82,126 86,122" stroke="#1e1e24" stroke-width="2" fill="none" stroke-linecap="round" />
-
-      <!-- Nose/Mouth -->
-      <polygon points="72,126 70,128 74,128" fill="#ff8787" />
-      <path d="M 70,131 Q 72,133 72,131 Q 72,133 74,131" stroke="#212529" stroke-width="1.2" fill="none" />
-      
-      <!-- Blush -->
-      <ellipse cx="60" cy="127" rx="4.5" ry="2.2" fill="#ff8787" opacity="0.45" />
-      <ellipse cx="84" cy="127" rx="4.5" ry="2.2" fill="#ff8787" opacity="0.45" />
+      <ellipse cx="118" cy="72" rx="13" ry="15" fill="url(#cat-eye-iris)" stroke="#34180C" stroke-width="2.2" />
+      <ellipse cx="118" cy="72" rx="9" ry="11" fill="#0E0502" />
+      <circle class="pet-pupil" data-anchor-x="118" data-anchor-y="72" cx="118" cy="72" r="5" fill="#000000" />
+      <circle cx="114" cy="66" r="4.5" fill="#FFFFFF" />
+      <circle cx="123" cy="77" r="2" fill="#FFFFFF" />
+      <circle cx="113" cy="75" r="1.2" fill="#FFFFFF" opacity="0.75" />
     </g>
   </g>
-</svg>
-`;
+</svg>`;
+const catWalk1SVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="cat-fur" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#EAA663" />
+      <stop offset="50%" stop-color="#D08842" />
+      <stop offset="100%" stop-color="#A85F28" />
+    </linearGradient>
+    <linearGradient id="cat-fur-dark" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#8C461A" />
+      <stop offset="100%" stop-color="#602E0E" />
+    </linearGradient>
+    <linearGradient id="cat-stripes" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#4E240F" />
+      <stop offset="100%" stop-color="#341507" />
+    </linearGradient>
+    <linearGradient id="cat-cream" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFDF9" />
+      <stop offset="50%" stop-color="#FFF5E6" />
+      <stop offset="100%" stop-color="#FDE8CE" />
+    </linearGradient>
+    <linearGradient id="cat-ear-inner" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFBEB8" />
+      <stop offset="100%" stop-color="#FFAAA3" />
+    </linearGradient>
+    <linearGradient id="cat-eye-iris" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1F0D05" />
+      <stop offset="45%" stop-color="#3D1A0A" />
+      <stop offset="85%" stop-color="#7A3912" />
+      <stop offset="100%" stop-color="#A4551E" />
+    </linearGradient>
+    <linearGradient id="cushion-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6" />
+      <stop offset="100%" stop-color="#1D4ED8" />
+    </linearGradient>
+  </defs>
+  <!-- Sombra en suelo suave -->
+  <ellipse cx="100" cy="170" rx="55" ry="7" fill="#28140B" opacity="0.22" class="pet-shadow" />
 
-const catSVG = catIdleSVG; // Compatibility alias
+  <!-- Cola Esponjosa con Rayas (Atrás Izquierda) -->
+  <g id="cat-tail" class="" style="transform-origin: 70px 140px; transform: rotate(8deg);">
+    <path d="M 72,140 C 52,145 34,130 30,108 C 26,88 38,72 52,76 C 56,78 54,90 48,96 C 42,104 46,120 60,126 C 66,129 71,133 75,138 Z" 
+          fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+    <path d="M 36,90 C 42,94 46,100 46,106" stroke="url(#cat-stripes)" stroke-width="3.5" stroke-linecap="round" fill="none" />
+    <path d="M 40,108 C 47,112 51,118 49,124" stroke="url(#cat-stripes)" stroke-width="3.5" stroke-linecap="round" fill="none" />
+    <path d="M 52,124 C 58,128 62,133 58,137" stroke="url(#cat-stripes)" stroke-width="3.5" stroke-linecap="round" fill="none" />
+  </g>
 
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { catIdleSVG, catWalkSVG, catSleepSVG, catSVG };
-} else {
+  <!-- Muslos traseros redondeados con patitas apoyadas en suelo -->
+  <g class="pet-hind-legs">
+    <g class="back-foot-left">
+      <!-- Muslo Izquierdo -->
+      <path d="M 58,132 C 48,142 48,156 55,164 C 60,168 68,168 74,165 C 77,161 76,146 71,136 Z"
+            fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+      <path d="M 50,146 Q 58,148 63,152" stroke="url(#cat-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
+      <path d="M 52,154 Q 60,156 65,159" stroke="url(#cat-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
+      <ellipse cx="54" cy="167" rx="8" ry="4.5" fill="url(#cat-cream)" stroke="#34180C" stroke-width="1.8" />
+    </g>
+    <g class="back-foot-right">
+      <!-- Muslo Derecho -->
+      <path d="M 142,132 C 152,142 152,156 145,164 C 140,168 132,168 126,165 C 123,161 124,146 129,136 Z"
+            fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+      <path d="M 150,146 Q 142,148 137,152" stroke="url(#cat-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
+      <path d="M 148,154 Q 140,156 135,159" stroke="url(#cat-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
+      <ellipse cx="146" cy="162" rx="8" ry="4.5" fill="url(#cat-cream)" stroke="#34180C" stroke-width="1.8" />
+    </g>
+  </g>
+
+  <!-- Torso & Pecho Esponjoso en Capas -->
+  <g class=" pet-body" style="transform-origin: 100px 165px; transform: translateY(-1px) rotate(-2deg);">
+    <!-- Cuerpo Base Atigrado -->
+    <path d="M 68,105 C 63,122 65,148 74,163 C 83,167 117,167 126,163 C 135,148 137,122 132,105 Z" 
+          fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+
+    <path d="M 70,120 Q 78,123 82,127" stroke="url(#cat-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+    <path d="M 71,132 Q 79,134 84,138" stroke="url(#cat-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+    <path d="M 130,120 Q 122,123 118,127" stroke="url(#cat-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+    <path d="M 129,132 Q 121,134 116,138" stroke="url(#cat-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+
+    <!-- Pechera Esponjosa en Capas Suaves (Cascada de Mechones) -->
+    <path d="M 80,94 C 74,108 72,122 79,132 C 84,138 92,144 100,146 C 108,144 116,138 121,132 C 128,122 126,108 120,94 C 112,104 88,104 80,94 Z" 
+          fill="url(#cat-cream)" stroke="#34180C" stroke-width="1.8" stroke-linejoin="round" />
+    <path d="M 88,128 C 94,136 106,136 112,128" stroke="#34180C" stroke-width="1.4" fill="none" />
+
+    <!-- Patas delanteras redonditas y carnosas con deditos -->
+    <g class="pet-front-paws">
+      <g class="left-paw">
+        <!-- Pata Delantera Izquierda -->
+        <path d="M 76,132 L 75,155 C 75,161 78,165 83,165 C 88,165 91,161 91,155 L 90,132 Z"
+              fill="url(#cat-cream)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
+        <ellipse cx="83" cy="158" rx="9.5" ry="5.5" fill="url(#cat-cream)" stroke="#34180C" stroke-width="2" />
+        <path d="M 79,156 L 79,161" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
+        <path d="M 86,156 L 86,161" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
+      </g>
+      <g class="right-paw">
+        <!-- Pata Delantera Derecha -->
+        <path d="M 110,132 L 109,155 C 109,161 112,165 117,165 C 122,165 125,161 125,155 L 124,132 Z"
+              fill="url(#cat-cream)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
+        <ellipse cx="117" cy="166" rx="9.5" ry="5.5" fill="url(#cat-cream)" stroke="#34180C" stroke-width="2" />
+        <path d="M 113,164 L 113,169" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
+        <path d="M 120,164 L 120,169" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
+      </g>
+    </g>
+  </g>
+
+  <!-- Cabeza Expresiva Chibi Anime -->
+  <g class="pet-head " style="transform-origin: 100px 105px; transform: translateY(-1px) rotate(-1.4deg);">
+    <!-- Oreja Izquierda -->
+    <g class="pet-ear pet-ear-left" style="transform-origin: 64px 55px;">
+      <path d="M 60,58 L 46,26 C 60,29 76,42 76,56 Z" fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+      <path d="M 56,54 L 49,33 C 58,36 68,45 66,54 Z" fill="url(#cat-ear-inner)" />
+      <path d="M 52,48 Q 57,44 62,51" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" fill="none" />
+    </g>
+
+    <!-- Oreja Derecha -->
+    <g class="pet-ear pet-ear-right" style="transform-origin: 136px 55px;">
+      <path d="M 140,58 L 154,26 C 140,29 124,42 124,56 Z" fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+      <path d="M 144,54 L 151,33 C 142,36 132,45 134,54 Z" fill="url(#cat-ear-inner)" />
+      <path d="M 148,48 Q 143,44 138,51" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" fill="none" />
+    </g>
+
+    <!-- Silueta de la Cabeza con 3 Mechones en cada Mejilla -->
+    <path d="M 56,62 C 50,52 68,38 100,38 C 132,38 150,52 144,62 
+             C 154,66 159,74 152,80 
+             C 159,84 161,93 150,97 
+             C 154,101 148,109 137,109 
+             C 126,115 74,115 63,109 
+             C 52,109 46,101 50,97 
+             C 39,93 41,84 48,80 
+             C 41,74 46,66 56,62 Z" 
+          fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+
+    <!-- Rayas atigradas de la frente -->
+    <path d="M 100,40 L 100,54" stroke="url(#cat-stripes)" stroke-width="3.8" stroke-linecap="round" />
+    <path d="M 91,44 Q 93,52 88,56" stroke="url(#cat-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
+    <path d="M 109,44 Q 107,52 112,56" stroke="url(#cat-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
+    <path d="M 82,49 Q 86,56 81,60" stroke="url(#cat-stripes)" stroke-width="2.6" stroke-linecap="round" fill="none" />
+    <path d="M 118,49 Q 114,56 119,60" stroke="url(#cat-stripes)" stroke-width="2.6" stroke-linecap="round" fill="none" />
+
+    <!-- Rayitas en mejillas -->
+    <path d="M 54,74 Q 63,76 67,74" stroke="url(#cat-stripes)" stroke-width="2.5" stroke-linecap="round" fill="none" />
+    <path d="M 52,83 Q 61,83 67,82" stroke="url(#cat-stripes)" stroke-width="2.5" stroke-linecap="round" fill="none" />
+    <path d="M 146,74 Q 137,76 133,74" stroke="url(#cat-stripes)" stroke-width="2.5" stroke-linecap="round" fill="none" />
+    <path d="M 148,83 Q 139,83 133,82" stroke="url(#cat-stripes)" stroke-width="2.5" stroke-linecap="round" fill="none" />
+
+    <!-- Bigotes Blancos Finos -->
+    <path d="M 54,86 Q 38,84 28,81" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.95" />
+    <path d="M 52,91 Q 36,93 26,97" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.95" />
+    <path d="M 146,86 Q 162,84 172,81" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.95" />
+    <path d="M 148,91 Q 164,93 174,97" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.95" />
+
+    <!-- Hocico Crema Redondito -->
+    <ellipse cx="100" cy="86" rx="14" ry="10" fill="url(#cat-cream)" stroke="#34180C" stroke-width="1.5" />
+    <!-- Nariz Rosita -->
+    <path d="M 97,80 L 103,80 L 100,83 Z" fill="#FF8585" stroke="#34180C" stroke-width="1" stroke-linejoin="round" />
+    <!-- Boquita Abierta Feliz con Lengüita -->
+    <path d="M 95,84 Q 100,87 100,84 Q 100,87 105,84" stroke="#34180C" stroke-width="1.8" fill="none" stroke-linecap="round" />
+    <path d="M 97,85 Q 100,91 103,85 Z" fill="#FF7675" stroke="#34180C" stroke-width="1" />
+
+    <!-- Rubor en Mejillas -->
+    <ellipse cx="64" cy="86" rx="7" ry="4" fill="#FF7675" opacity="0.45" />
+    <ellipse cx="136" cy="86" rx="7" ry="4" fill="#FF7675" opacity="0.45" />
+
+    <!-- Ojos Anime Grandes y Brillantes -->
+    <g class="">
+      <ellipse cx="82" cy="72" rx="13" ry="15" fill="url(#cat-eye-iris)" stroke="#34180C" stroke-width="2.2" />
+      <ellipse cx="82" cy="72" rx="9" ry="11" fill="#0E0502" />
+      <circle class="pet-pupil" data-anchor-x="82" data-anchor-y="72" cx="82" cy="72" r="5" fill="#000000" />
+      <circle cx="78" cy="66" r="4.5" fill="#FFFFFF" />
+      <circle cx="87" cy="77" r="2" fill="#FFFFFF" />
+      <circle cx="77" cy="75" r="1.2" fill="#FFFFFF" opacity="0.75" />
+
+      <ellipse cx="118" cy="72" rx="13" ry="15" fill="url(#cat-eye-iris)" stroke="#34180C" stroke-width="2.2" />
+      <ellipse cx="118" cy="72" rx="9" ry="11" fill="#0E0502" />
+      <circle class="pet-pupil" data-anchor-x="118" data-anchor-y="72" cx="118" cy="72" r="5" fill="#000000" />
+      <circle cx="114" cy="66" r="4.5" fill="#FFFFFF" />
+      <circle cx="123" cy="77" r="2" fill="#FFFFFF" />
+      <circle cx="113" cy="75" r="1.2" fill="#FFFFFF" opacity="0.75" />
+    </g>
+  </g>
+</svg>`;
+const catWalk2SVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="cat-fur" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#EAA663" />
+      <stop offset="50%" stop-color="#D08842" />
+      <stop offset="100%" stop-color="#A85F28" />
+    </linearGradient>
+    <linearGradient id="cat-fur-dark" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#8C461A" />
+      <stop offset="100%" stop-color="#602E0E" />
+    </linearGradient>
+    <linearGradient id="cat-stripes" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#4E240F" />
+      <stop offset="100%" stop-color="#341507" />
+    </linearGradient>
+    <linearGradient id="cat-cream" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFDF9" />
+      <stop offset="50%" stop-color="#FFF5E6" />
+      <stop offset="100%" stop-color="#FDE8CE" />
+    </linearGradient>
+    <linearGradient id="cat-ear-inner" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFBEB8" />
+      <stop offset="100%" stop-color="#FFAAA3" />
+    </linearGradient>
+    <linearGradient id="cat-eye-iris" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1F0D05" />
+      <stop offset="45%" stop-color="#3D1A0A" />
+      <stop offset="85%" stop-color="#7A3912" />
+      <stop offset="100%" stop-color="#A4551E" />
+    </linearGradient>
+    <linearGradient id="cushion-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6" />
+      <stop offset="100%" stop-color="#1D4ED8" />
+    </linearGradient>
+  </defs>
+  <!-- Sombra en suelo suave -->
+  <ellipse cx="100" cy="170" rx="55" ry="7" fill="#28140B" opacity="0.22" class="pet-shadow" />
+
+  <!-- Cola Esponjosa con Rayas (Atrás Izquierda) -->
+  <g id="cat-tail" class="" style="transform-origin: 70px 140px; transform: rotate(0deg);">
+    <path d="M 72,140 C 52,145 34,130 30,108 C 26,88 38,72 52,76 C 56,78 54,90 48,96 C 42,104 46,120 60,126 C 66,129 71,133 75,138 Z" 
+          fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+    <path d="M 36,90 C 42,94 46,100 46,106" stroke="url(#cat-stripes)" stroke-width="3.5" stroke-linecap="round" fill="none" />
+    <path d="M 40,108 C 47,112 51,118 49,124" stroke="url(#cat-stripes)" stroke-width="3.5" stroke-linecap="round" fill="none" />
+    <path d="M 52,124 C 58,128 62,133 58,137" stroke="url(#cat-stripes)" stroke-width="3.5" stroke-linecap="round" fill="none" />
+  </g>
+
+  <!-- Muslos traseros redondeados con patitas apoyadas en suelo -->
+  <g class="pet-hind-legs">
+    <g class="back-foot-left">
+      <!-- Muslo Izquierdo -->
+      <path d="M 58,132 C 48,142 48,156 55,164 C 60,168 68,168 74,165 C 77,161 76,146 71,136 Z"
+            fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+      <path d="M 50,146 Q 58,148 63,152" stroke="url(#cat-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
+      <path d="M 52,154 Q 60,156 65,159" stroke="url(#cat-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
+      <ellipse cx="54" cy="165" rx="8" ry="4.5" fill="url(#cat-cream)" stroke="#34180C" stroke-width="1.8" />
+    </g>
+    <g class="back-foot-right">
+      <!-- Muslo Derecho -->
+      <path d="M 142,132 C 152,142 152,156 145,164 C 140,168 132,168 126,165 C 123,161 124,146 129,136 Z"
+            fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+      <path d="M 150,146 Q 142,148 137,152" stroke="url(#cat-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
+      <path d="M 148,154 Q 140,156 135,159" stroke="url(#cat-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
+      <ellipse cx="146" cy="165" rx="8" ry="4.5" fill="url(#cat-cream)" stroke="#34180C" stroke-width="1.8" />
+    </g>
+  </g>
+
+  <!-- Torso & Pecho Esponjoso en Capas -->
+  <g class=" pet-body" style="transform-origin: 100px 165px; transform: translateY(-3px) rotate(0deg);">
+    <!-- Cuerpo Base Atigrado -->
+    <path d="M 68,105 C 63,122 65,148 74,163 C 83,167 117,167 126,163 C 135,148 137,122 132,105 Z" 
+          fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+
+    <path d="M 70,120 Q 78,123 82,127" stroke="url(#cat-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+    <path d="M 71,132 Q 79,134 84,138" stroke="url(#cat-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+    <path d="M 130,120 Q 122,123 118,127" stroke="url(#cat-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+    <path d="M 129,132 Q 121,134 116,138" stroke="url(#cat-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+
+    <!-- Pechera Esponjosa en Capas Suaves (Cascada de Mechones) -->
+    <path d="M 80,94 C 74,108 72,122 79,132 C 84,138 92,144 100,146 C 108,144 116,138 121,132 C 128,122 126,108 120,94 C 112,104 88,104 80,94 Z" 
+          fill="url(#cat-cream)" stroke="#34180C" stroke-width="1.8" stroke-linejoin="round" />
+    <path d="M 88,128 C 94,136 106,136 112,128" stroke="#34180C" stroke-width="1.4" fill="none" />
+
+    <!-- Patas delanteras redonditas y carnosas con deditos -->
+    <g class="pet-front-paws">
+      <g class="left-paw">
+        <!-- Pata Delantera Izquierda -->
+        <path d="M 76,132 L 75,155 C 75,161 78,165 83,165 C 88,165 91,161 91,155 L 90,132 Z"
+              fill="url(#cat-cream)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
+        <ellipse cx="83" cy="161" rx="9.5" ry="5.5" fill="url(#cat-cream)" stroke="#34180C" stroke-width="2" />
+        <path d="M 79,159 L 79,164" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
+        <path d="M 86,159 L 86,164" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
+      </g>
+      <g class="right-paw">
+        <!-- Pata Delantera Derecha -->
+        <path d="M 110,132 L 109,155 C 109,161 112,165 117,165 C 122,165 125,161 125,155 L 124,132 Z"
+              fill="url(#cat-cream)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
+        <ellipse cx="117" cy="163" rx="9.5" ry="5.5" fill="url(#cat-cream)" stroke="#34180C" stroke-width="2" />
+        <path d="M 113,161 L 113,166" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
+        <path d="M 120,161 L 120,166" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
+      </g>
+    </g>
+  </g>
+
+  <!-- Cabeza Expresiva Chibi Anime -->
+  <g class="pet-head " style="transform-origin: 100px 105px; transform: translateY(-3px) rotate(0deg);">
+    <!-- Oreja Izquierda -->
+    <g class="pet-ear pet-ear-left" style="transform-origin: 64px 55px;">
+      <path d="M 60,58 L 46,26 C 60,29 76,42 76,56 Z" fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+      <path d="M 56,54 L 49,33 C 58,36 68,45 66,54 Z" fill="url(#cat-ear-inner)" />
+      <path d="M 52,48 Q 57,44 62,51" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" fill="none" />
+    </g>
+
+    <!-- Oreja Derecha -->
+    <g class="pet-ear pet-ear-right" style="transform-origin: 136px 55px;">
+      <path d="M 140,58 L 154,26 C 140,29 124,42 124,56 Z" fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+      <path d="M 144,54 L 151,33 C 142,36 132,45 134,54 Z" fill="url(#cat-ear-inner)" />
+      <path d="M 148,48 Q 143,44 138,51" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" fill="none" />
+    </g>
+
+    <!-- Silueta de la Cabeza con 3 Mechones en cada Mejilla -->
+    <path d="M 56,62 C 50,52 68,38 100,38 C 132,38 150,52 144,62 
+             C 154,66 159,74 152,80 
+             C 159,84 161,93 150,97 
+             C 154,101 148,109 137,109 
+             C 126,115 74,115 63,109 
+             C 52,109 46,101 50,97 
+             C 39,93 41,84 48,80 
+             C 41,74 46,66 56,62 Z" 
+          fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+
+    <!-- Rayas atigradas de la frente -->
+    <path d="M 100,40 L 100,54" stroke="url(#cat-stripes)" stroke-width="3.8" stroke-linecap="round" />
+    <path d="M 91,44 Q 93,52 88,56" stroke="url(#cat-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
+    <path d="M 109,44 Q 107,52 112,56" stroke="url(#cat-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
+    <path d="M 82,49 Q 86,56 81,60" stroke="url(#cat-stripes)" stroke-width="2.6" stroke-linecap="round" fill="none" />
+    <path d="M 118,49 Q 114,56 119,60" stroke="url(#cat-stripes)" stroke-width="2.6" stroke-linecap="round" fill="none" />
+
+    <!-- Rayitas en mejillas -->
+    <path d="M 54,74 Q 63,76 67,74" stroke="url(#cat-stripes)" stroke-width="2.5" stroke-linecap="round" fill="none" />
+    <path d="M 52,83 Q 61,83 67,82" stroke="url(#cat-stripes)" stroke-width="2.5" stroke-linecap="round" fill="none" />
+    <path d="M 146,74 Q 137,76 133,74" stroke="url(#cat-stripes)" stroke-width="2.5" stroke-linecap="round" fill="none" />
+    <path d="M 148,83 Q 139,83 133,82" stroke="url(#cat-stripes)" stroke-width="2.5" stroke-linecap="round" fill="none" />
+
+    <!-- Bigotes Blancos Finos -->
+    <path d="M 54,86 Q 38,84 28,81" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.95" />
+    <path d="M 52,91 Q 36,93 26,97" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.95" />
+    <path d="M 146,86 Q 162,84 172,81" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.95" />
+    <path d="M 148,91 Q 164,93 174,97" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.95" />
+
+    <!-- Hocico Crema Redondito -->
+    <ellipse cx="100" cy="86" rx="14" ry="10" fill="url(#cat-cream)" stroke="#34180C" stroke-width="1.5" />
+    <!-- Nariz Rosita -->
+    <path d="M 97,80 L 103,80 L 100,83 Z" fill="#FF8585" stroke="#34180C" stroke-width="1" stroke-linejoin="round" />
+    <!-- Boquita Abierta Feliz con Lengüita -->
+    <path d="M 95,84 Q 100,87 100,84 Q 100,87 105,84" stroke="#34180C" stroke-width="1.8" fill="none" stroke-linecap="round" />
+    <path d="M 97,85 Q 100,91 103,85 Z" fill="#FF7675" stroke="#34180C" stroke-width="1" />
+
+    <!-- Rubor en Mejillas -->
+    <ellipse cx="64" cy="86" rx="7" ry="4" fill="#FF7675" opacity="0.45" />
+    <ellipse cx="136" cy="86" rx="7" ry="4" fill="#FF7675" opacity="0.45" />
+
+    <!-- Ojos Anime Grandes y Brillantes -->
+    <g class="">
+      <ellipse cx="82" cy="72" rx="13" ry="15" fill="url(#cat-eye-iris)" stroke="#34180C" stroke-width="2.2" />
+      <ellipse cx="82" cy="72" rx="9" ry="11" fill="#0E0502" />
+      <circle class="pet-pupil" data-anchor-x="82" data-anchor-y="72" cx="82" cy="72" r="5" fill="#000000" />
+      <circle cx="78" cy="66" r="4.5" fill="#FFFFFF" />
+      <circle cx="87" cy="77" r="2" fill="#FFFFFF" />
+      <circle cx="77" cy="75" r="1.2" fill="#FFFFFF" opacity="0.75" />
+
+      <ellipse cx="118" cy="72" rx="13" ry="15" fill="url(#cat-eye-iris)" stroke="#34180C" stroke-width="2.2" />
+      <ellipse cx="118" cy="72" rx="9" ry="11" fill="#0E0502" />
+      <circle class="pet-pupil" data-anchor-x="118" data-anchor-y="72" cx="118" cy="72" r="5" fill="#000000" />
+      <circle cx="114" cy="66" r="4.5" fill="#FFFFFF" />
+      <circle cx="123" cy="77" r="2" fill="#FFFFFF" />
+      <circle cx="113" cy="75" r="1.2" fill="#FFFFFF" opacity="0.75" />
+    </g>
+  </g>
+</svg>`;
+const catWalk3SVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="cat-fur" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#EAA663" />
+      <stop offset="50%" stop-color="#D08842" />
+      <stop offset="100%" stop-color="#A85F28" />
+    </linearGradient>
+    <linearGradient id="cat-fur-dark" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#8C461A" />
+      <stop offset="100%" stop-color="#602E0E" />
+    </linearGradient>
+    <linearGradient id="cat-stripes" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#4E240F" />
+      <stop offset="100%" stop-color="#341507" />
+    </linearGradient>
+    <linearGradient id="cat-cream" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFDF9" />
+      <stop offset="50%" stop-color="#FFF5E6" />
+      <stop offset="100%" stop-color="#FDE8CE" />
+    </linearGradient>
+    <linearGradient id="cat-ear-inner" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFBEB8" />
+      <stop offset="100%" stop-color="#FFAAA3" />
+    </linearGradient>
+    <linearGradient id="cat-eye-iris" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1F0D05" />
+      <stop offset="45%" stop-color="#3D1A0A" />
+      <stop offset="85%" stop-color="#7A3912" />
+      <stop offset="100%" stop-color="#A4551E" />
+    </linearGradient>
+    <linearGradient id="cushion-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6" />
+      <stop offset="100%" stop-color="#1D4ED8" />
+    </linearGradient>
+  </defs>
+  <!-- Sombra en suelo suave -->
+  <ellipse cx="100" cy="170" rx="55" ry="7" fill="#28140B" opacity="0.22" class="pet-shadow" />
+
+  <!-- Cola Esponjosa con Rayas (Atrás Izquierda) -->
+  <g id="cat-tail" class="" style="transform-origin: 70px 140px; transform: rotate(-8deg);">
+    <path d="M 72,140 C 52,145 34,130 30,108 C 26,88 38,72 52,76 C 56,78 54,90 48,96 C 42,104 46,120 60,126 C 66,129 71,133 75,138 Z" 
+          fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+    <path d="M 36,90 C 42,94 46,100 46,106" stroke="url(#cat-stripes)" stroke-width="3.5" stroke-linecap="round" fill="none" />
+    <path d="M 40,108 C 47,112 51,118 49,124" stroke="url(#cat-stripes)" stroke-width="3.5" stroke-linecap="round" fill="none" />
+    <path d="M 52,124 C 58,128 62,133 58,137" stroke="url(#cat-stripes)" stroke-width="3.5" stroke-linecap="round" fill="none" />
+  </g>
+
+  <!-- Muslos traseros redondeados con patitas apoyadas en suelo -->
+  <g class="pet-hind-legs">
+    <g class="back-foot-left">
+      <!-- Muslo Izquierdo -->
+      <path d="M 58,132 C 48,142 48,156 55,164 C 60,168 68,168 74,165 C 77,161 76,146 71,136 Z"
+            fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+      <path d="M 50,146 Q 58,148 63,152" stroke="url(#cat-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
+      <path d="M 52,154 Q 60,156 65,159" stroke="url(#cat-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
+      <ellipse cx="54" cy="162" rx="8" ry="4.5" fill="url(#cat-cream)" stroke="#34180C" stroke-width="1.8" />
+    </g>
+    <g class="back-foot-right">
+      <!-- Muslo Derecho -->
+      <path d="M 142,132 C 152,142 152,156 145,164 C 140,168 132,168 126,165 C 123,161 124,146 129,136 Z"
+            fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+      <path d="M 150,146 Q 142,148 137,152" stroke="url(#cat-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
+      <path d="M 148,154 Q 140,156 135,159" stroke="url(#cat-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
+      <ellipse cx="146" cy="167" rx="8" ry="4.5" fill="url(#cat-cream)" stroke="#34180C" stroke-width="1.8" />
+    </g>
+  </g>
+
+  <!-- Torso & Pecho Esponjoso en Capas -->
+  <g class=" pet-body" style="transform-origin: 100px 165px; transform: translateY(-1px) rotate(2deg);">
+    <!-- Cuerpo Base Atigrado -->
+    <path d="M 68,105 C 63,122 65,148 74,163 C 83,167 117,167 126,163 C 135,148 137,122 132,105 Z" 
+          fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+
+    <path d="M 70,120 Q 78,123 82,127" stroke="url(#cat-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+    <path d="M 71,132 Q 79,134 84,138" stroke="url(#cat-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+    <path d="M 130,120 Q 122,123 118,127" stroke="url(#cat-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+    <path d="M 129,132 Q 121,134 116,138" stroke="url(#cat-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+
+    <!-- Pechera Esponjosa en Capas Suaves (Cascada de Mechones) -->
+    <path d="M 80,94 C 74,108 72,122 79,132 C 84,138 92,144 100,146 C 108,144 116,138 121,132 C 128,122 126,108 120,94 C 112,104 88,104 80,94 Z" 
+          fill="url(#cat-cream)" stroke="#34180C" stroke-width="1.8" stroke-linejoin="round" />
+    <path d="M 88,128 C 94,136 106,136 112,128" stroke="#34180C" stroke-width="1.4" fill="none" />
+
+    <!-- Patas delanteras redonditas y carnosas con deditos -->
+    <g class="pet-front-paws">
+      <g class="left-paw">
+        <!-- Pata Delantera Izquierda -->
+        <path d="M 76,132 L 75,155 C 75,161 78,165 83,165 C 88,165 91,161 91,155 L 90,132 Z"
+              fill="url(#cat-cream)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
+        <ellipse cx="83" cy="166" rx="9.5" ry="5.5" fill="url(#cat-cream)" stroke="#34180C" stroke-width="2" />
+        <path d="M 79,164 L 79,169" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
+        <path d="M 86,164 L 86,169" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
+      </g>
+      <g class="right-paw">
+        <!-- Pata Delantera Derecha -->
+        <path d="M 110,132 L 109,155 C 109,161 112,165 117,165 C 122,165 125,161 125,155 L 124,132 Z"
+              fill="url(#cat-cream)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
+        <ellipse cx="117" cy="158" rx="9.5" ry="5.5" fill="url(#cat-cream)" stroke="#34180C" stroke-width="2" />
+        <path d="M 113,156 L 113,161" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
+        <path d="M 120,156 L 120,161" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
+      </g>
+    </g>
+  </g>
+
+  <!-- Cabeza Expresiva Chibi Anime -->
+  <g class="pet-head " style="transform-origin: 100px 105px; transform: translateY(-1px) rotate(1.4deg);">
+    <!-- Oreja Izquierda -->
+    <g class="pet-ear pet-ear-left" style="transform-origin: 64px 55px;">
+      <path d="M 60,58 L 46,26 C 60,29 76,42 76,56 Z" fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+      <path d="M 56,54 L 49,33 C 58,36 68,45 66,54 Z" fill="url(#cat-ear-inner)" />
+      <path d="M 52,48 Q 57,44 62,51" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" fill="none" />
+    </g>
+
+    <!-- Oreja Derecha -->
+    <g class="pet-ear pet-ear-right" style="transform-origin: 136px 55px;">
+      <path d="M 140,58 L 154,26 C 140,29 124,42 124,56 Z" fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+      <path d="M 144,54 L 151,33 C 142,36 132,45 134,54 Z" fill="url(#cat-ear-inner)" />
+      <path d="M 148,48 Q 143,44 138,51" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" fill="none" />
+    </g>
+
+    <!-- Silueta de la Cabeza con 3 Mechones en cada Mejilla -->
+    <path d="M 56,62 C 50,52 68,38 100,38 C 132,38 150,52 144,62 
+             C 154,66 159,74 152,80 
+             C 159,84 161,93 150,97 
+             C 154,101 148,109 137,109 
+             C 126,115 74,115 63,109 
+             C 52,109 46,101 50,97 
+             C 39,93 41,84 48,80 
+             C 41,74 46,66 56,62 Z" 
+          fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+
+    <!-- Rayas atigradas de la frente -->
+    <path d="M 100,40 L 100,54" stroke="url(#cat-stripes)" stroke-width="3.8" stroke-linecap="round" />
+    <path d="M 91,44 Q 93,52 88,56" stroke="url(#cat-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
+    <path d="M 109,44 Q 107,52 112,56" stroke="url(#cat-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
+    <path d="M 82,49 Q 86,56 81,60" stroke="url(#cat-stripes)" stroke-width="2.6" stroke-linecap="round" fill="none" />
+    <path d="M 118,49 Q 114,56 119,60" stroke="url(#cat-stripes)" stroke-width="2.6" stroke-linecap="round" fill="none" />
+
+    <!-- Rayitas en mejillas -->
+    <path d="M 54,74 Q 63,76 67,74" stroke="url(#cat-stripes)" stroke-width="2.5" stroke-linecap="round" fill="none" />
+    <path d="M 52,83 Q 61,83 67,82" stroke="url(#cat-stripes)" stroke-width="2.5" stroke-linecap="round" fill="none" />
+    <path d="M 146,74 Q 137,76 133,74" stroke="url(#cat-stripes)" stroke-width="2.5" stroke-linecap="round" fill="none" />
+    <path d="M 148,83 Q 139,83 133,82" stroke="url(#cat-stripes)" stroke-width="2.5" stroke-linecap="round" fill="none" />
+
+    <!-- Bigotes Blancos Finos -->
+    <path d="M 54,86 Q 38,84 28,81" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.95" />
+    <path d="M 52,91 Q 36,93 26,97" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.95" />
+    <path d="M 146,86 Q 162,84 172,81" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.95" />
+    <path d="M 148,91 Q 164,93 174,97" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.95" />
+
+    <!-- Hocico Crema Redondito -->
+    <ellipse cx="100" cy="86" rx="14" ry="10" fill="url(#cat-cream)" stroke="#34180C" stroke-width="1.5" />
+    <!-- Nariz Rosita -->
+    <path d="M 97,80 L 103,80 L 100,83 Z" fill="#FF8585" stroke="#34180C" stroke-width="1" stroke-linejoin="round" />
+    <!-- Boquita Abierta Feliz con Lengüita -->
+    <path d="M 95,84 Q 100,87 100,84 Q 100,87 105,84" stroke="#34180C" stroke-width="1.8" fill="none" stroke-linecap="round" />
+    <path d="M 97,85 Q 100,91 103,85 Z" fill="#FF7675" stroke="#34180C" stroke-width="1" />
+
+    <!-- Rubor en Mejillas -->
+    <ellipse cx="64" cy="86" rx="7" ry="4" fill="#FF7675" opacity="0.45" />
+    <ellipse cx="136" cy="86" rx="7" ry="4" fill="#FF7675" opacity="0.45" />
+
+    <!-- Ojos Anime Grandes y Brillantes -->
+    <g class="">
+      <ellipse cx="82" cy="72" rx="13" ry="15" fill="url(#cat-eye-iris)" stroke="#34180C" stroke-width="2.2" />
+      <ellipse cx="82" cy="72" rx="9" ry="11" fill="#0E0502" />
+      <circle class="pet-pupil" data-anchor-x="82" data-anchor-y="72" cx="82" cy="72" r="5" fill="#000000" />
+      <circle cx="78" cy="66" r="4.5" fill="#FFFFFF" />
+      <circle cx="87" cy="77" r="2" fill="#FFFFFF" />
+      <circle cx="77" cy="75" r="1.2" fill="#FFFFFF" opacity="0.75" />
+
+      <ellipse cx="118" cy="72" rx="13" ry="15" fill="url(#cat-eye-iris)" stroke="#34180C" stroke-width="2.2" />
+      <ellipse cx="118" cy="72" rx="9" ry="11" fill="#0E0502" />
+      <circle class="pet-pupil" data-anchor-x="118" data-anchor-y="72" cx="118" cy="72" r="5" fill="#000000" />
+      <circle cx="114" cy="66" r="4.5" fill="#FFFFFF" />
+      <circle cx="123" cy="77" r="2" fill="#FFFFFF" />
+      <circle cx="113" cy="75" r="1.2" fill="#FFFFFF" opacity="0.75" />
+    </g>
+  </g>
+</svg>`;
+const catWalk4SVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="cat-fur" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#EAA663" />
+      <stop offset="50%" stop-color="#D08842" />
+      <stop offset="100%" stop-color="#A85F28" />
+    </linearGradient>
+    <linearGradient id="cat-fur-dark" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#8C461A" />
+      <stop offset="100%" stop-color="#602E0E" />
+    </linearGradient>
+    <linearGradient id="cat-stripes" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#4E240F" />
+      <stop offset="100%" stop-color="#341507" />
+    </linearGradient>
+    <linearGradient id="cat-cream" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFDF9" />
+      <stop offset="50%" stop-color="#FFF5E6" />
+      <stop offset="100%" stop-color="#FDE8CE" />
+    </linearGradient>
+    <linearGradient id="cat-ear-inner" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFBEB8" />
+      <stop offset="100%" stop-color="#FFAAA3" />
+    </linearGradient>
+    <linearGradient id="cat-eye-iris" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1F0D05" />
+      <stop offset="45%" stop-color="#3D1A0A" />
+      <stop offset="85%" stop-color="#7A3912" />
+      <stop offset="100%" stop-color="#A4551E" />
+    </linearGradient>
+    <linearGradient id="cushion-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6" />
+      <stop offset="100%" stop-color="#1D4ED8" />
+    </linearGradient>
+  </defs>
+  <!-- Sombra en suelo suave -->
+  <ellipse cx="100" cy="170" rx="55" ry="7" fill="#28140B" opacity="0.22" class="pet-shadow" />
+
+  <!-- Cola Esponjosa con Rayas (Atrás Izquierda) -->
+  <g id="cat-tail" class="" style="transform-origin: 70px 140px; transform: rotate(0deg);">
+    <path d="M 72,140 C 52,145 34,130 30,108 C 26,88 38,72 52,76 C 56,78 54,90 48,96 C 42,104 46,120 60,126 C 66,129 71,133 75,138 Z" 
+          fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+    <path d="M 36,90 C 42,94 46,100 46,106" stroke="url(#cat-stripes)" stroke-width="3.5" stroke-linecap="round" fill="none" />
+    <path d="M 40,108 C 47,112 51,118 49,124" stroke="url(#cat-stripes)" stroke-width="3.5" stroke-linecap="round" fill="none" />
+    <path d="M 52,124 C 58,128 62,133 58,137" stroke="url(#cat-stripes)" stroke-width="3.5" stroke-linecap="round" fill="none" />
+  </g>
+
+  <!-- Muslos traseros redondeados con patitas apoyadas en suelo -->
+  <g class="pet-hind-legs">
+    <g class="back-foot-left">
+      <!-- Muslo Izquierdo -->
+      <path d="M 58,132 C 48,142 48,156 55,164 C 60,168 68,168 74,165 C 77,161 76,146 71,136 Z"
+            fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+      <path d="M 50,146 Q 58,148 63,152" stroke="url(#cat-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
+      <path d="M 52,154 Q 60,156 65,159" stroke="url(#cat-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
+      <ellipse cx="54" cy="165" rx="8" ry="4.5" fill="url(#cat-cream)" stroke="#34180C" stroke-width="1.8" />
+    </g>
+    <g class="back-foot-right">
+      <!-- Muslo Derecho -->
+      <path d="M 142,132 C 152,142 152,156 145,164 C 140,168 132,168 126,165 C 123,161 124,146 129,136 Z"
+            fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+      <path d="M 150,146 Q 142,148 137,152" stroke="url(#cat-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
+      <path d="M 148,154 Q 140,156 135,159" stroke="url(#cat-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
+      <ellipse cx="146" cy="165" rx="8" ry="4.5" fill="url(#cat-cream)" stroke="#34180C" stroke-width="1.8" />
+    </g>
+  </g>
+
+  <!-- Torso & Pecho Esponjoso en Capas -->
+  <g class=" pet-body" style="transform-origin: 100px 165px; transform: translateY(-3px) rotate(0deg);">
+    <!-- Cuerpo Base Atigrado -->
+    <path d="M 68,105 C 63,122 65,148 74,163 C 83,167 117,167 126,163 C 135,148 137,122 132,105 Z" 
+          fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+
+    <path d="M 70,120 Q 78,123 82,127" stroke="url(#cat-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+    <path d="M 71,132 Q 79,134 84,138" stroke="url(#cat-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+    <path d="M 130,120 Q 122,123 118,127" stroke="url(#cat-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+    <path d="M 129,132 Q 121,134 116,138" stroke="url(#cat-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+
+    <!-- Pechera Esponjosa en Capas Suaves (Cascada de Mechones) -->
+    <path d="M 80,94 C 74,108 72,122 79,132 C 84,138 92,144 100,146 C 108,144 116,138 121,132 C 128,122 126,108 120,94 C 112,104 88,104 80,94 Z" 
+          fill="url(#cat-cream)" stroke="#34180C" stroke-width="1.8" stroke-linejoin="round" />
+    <path d="M 88,128 C 94,136 106,136 112,128" stroke="#34180C" stroke-width="1.4" fill="none" />
+
+    <!-- Patas delanteras redonditas y carnosas con deditos -->
+    <g class="pet-front-paws">
+      <g class="left-paw">
+        <!-- Pata Delantera Izquierda -->
+        <path d="M 76,132 L 75,155 C 75,161 78,165 83,165 C 88,165 91,161 91,155 L 90,132 Z"
+              fill="url(#cat-cream)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
+        <ellipse cx="83" cy="163" rx="9.5" ry="5.5" fill="url(#cat-cream)" stroke="#34180C" stroke-width="2" />
+        <path d="M 79,161 L 79,166" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
+        <path d="M 86,161 L 86,166" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
+      </g>
+      <g class="right-paw">
+        <!-- Pata Delantera Derecha -->
+        <path d="M 110,132 L 109,155 C 109,161 112,165 117,165 C 122,165 125,161 125,155 L 124,132 Z"
+              fill="url(#cat-cream)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
+        <ellipse cx="117" cy="161" rx="9.5" ry="5.5" fill="url(#cat-cream)" stroke="#34180C" stroke-width="2" />
+        <path d="M 113,159 L 113,164" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
+        <path d="M 120,159 L 120,164" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
+      </g>
+    </g>
+  </g>
+
+  <!-- Cabeza Expresiva Chibi Anime -->
+  <g class="pet-head " style="transform-origin: 100px 105px; transform: translateY(-3px) rotate(0deg);">
+    <!-- Oreja Izquierda -->
+    <g class="pet-ear pet-ear-left" style="transform-origin: 64px 55px;">
+      <path d="M 60,58 L 46,26 C 60,29 76,42 76,56 Z" fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+      <path d="M 56,54 L 49,33 C 58,36 68,45 66,54 Z" fill="url(#cat-ear-inner)" />
+      <path d="M 52,48 Q 57,44 62,51" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" fill="none" />
+    </g>
+
+    <!-- Oreja Derecha -->
+    <g class="pet-ear pet-ear-right" style="transform-origin: 136px 55px;">
+      <path d="M 140,58 L 154,26 C 140,29 124,42 124,56 Z" fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+      <path d="M 144,54 L 151,33 C 142,36 132,45 134,54 Z" fill="url(#cat-ear-inner)" />
+      <path d="M 148,48 Q 143,44 138,51" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" fill="none" />
+    </g>
+
+    <!-- Silueta de la Cabeza con 3 Mechones en cada Mejilla -->
+    <path d="M 56,62 C 50,52 68,38 100,38 C 132,38 150,52 144,62 
+             C 154,66 159,74 152,80 
+             C 159,84 161,93 150,97 
+             C 154,101 148,109 137,109 
+             C 126,115 74,115 63,109 
+             C 52,109 46,101 50,97 
+             C 39,93 41,84 48,80 
+             C 41,74 46,66 56,62 Z" 
+          fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+
+    <!-- Rayas atigradas de la frente -->
+    <path d="M 100,40 L 100,54" stroke="url(#cat-stripes)" stroke-width="3.8" stroke-linecap="round" />
+    <path d="M 91,44 Q 93,52 88,56" stroke="url(#cat-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
+    <path d="M 109,44 Q 107,52 112,56" stroke="url(#cat-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
+    <path d="M 82,49 Q 86,56 81,60" stroke="url(#cat-stripes)" stroke-width="2.6" stroke-linecap="round" fill="none" />
+    <path d="M 118,49 Q 114,56 119,60" stroke="url(#cat-stripes)" stroke-width="2.6" stroke-linecap="round" fill="none" />
+
+    <!-- Rayitas en mejillas -->
+    <path d="M 54,74 Q 63,76 67,74" stroke="url(#cat-stripes)" stroke-width="2.5" stroke-linecap="round" fill="none" />
+    <path d="M 52,83 Q 61,83 67,82" stroke="url(#cat-stripes)" stroke-width="2.5" stroke-linecap="round" fill="none" />
+    <path d="M 146,74 Q 137,76 133,74" stroke="url(#cat-stripes)" stroke-width="2.5" stroke-linecap="round" fill="none" />
+    <path d="M 148,83 Q 139,83 133,82" stroke="url(#cat-stripes)" stroke-width="2.5" stroke-linecap="round" fill="none" />
+
+    <!-- Bigotes Blancos Finos -->
+    <path d="M 54,86 Q 38,84 28,81" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.95" />
+    <path d="M 52,91 Q 36,93 26,97" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.95" />
+    <path d="M 146,86 Q 162,84 172,81" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.95" />
+    <path d="M 148,91 Q 164,93 174,97" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.95" />
+
+    <!-- Hocico Crema Redondito -->
+    <ellipse cx="100" cy="86" rx="14" ry="10" fill="url(#cat-cream)" stroke="#34180C" stroke-width="1.5" />
+    <!-- Nariz Rosita -->
+    <path d="M 97,80 L 103,80 L 100,83 Z" fill="#FF8585" stroke="#34180C" stroke-width="1" stroke-linejoin="round" />
+    <!-- Boquita Abierta Feliz con Lengüita -->
+    <path d="M 95,84 Q 100,87 100,84 Q 100,87 105,84" stroke="#34180C" stroke-width="1.8" fill="none" stroke-linecap="round" />
+    <path d="M 97,85 Q 100,91 103,85 Z" fill="#FF7675" stroke="#34180C" stroke-width="1" />
+
+    <!-- Rubor en Mejillas -->
+    <ellipse cx="64" cy="86" rx="7" ry="4" fill="#FF7675" opacity="0.45" />
+    <ellipse cx="136" cy="86" rx="7" ry="4" fill="#FF7675" opacity="0.45" />
+
+    <!-- Ojos Anime Grandes y Brillantes -->
+    <g class="">
+      <ellipse cx="82" cy="72" rx="13" ry="15" fill="url(#cat-eye-iris)" stroke="#34180C" stroke-width="2.2" />
+      <ellipse cx="82" cy="72" rx="9" ry="11" fill="#0E0502" />
+      <circle class="pet-pupil" data-anchor-x="82" data-anchor-y="72" cx="82" cy="72" r="5" fill="#000000" />
+      <circle cx="78" cy="66" r="4.5" fill="#FFFFFF" />
+      <circle cx="87" cy="77" r="2" fill="#FFFFFF" />
+      <circle cx="77" cy="75" r="1.2" fill="#FFFFFF" opacity="0.75" />
+
+      <ellipse cx="118" cy="72" rx="13" ry="15" fill="url(#cat-eye-iris)" stroke="#34180C" stroke-width="2.2" />
+      <ellipse cx="118" cy="72" rx="9" ry="11" fill="#0E0502" />
+      <circle class="pet-pupil" data-anchor-x="118" data-anchor-y="72" cx="118" cy="72" r="5" fill="#000000" />
+      <circle cx="114" cy="66" r="4.5" fill="#FFFFFF" />
+      <circle cx="123" cy="77" r="2" fill="#FFFFFF" />
+      <circle cx="113" cy="75" r="1.2" fill="#FFFFFF" opacity="0.75" />
+    </g>
+  </g>
+</svg>`;
+const catWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="cat-fur" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#EAA663" />
+      <stop offset="50%" stop-color="#D08842" />
+      <stop offset="100%" stop-color="#A85F28" />
+    </linearGradient>
+    <linearGradient id="cat-fur-dark" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#8C461A" />
+      <stop offset="100%" stop-color="#602E0E" />
+    </linearGradient>
+    <linearGradient id="cat-stripes" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#4E240F" />
+      <stop offset="100%" stop-color="#341507" />
+    </linearGradient>
+    <linearGradient id="cat-cream" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFDF9" />
+      <stop offset="50%" stop-color="#FFF5E6" />
+      <stop offset="100%" stop-color="#FDE8CE" />
+    </linearGradient>
+    <linearGradient id="cat-ear-inner" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFBEB8" />
+      <stop offset="100%" stop-color="#FFAAA3" />
+    </linearGradient>
+    <linearGradient id="cat-eye-iris" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1F0D05" />
+      <stop offset="45%" stop-color="#3D1A0A" />
+      <stop offset="85%" stop-color="#7A3912" />
+      <stop offset="100%" stop-color="#A4551E" />
+    </linearGradient>
+    <linearGradient id="cushion-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6" />
+      <stop offset="100%" stop-color="#1D4ED8" />
+    </linearGradient>
+  </defs>
+  <ellipse cx="100" cy="170" rx="56" ry="6.5" fill="#28140B" opacity="0.22" class="pet-shadow" />
+  <circle class="pet-pupil" data-anchor-x="42" data-anchor-y="78" cx="42" cy="78" r="4" fill="#000000" />
+</svg>`;
+const catWalkFrames = [catWalk1SVG, catWalk2SVG, catWalk3SVG, catWalk4SVG];
+const catSleepSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="cat-fur" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#EAA663" />
+      <stop offset="50%" stop-color="#D08842" />
+      <stop offset="100%" stop-color="#A85F28" />
+    </linearGradient>
+    <linearGradient id="cat-fur-dark" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#8C461A" />
+      <stop offset="100%" stop-color="#602E0E" />
+    </linearGradient>
+    <linearGradient id="cat-stripes" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#4E240F" />
+      <stop offset="100%" stop-color="#341507" />
+    </linearGradient>
+    <linearGradient id="cat-cream" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFDF9" />
+      <stop offset="50%" stop-color="#FFF5E6" />
+      <stop offset="100%" stop-color="#FDE8CE" />
+    </linearGradient>
+    <linearGradient id="cat-ear-inner" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFBEB8" />
+      <stop offset="100%" stop-color="#FFAAA3" />
+    </linearGradient>
+    <linearGradient id="cat-eye-iris" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1F0D05" />
+      <stop offset="45%" stop-color="#3D1A0A" />
+      <stop offset="85%" stop-color="#7A3912" />
+      <stop offset="100%" stop-color="#A4551E" />
+    </linearGradient>
+    <linearGradient id="cushion-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6" />
+      <stop offset="100%" stop-color="#1D4ED8" />
+    </linearGradient>
+  </defs>
+  <ellipse cx="100" cy="176" rx="68" ry="10" fill="#1E293B" opacity="0.25" />
+  <circle cx="36" cy="152" r="5" fill="#60A5FA" stroke="#1D4ED8" stroke-width="1.5" />
+  <circle cx="164" cy="152" r="5" fill="#60A5FA" stroke="#1D4ED8" stroke-width="1.5" />
+  <path d="M 36,152 Q 100,136 164,152 Q 148,174 100,176 Q 52,174 36,152 Z" fill="url(#cushion-grad)" stroke="#1E3A8A" stroke-width="2.2" />
+  <path d="M 44,152 Q 100,140 156,152" stroke="#93C5FD" stroke-width="2" fill="none" opacity="0.6" />
+
+  <g class="anim-breath" style="transform-origin: 100px 148px;">
+    <path d="M 140,130 C 152,143 128,161 96,161 C 72,161 56,148 60,136" stroke="url(#cat-fur)" stroke-width="15" fill="none" stroke-linecap="round" />
+    <path d="M 128,146 C 118,153 100,155 92,155" stroke="url(#cat-stripes)" stroke-width="3.8" stroke-linecap="round" fill="none" />
+
+    <ellipse cx="102" cy="126" rx="44" ry="32" fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" />
+    <path d="M 112,102 Q 115,114 110,122" stroke="url(#cat-stripes)" stroke-width="3.8" stroke-linecap="round" fill="none" />
+    <path d="M 126,108 Q 128,118 123,127" stroke="url(#cat-stripes)" stroke-width="3.8" stroke-linecap="round" fill="none" />
+
+    <g class="pet-head" style="transform-origin: 74px 122px;">
+      <circle cx="74" cy="122" r="25" fill="url(#cat-fur)" stroke="#34180C" stroke-width="2.2" />
+      <path d="M 64,103 L 52,86 C 63,88 74,97 72,106 Z" fill="url(#cat-fur)" stroke="#34180C" stroke-width="2" />
+      <path d="M 62,100 L 55,90 C 62,92 68,98 66,103 Z" fill="#FFAAA3" />
+
+      <path d="M 82,104 L 80,113" stroke="url(#cat-stripes)" stroke-width="2.8" stroke-linecap="round" />
+      <path d="M 88,108 L 86,117" stroke="url(#cat-stripes)" stroke-width="2.8" stroke-linecap="round" />
+
+      <path d="M 63,120 Q 68,115 73,120" stroke="#34180C" stroke-width="2.5" stroke-linecap="round" fill="none" />
+      <path d="M 78,120 Q 83,115 88,120" stroke="#34180C" stroke-width="2.5" stroke-linecap="round" fill="none" />
+
+      <polygon points="76,126 79,126 77.5,128" fill="#FF8585" />
+      <path d="M 74,130 Q 77.5,132 81,130" stroke="#34180C" stroke-width="1.5" fill="none" stroke-linecap="round" />
+      <ellipse cx="64" cy="128" rx="5" ry="2.8" fill="#FF7675" opacity="0.5" />
+    </g>
+  </g>
+</svg>`;
+const catSitSVG = catIdleSVG;
+const catSitBlinkSVG = catIdleSVG;
+const catLaySVG = catSleepSVG;
+const catLayBreatheSVG = catSleepSVG;
+const catStretchSVG = catWalk1SVG;
+
+function getCatPartsForState(state) {
+  const scope = typeof window !== "undefined" ? window : {};
+  const STATE_TO_FRAMES = {
+    idle: ["Idle"],
+    walking: ["Walk1", "Walk2", "Walk3", "Walk4"],
+    sleeping: ["Sleep"],
+    sitting: ["Sit", "SitBlink"],
+    laying: ["Lay", "LayBreathe"],
+    stretching: ["Stretch"],
+  };
+  const frames = STATE_TO_FRAMES[state] || ["Idle"];
+  return frames.map(name => ({
+    head: null,
+    body: scope["cat" + name + "SVG"] || (name === "Idle" || name === "Sit" || name === "SitBlink" ? catIdleSVG : name === "Sleep" || name === "Lay" || name === "LayBreathe" ? catSleepSVG : catWalk1SVG),
+    tail: null,
+    backLegLeft: null,
+    backLegRight: null,
+    frontLegLeft: null,
+    frontLegRight: null,
+  }));
+}
+
+if (typeof window !== "undefined") {
   window.catIdleSVG = catIdleSVG;
   window.catWalkSVG = catWalkSVG;
+  window.catWalk1SVG = catWalk1SVG;
+  window.catWalk2SVG = catWalk2SVG;
+  window.catWalk3SVG = catWalk3SVG;
+  window.catWalk4SVG = catWalk4SVG;
+  window.catWalkFrames = catWalkFrames;
   window.catSleepSVG = catSleepSVG;
-  window.catSVG = catSVG;
+  window.catSitSVG = catSitSVG;
+  window.catSitBlinkSVG = catSitBlinkSVG;
+  window.catLaySVG = catLaySVG;
+  window.catLayBreatheSVG = catLayBreatheSVG;
+  window.catStretchSVG = catStretchSVG;
+  window.getCatPartsForState = getCatPartsForState;
+}
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = {
+    catIdleSVG,
+    catWalkSVG,
+    catWalk1SVG,
+    catWalk2SVG,
+    catWalk3SVG,
+    catWalk4SVG,
+    catWalkFrames,
+    catSleepSVG,
+    catSitSVG,
+    catSitBlinkSVG,
+    catLaySVG,
+    catLayBreatheSVG,
+    catStretchSVG,
+    getCatPartsForState
+  };
 }

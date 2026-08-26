@@ -199,11 +199,46 @@ function gateQa(opts = {}) {
       };
     }
   }
+
+  // Validacion de contenido: el sign-off debe tener evidencia de runtime.
+  // Esto cierra el loophole del v2.0.0 release donde el QA decia
+  // 'QA manual del .exe deferred to user' sin probar nada.
+  const REQUIRED_SECTIONS = [
+    /[*\s]*verdict[*\s:]*\**APPROVED/i,           // Verdict (acepta markdown bold: "**Verdict**: **APPROVED**" o "Verdict: APPROVED")
+    /(smoke test|runtime evidence|manual evidence|tests? corridos?|npm start|test:|integration:|pruebas? (corrid|ejecutad)|821\/821|tests?\s+verde)/i  // Alguna forma de evidencia
+  ];
+  const FORBIDDEN_PATTERNS = [
+    /\b(deferred|postpuesto|user manual|sin probar|manos vacias)\b/i  // Manos vacias
+  ];
+  const rejections = [];
+  for (const f of signoffs) {
+    let content;
+    try {
+      content = fs.readFileSync(path.join(getRoot(), 'docs', 'qa', f), 'utf8');
+    } catch { continue; }
+    const missingSections = REQUIRED_SECTIONS.filter(re => !re.test(content));
+    if (missingSections.length > 0) {
+      rejections.push(`${f}: falta evidencia (verdict APPROVED + smoke test/runtime evidence). Lo que tiene NO califica como QA.`);
+      continue;
+    }
+    const forbidden = FORBIDDEN_PATTERNS.filter(re => re.test(content));
+    if (forbidden.length > 0) {
+      rejections.push(`${f}: contiene 'deferred/manual/sin probar' — el sign-off tiene que tener evidencia REAL, no derivados.`);
+      continue;
+    }
+  }
+  if (rejections.length > 0) {
+    return {
+      passed: false,
+      evidence: `${signoffs.length - rejections.length}/${signoffs.length} sign-offs OK; ${rejections.length} rechazados por falta de evidencia:\n  - ${rejections.join('\n  - ')}`
+    };
+  }
+
   return {
     passed: signoffs.length > 0,
     evidence: signoffs.length > 0
-      ? `${signoffs.length} sign-off(s)${opts.since ? ` (desde ${new Date(opts.since).toISOString().slice(0, 10)})` : ''}: ${signoffs.slice(0, 3).join(', ')}`
-      : 'docs/qa/ existe pero sin sign-offs'
+      ? `${signoffs.length} sign-off(s) con evidencia de runtime${opts.since ? ` (desde ${new Date(opts.since).toISOString().slice(0, 10)})` : ''}: ${signoffs.slice(0, 3).join(', ')}`
+      : 'docs/qa/ existe pero sin sign-offs con evidencia'
   };
 }
 
@@ -218,16 +253,19 @@ function tagDate(tag) {
 }
 
 function gateRelease() {
-  // Detección: hay un tag vX.Y.Z
-  const tags = shOut('git', ['tag', '-l', 'v*'], { allowFail: true });
-  const semverTags = tags.split('\n').filter(t => /^v\d+\.\d+\.\d+/.test(t));
+  // Detección: hay un tag vX.Y.Z. Ignoramos tags con sufijos intermedios
+  // (-track-a, -pre, etc) porque son work-in-progress, no releases.
+  const tags = shOut('git', ['tag', '-l', 'v*', '--sort=-v:refname'], { allowFail: true });
+  const semverTags = tags
+    .split('\n')
+    .filter(t => /^v\d+\.\d+\.\d+$/.test(t)); // exact match, no prerelease
   if (semverTags.length === 0) {
     return { passed: false, evidence: 'no hay tags vX.Y.Z' };
   }
   // Compara con la version del package.json
   let pkgVersion = '?';
   try { pkgVersion = readJson('package.json').version; } catch {}
-  const latestTag = semverTags[semverTags.length - 1];
+  const latestTag = semverTags[0];
   const matches = latestTag === `v${pkgVersion}`;
   return {
     passed: matches,
@@ -271,11 +309,22 @@ function cmdStatus() {
   console.log(`Branch:          ${bold(branch())}`);
   console.log(`Last commit:     ${dim(lastCommit())}`);
   console.log(`Working tree:    ${isClean() ? green('clean') : yellow('dirty')}`);
-  console.log('');
 
+  // Para QA y Review, usar el mismo filtro `since` que cmdStrict, asi
+  // status refleja el release-readiness real (no muestra como "pending"
+  // sign-offs/reviews historicos que ya no aplican al release actual).
+  // Sin tag, se chequean todos (legacy).
+  const tags = shOut('git', ['tag', '-l', 'v*', '--sort=-v:refname'], { allowFail: true });
+  const semverTags = tags.split('\n').filter(t => /^v\d+\.\d+\.\d+$/.test(t));
+  const sinceMs = semverTags.length > 0 ? tagDate(semverTags[0]) : null;
+  const sinceOpts = sinceMs ? { since: sinceMs } : {};
+
+  console.log('');
   console.log(bold('Gates:'));
   for (const phase of PHASES) {
-    const { passed, evidence } = GATES[phase].fn();
+    // QA y Review aceptan `since`; otros no lo necesitan
+    const opts = (phase === 'qa' || phase === 'review') ? sinceOpts : {};
+    const { passed, evidence } = GATES[phase].fn(opts);
     const mark = passed ? green('✓') : dim('·');
     const label = GATES[phase].name.padEnd(8);
     const status = passed ? green('passed') : dim('pending');
@@ -593,10 +642,11 @@ function cmdStrict() {
     failed = true;
   }
 
-  // 1. Detectar commits desde último tag
-  const tagsRaw = shOut('git', ['tag', '-l', 'v*'], { allowFail: true });
-  const semverTags = tagsRaw.split('\n').filter(t => /^v\d+\.\d+\.\d+/.test(t));
-  const lastTag = semverTags.length > 0 ? semverTags[semverTags.length - 1] : null;
+  // 1. Detectar commits desde último tag. Ignoramos tags con sufijo
+  // (-track-a, -pre, etc) porque son work-in-progress, no releases.
+  const tagsRaw = shOut('git', ['tag', '-l', 'v*', '--sort=-v:refname'], { allowFail: true });
+  const semverTags = tagsRaw.split('\n').filter(t => /^v\d+\.\d+\.\d+$/.test(t));
+  const lastTag = semverTags.length > 0 ? semverTags[0] : null;
 
   let commitsSince = [];
   if (lastTag) {

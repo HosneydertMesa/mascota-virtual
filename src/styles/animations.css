@@ -1,0 +1,104 @@
+/* === ANIMATIONS & KEYFRAMES === */
+
+/* Breathing */
+@keyframes breathing {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02) translateY(-1px); }
+  100% { transform: scale(1); }
+}
+
+.anim-breath {
+  animation: breathing 3s ease-in-out infinite;
+}
+
+/* Tail Wagging */
+@keyframes wag {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(12deg); }
+}
+
+.anim-wag {
+  transform-origin: bottom left;
+  animation: wag 1.2s ease-in-out infinite;
+}
+
+.anim-wag-fast {
+  transform-origin: bottom left;
+  animation: wag 0.6s ease-in-out infinite;
+}
+
+/* Blinking */
+@keyframes blink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.1); }
+}
+
+.anim-blink {
+  transform-origin: center;
+  animation: blink 4s infinite;
+}
+
+/* Ear Twitch */
+@keyframes earTwitchLeft {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-5deg); }
+}
+
+@keyframes earTwitchRight {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(5deg); }
+}
+
+.pet-ear.ear-twitching {
+  animation-duration: 0.4s;
+  animation-timing-function: ease-in-out;
+}
+
+.pet-ear-left.ear-twitching { animation-name: earTwitchLeft; }
+.pet-ear-right.ear-twitching { animation-name: earTwitchRight; }
+
+.sleeping .pet-ear,
+.drag-mode .pet-ear { animation: none !important; }
+
+/* Walking bobbing physics */
+@keyframes catBodyWalk {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-2px) rotate(-1deg); }
+  50% { transform: translateY(0) rotate(0deg); }
+  75% { transform: translateY(-2px) rotate(1deg); }
+}
+
+@keyframes dogBodyWalk {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-3px) rotate(-1.5deg); }
+  50% { transform: translateY(0) rotate(0deg); }
+  75% { transform: translateY(-3px) rotate(1.5deg); }
+}
+
+.walking-bob.cat-walk {
+  animation: catBodyWalk 0.65s infinite ease-in-out;
+}
+
+.walking-bob.dog-walk {
+  animation: dogBodyWalk 0.55s infinite ease-in-out;
+}
+
+/* Landing bounce */
+@keyframes landingBounce {
+  0% { transform: translateY(-30px) scale(0.95, 1.05); }
+  40% { transform: translateY(0) scale(1.15, 0.85); }
+  70% { transform: translateY(-8px) scale(0.95, 1.05); }
+  100% { transform: translateY(0) scale(1, 1); }
+}
+
+.landing-bounce {
+  animation: landingBounce 0.6s ease-out !important;
+}
+
+/* Float Zzz */
+@keyframes floatZzz {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.6); }
+  30% { opacity: 0.85; transform: translate(-10px, -15px) scale(0.9); }
+  70% { opacity: 0.6; transform: translate(-20px, -35px) scale(1.1); }
+  100% { opacity: 0; transform: translate(-30px, -55px) scale(1.3); }
+}

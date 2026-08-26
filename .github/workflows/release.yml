@@ -1,0 +1,125 @@
+name: Release
+
+# Triggers:
+#   - push de tag con prefijo 'v' (ej: v2.0.0, v2.0.1) — auto-build al taggear
+#   - workflow_dispatch — boton "Run workflow" para builds manuales
+#
+# El nombre del tag (github.ref_name) se usa como version:
+#   - tag v2.0.0   -> MascotaVirtual-Setup-2.0.0.exe
+#   - tag v2.0.1   -> MascotaVirtual-Setup-2.0.1.exe
+#
+# El archivo subido al release es dist/MascotaVirtual-Setup-*.exe (NSIS
+# installer de electron-builder, target=nsis definido en package.json).
+#
+# electron-updater (configurado en package.json build.publish) consume
+# el latest.yml que electron-builder genera junto al .exe — esa es la
+# fuente de verdad para que la app sepa que hay un update.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version a publicar (ej: 2.0.0). Si se deja vacio, usa package.json'
+        required: false
+        default: ''
+
+# Sin concurrency: cada release es independiente y no se debe cancelar.
+# (diferente de ci.yml, donde cancelamos builds obsoletos)
+
+permissions:
+  contents: write   # necesario para `gh release create` (push de assets + tag)
+
+jobs:
+  release:
+    name: Build Windows installer & publish to GitHub Releases
+    # Solo Windows puede buildear un .exe de Windows con NSIS de manera
+    # confiable (wine en otros OS introduce flakiness y bugs de signed
+    # extraction). Si en el futuro hay builds para Mac/Linux, agregar
+    # jobs paralelos con `runs-on: macos-latest` / `ubuntu-latest`.
+    runs-on: windows-latest
+    timeout-minutes: 30  # NSIS + download + signed extraction puede ser lento
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Sync package.json version con el tag (CI-only, no commitea al repo).
+      # Esto evita tener que bumpear version en el commit del tag — el
+      # orchestrator local puede taggear v2.0.1 sin tocar package.json
+      # (que en main sigue en 2.0.0) y este job reescribe la version
+      # solo para el build. La version en package.json se bumpea en
+      # el release commit (cherry-pick del orchestrator) por separado.
+      - name: Sync version from tag
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "Tag version: $VERSION"
+          # Actualizar SOLO el top-level "version" sin tocar deps.
+          # Usa node para evitar depender de jq.
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.version = '$VERSION';
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+            console.log('package.json version set to', pkg.version);
+          "
+
+      # electron-builder corre electron-rebuild que compila native deps.
+      # El primer build de un repo fresco tarda 5-10 min en Windows por
+      # la extraccion de winCodeSign + NSIS.
+      - name: Build Windows installer
+        env:
+          # Sin code signing cert (self-signed), pero evitamos que
+          # electron-builder intente validar certs que no existen.
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+        run: npm run build
+
+      - name: List dist output
+        # Debug: confirmar que el .exe se genero antes de intentar
+        # subirlo al release. Si no esta, el job falla aca.
+        shell: bash
+        run: ls -la dist/
+
+      - name: Upload .exe to GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          # Detectar el .exe generado. electron-builder usa el artifactName
+          # definido en package.json: MascotaVirtual-Setup-${version}.${ext}
+          EXE_FILE=$(ls dist/MascotaVirtual-Setup-*.exe 2>/dev/null | head -1)
+          if [ -z "$EXE_FILE" ]; then
+            echo "ERROR: No se encontro MascotaVirtual-Setup-*.exe en dist/"
+            exit 1
+          fi
+          echo "Subiendo $EXE_FILE al release $GITHUB_REF_NAME"
+          # gh release create:
+          #   - si el tag NO existe: lo crea + sube el .exe
+          #   - si el tag YA existe (re-run): sube el .exe al release existente
+          #   --generate-notes: auto-genera las release notes desde los PRs
+          #   --draft: NO queremos draft — el orchestrator decide si marcarlo
+          gh release create "$GITHUB_REF_NAME" "$EXE_FILE" \
+            --title "Mascota Virtual $GITHUB_REF_NAME" \
+            --notes "Release automatica de Mascota Virtual $GITHUB_REF_NAME.
+
+          ## Instalacion
+          1. Descarga \`MascotaVirtual-Setup-*.exe\` de abajo
+          2. Ejecuta el instalador
+          3. Si Windows SmartScreen muestra advertencia: 'More info -> Run anyway' (codigo sin firmar)
+
+          ## Updates automaticos
+          La app detecta esta version al abrirla y descarga el update en background.
+          Se aplica al cerrar la app." \
+            --target "${{ github.event_name == 'push' && 'latest' || 'commitish' }}"

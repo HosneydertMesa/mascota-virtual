@@ -1,501 +1,228 @@
-'use strict';
+/* ============================================================
+   MASCOTA VIRTUAL — MAIN RENDERER COORDINATOR
+   Coordinates modular controllers: Viewport, Speech, Interaction,
+   EyeTracker, Pomodoro, and IPC bridge.
+   ============================================================ */
 
-let currentPet = 'cat';
+let viewport = null;
+let speech = null;
+let interaction = null;
+let pomodoro = null;
 let soundEnabled = true;
-let currentVisualState = null;
-let speechTimeout = null;
+let currentPet = 'cat';
 let sleepTimeout = null;
-let dragCandidate = null;
-let isDragging = false;
-let tailTime = 0;
-let tailWagSpeed = 0.04;
-let tailWagAmplitude = 1;
-let currentPetX = 0;
-let isQuickChatSending = false;
-let quickChatHistory = [];
-let nextEarTwitchAt = 0;
 
-const DRAG_THRESHOLD_PX = 7;
-const SLEEP_DELAY_MS = 45000;
-const hoveredInteractiveElements = new Set();
+// Ear twitch idle timer
+let earTwitchTimer = null;
 
-const petContainer = document.getElementById('pet-container');
-const petSvgWrapper = document.getElementById('pet-svg-wrapper');
-const speechBubble = document.getElementById('speech-bubble');
-const speechText = document.getElementById('speech-text');
-const settingsBtn = document.getElementById('settings-btn');
-const quickChatBtn = document.getElementById('quick-chat-btn');
-const quickChatPanel = document.getElementById('quick-chat-panel');
-const quickChatClose = document.getElementById('quick-chat-close');
-const quickChatTitle = document.getElementById('quick-chat-title');
-const quickChatSubtitle = document.getElementById('quick-chat-subtitle');
-const quickChatReply = document.getElementById('quick-chat-reply');
-const quickChatInput = document.getElementById('quick-chat-input');
-const quickChatSend = document.getElementById('quick-chat-send');
-
-// Allow-lists y parser de respuestas de la IA viven en PetProtocol (src/core/pet-protocol.js).
-// Carga via <script> antes de este archivo (ver index.html).
-
-function applyPetTheme() {
-  document.body.dataset.pet = currentPet;
-  quickChatTitle.textContent = currentPet === 'cat' ? 'Habla con Luna' : 'Habla con Max';
-  quickChatSubtitle.textContent = currentPet === 'cat'
-    ? 'Tu compañera está escuchando'
-    : 'Tu compañero está listo';
+function triggerEarTwitch() {
+  if (document.body.classList.contains('sleeping') || document.body.classList.contains('drag-mode')) return;
+  const leftEar = document.querySelector('.pet-ear-left');
+  const rightEar = document.querySelector('.pet-ear-right');
+  const ear = Math.random() < 0.5 ? leftEar : rightEar;
+  if (!ear) return;
+  ear.classList.remove('ear-twitching');
+  void ear.offsetWidth; // reflow
+  ear.classList.add('ear-twitching');
+  setTimeout(() => ear.classList.remove('ear-twitching'), 450);
 }
 
-function getQuickHistoryKey(petType = currentPet) {
-  return `quickChatHistory:${petType}`;
-}
-
-function loadQuickChatHistory(petType = currentPet) {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(getQuickHistoryKey(petType)) || '[]');
-    return Array.isArray(parsed)
-      ? parsed.filter(item => item && ['user', 'assistant'].includes(item.role) && typeof item.content === 'string').slice(-6)
-      : [];
-  } catch (_error) {
-    localStorage.removeItem(getQuickHistoryKey(petType));
-    return [];
-  }
-}
-
-function initSettings() {
-  localStorage.removeItem('apiKey');
-  const savedPet = localStorage.getItem('pet');
-  if (savedPet === 'cat' || savedPet === 'dog') currentPet = savedPet;
-  else localStorage.setItem('pet', currentPet);
-  soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
-  const legacyQuickHistory = localStorage.getItem('quickChatHistory');
-  if (legacyQuickHistory && !localStorage.getItem(getQuickHistoryKey())) {
-    localStorage.setItem(getQuickHistoryKey(), legacyQuickHistory);
-  }
-  localStorage.removeItem('quickChatHistory');
-  quickChatHistory = loadQuickChatHistory();
-
-  applyPetTheme();
-  setVisualState('idle', null, true);
-  window.api.syncSettings({ pet: currentPet, soundEnabled });
-  scheduleSleep();
-}
-
-function loadMascotSVG(petType, state) {
-  if (petType === 'cat') {
-    petSvgWrapper.innerHTML = state === 'walking'
-      ? window.catWalkSVG
-      : state === 'sleeping' ? window.catSleepSVG : window.catIdleSVG;
-  } else {
-    petSvgWrapper.innerHTML = state === 'walking'
-      ? window.dogWalkSVG
-      : state === 'sleeping' ? window.dogSleepSVG : window.dogIdleSVG;
-  }
-}
-
-function setVisualState(state, direction = null, force = false) {
-  if (force || currentVisualState !== state) {
-    currentVisualState = state;
-    loadMascotSVG(currentPet, state);
-  }
-
-  petContainer.classList.toggle('sleeping', state === 'sleeping');
-  petContainer.classList.toggle('walking-bob', state === 'walking');
-  petContainer.classList.toggle('cat-walk', state === 'walking' && currentPet === 'cat');
-  petContainer.classList.toggle('dog-walk', state === 'walking' && currentPet === 'dog');
-  if (direction) petContainer.classList.toggle('flipped', direction === 'right');
-}
-
-function updateMousePassthrough() {
-  const shouldIgnore = !isDragging && hoveredInteractiveElements.size === 0;
-  window.api.setIgnoreMouseEvents(shouldIgnore, shouldIgnore ? { forward: true } : undefined);
-}
-
-function setupInteraction() {
-  [petContainer, speechBubble, quickChatPanel].forEach(element => {
-    element.addEventListener('mouseenter', () => {
-      hoveredInteractiveElements.add(element);
-      updateMousePassthrough();
-    });
-    element.addEventListener('mouseleave', () => {
-      hoveredInteractiveElements.delete(element);
-      setTimeout(updateMousePassthrough, 0);
-    });
-  });
-}
-
-function beginDragCandidate(event) {
-  if (event.button !== 0 || event.target.closest('#settings-btn, #quick-chat-btn')) return;
-  dragCandidate = { x: event.screenX, y: event.screenY };
-  petContainer.style.cursor = 'grabbing';
-  wakeUp();
-  event.preventDefault();
-}
-
-function moveDrag(event) {
-  if (!dragCandidate) return;
-  const distance = Math.hypot(event.screenX - dragCandidate.x, event.screenY - dragCandidate.y);
-  if (!isDragging && distance >= DRAG_THRESHOLD_PX) {
-    closeQuickChat();
-    isDragging = true;
-    hoveredInteractiveElements.add(petContainer);
-    window.api.dragStart();
-  }
-  if (isDragging) window.api.dragMove();
-}
-
-function finishDrag() {
-  if (!dragCandidate && !isDragging) return;
-  const wasDragging = isDragging;
-  dragCandidate = null;
-  isDragging = false;
-  petContainer.style.cursor = 'grab';
-  if (wasDragging) window.api.dragEnd();
-  scheduleSleep();
-  setTimeout(updateMousePassthrough, 0);
-}
-
-petContainer.addEventListener('mousedown', beginDragCandidate);
-window.addEventListener('mousemove', moveDrag);
-window.addEventListener('mouseup', finishDrag);
-window.addEventListener('blur', finishDrag);
-
-settingsBtn.addEventListener('mousedown', event => event.stopPropagation());
-quickChatBtn.addEventListener('mousedown', event => event.stopPropagation());
-petContainer.addEventListener('dblclick', event => {
-  if (event.target.closest('#settings-btn, #quick-chat-btn')) return;
-  window.api.openDashboard('chat');
-  wakeUp();
-});
-settingsBtn.addEventListener('click', event => {
-  event.stopPropagation();
-  window.api.openDashboard('settings');
-  wakeUp();
-});
-
-function updateQuickChatSide() {
-  quickChatPanel.classList.toggle('open-right', currentPetX < 310);
-}
-
-function openQuickChat() {
-  window.petAudio?.unlock();
-  updateQuickChatSide();
-  quickChatPanel.hidden = false;
-  quickChatBtn.setAttribute('aria-expanded', 'true');
-  document.body.classList.add('quick-chat-open');
-  quickChatReply.textContent = currentPet === 'cat' ? '¿Qué tienes en mente?' : '¡Cuéntame! ¿En qué te ayudo?';
-  setTimeout(() => quickChatInput.focus(), 0);
-}
-
-function closeQuickChat() {
-  quickChatPanel.hidden = true;
-  quickChatBtn.setAttribute('aria-expanded', 'false');
-  document.body.classList.remove('quick-chat-open');
-  hoveredInteractiveElements.delete(quickChatPanel);
-  updateMousePassthrough();
-}
-
-quickChatBtn.addEventListener('click', event => {
-  event.stopPropagation();
-  if (quickChatPanel.hidden) openQuickChat();
-  else closeQuickChat();
-  wakeUp();
-});
-quickChatClose.addEventListener('click', closeQuickChat);
-
-function scheduleSleep() {
+function scheduleSleep(delayMs = 45000) {
   if (sleepTimeout) clearTimeout(sleepTimeout);
-  sleepTimeout = setTimeout(goToSleep, SLEEP_DELAY_MS);
-}
-
-function goToSleep() {
-  if (isDragging) {
-    scheduleSleep();
-    return;
-  }
-  closeQuickChat();
-  speechBubble.classList.remove('visible');
-  setVisualState('sleeping');
-  window.api.setSleeping(true);
+  sleepTimeout = setTimeout(() => {
+    if (viewport && viewport.currentState === 'idle') {
+      viewport.setState('sleeping');
+      if (window.api?.setSleeping) window.api.setSleeping(true);
+    }
+  }, delayMs);
 }
 
 function wakeUp() {
-  const wasSleeping = currentVisualState === 'sleeping';
-  if (wasSleeping) {
-    setVisualState('idle');
-    window.api.setSleeping(false);
+  if (sleepTimeout) {
+    clearTimeout(sleepTimeout);
+    sleepTimeout = null;
   }
-  scheduleSleep();
+  if (viewport && viewport.currentState === 'sleeping') {
+    viewport.setState('idle');
+    if (window.api?.setSleeping) window.api.setSleeping(false);
+  }
 }
 
 function triggerHappyBounce() {
-  wakeUp();
-  petContainer.classList.remove('happy-bounce');
-  void petContainer.offsetWidth;
-  petContainer.classList.add('happy-bounce');
-  setTimeout(() => petContainer.classList.remove('happy-bounce'), 800);
+  const container = document.getElementById('pet-container');
+  if (!container) return;
+  container.classList.remove('landing-bounce');
+  void container.offsetWidth;
+  container.classList.add('landing-bounce');
+  setTimeout(() => container.classList.remove('landing-bounce'), 600);
 }
 
-function triggerLandingBounce() {
-  wakeUp();
-  petContainer.classList.remove('landing-bounce');
-  void petContainer.offsetWidth;
-  petContainer.classList.add('landing-bounce');
-  setTimeout(() => petContainer.classList.remove('landing-bounce'), 600);
-}
+function initQuickChat() {
+  const panel = document.getElementById('quick-chat-panel');
+  const btn = document.getElementById('quick-chat-btn');
+  const closeBtn = document.getElementById('quick-chat-close');
+  const input = document.getElementById('quick-chat-input');
+  const sendBtn = document.getElementById('quick-chat-send');
+  const reply = document.getElementById('quick-chat-reply');
 
-function cleanThinkingTags(text) {
-  return String(text || '').replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-}
+  if (!panel || !btn) return;
 
-// Wrapper que usa PetProtocol con el pet actual.
-function parsePetReply(reply) {
-  return window.PetProtocol.parsePetReply(reply, currentPet);
-}
-
-// Intenta extraer un JSON object de la respuesta. Acepta:
-// - JSON puro: {"emotion":"happy",...}
-// - JSON en markdown: ```json\n{...}\n```
-// - JSON con prosa alrededor: "...texto... {...} ...mas texto..."
-// - JSON con thinking antes: <think>...</think>{...}
-// Devuelve { parsed, error } donde error explica por qué falló si aplica.
-// (Implementado en PetProtocol, expuesto via window.PetProtocol)
-
-// Parsea respuesta de la IA. Intenta JSON, fallback a tags viejos, fallback a texto libre.
-// (Implementado en PetProtocol.parsePetReply)
-
-function inferSound(text) {
-  const normalized = String(text || '').toLowerCase();
-  if (currentPet === 'cat') {
-    if (normalized.includes('ronrone') || normalized.includes('purr')) return 'purr';
-    if (normalized.includes('miau')) return 'meow';
-  } else {
-    if (normalized.includes('guau') || normalized.includes('ladra')) return 'bark';
-    if (normalized.includes('olfatea') || normalized.includes('sniff')) return 'sniff';
+  function toggle(open) {
+    const isOpen = open !== undefined ? open : panel.hidden;
+    panel.hidden = !isOpen;
+    btn.setAttribute('aria-expanded', String(isOpen));
+    document.body.classList.toggle('quick-chat-open', isOpen);
+    if (isOpen && input) setTimeout(() => input.focus(), 50);
   }
-  return 'none';
-}
 
-function showSpeech(text, duration = 6000) {
-  if (speechTimeout) clearTimeout(speechTimeout);
-  const cleanedText = cleanThinkingTags(text);
-  if (!cleanedText) return;
-  speechText.textContent = cleanedText;
-  speechBubble.classList.add('visible');
-  speechTimeout = setTimeout(() => {
-    speechBubble.classList.remove('visible');
-    hoveredInteractiveElements.delete(speechBubble);
-    updateMousePassthrough();
-  }, duration);
-}
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggle();
+  });
 
-window.api.onPetMoveState(data => {
-  if (!data || typeof data.state !== 'string') return;
-  if (data.state === 'walking') {
-    wakeUp();
-    setVisualState('walking', data.direction);
-    tailWagSpeed = currentPet === 'cat' ? 0.06 : 0.12;
-    tailWagAmplitude = 1.1;
-  } else if (data.state === 'playing') {
-    wakeUp();
-    setVisualState('idle');
-    tailWagSpeed = currentPet === 'cat' ? 0.08 : 0.16;
-    tailWagAmplitude = 1.3;
-    if (Math.random() < 0.025) {
-      triggerHappyBounce();
-      const messages = currentPet === 'cat'
-        ? ['¡Miau! ¿Qué hace tu cursor aquí?', '¡Te sigo, humano!', '¡Te tengo!', '¡Miau!']
-        : ['¡Guau! ¡Juguemos con el ratón!', '¡Te encontré!', '¿Me das un mimo?', '¡Guau!'];
-      showSpeech(messages[Math.floor(Math.random() * messages.length)], 3000);
+  if (closeBtn) closeBtn.addEventListener('click', () => toggle(false));
+
+  async function handleSend() {
+    if (!input || !input.value.trim()) return;
+    const text = input.value.trim();
+    input.value = '';
+    if (reply) reply.textContent = 'Pensando...';
+    try {
+      if (window.api?.aiSendMessage) {
+        const res = await window.api.aiSendMessage({
+          userMessage: text,
+          petType: currentPet,
+          history: []
+        });
+        // B1 fix (commit chat-bugs-leak): raw LLM response viene envuelto en
+        // <think>...</think> + JSON. Sin cleanChatResponse, el chat mostraba
+        // el JSON crudo. Ver docs/plans/chat-bugs-leak-and-close-2026-08-25.md
+        const fallback = currentPet === 'cat' ? '¡Miau! Hola amigo.' : '¡Guau! Hola amigo.';
+        const resText = cleanChatResponse(res, currentPet, fallback);
+        if (reply) reply.textContent = resText;
+        if (speech) speech.show(resText);
+      } else {
+        const fallback = currentPet === 'cat' ? '¡Miau! ¿En qué te ayudo?' : '¡Guau! ¿Qué hacemos hoy?';
+        if (reply) reply.textContent = fallback;
+        if (speech) speech.show(fallback);
+      }
+    } catch (_err) {
+      const fallback = currentPet === 'cat' ? '¡Miau! ¿Cómo estás hoy?' : '¡Guau! ¡Listo para trabajar!';
+      if (reply) reply.textContent = fallback;
+      if (speech) speech.show(fallback);
     }
-  } else if (currentVisualState !== 'sleeping') {
-    setVisualState('idle');
-    scheduleSleep();
-    tailWagSpeed = currentPet === 'cat' ? 0.04 : 0.06;
-    tailWagAmplitude = 1;
-  }
-});
-
-window.api.onSettingsUpdated(settings => {
-  if (!settings) return;
-  soundEnabled = settings.soundEnabled !== false;
-  localStorage.setItem('soundEnabled', String(soundEnabled));
-  if (!['cat', 'dog'].includes(settings.pet) || settings.pet === currentPet) return;
-  localStorage.setItem(getQuickHistoryKey(), JSON.stringify(quickChatHistory.slice(-6)));
-  currentPet = settings.pet;
-  quickChatHistory = loadQuickChatHistory();
-  localStorage.setItem('pet', currentPet);
-  applyPetTheme();
-  currentVisualState = null;
-  setVisualState('idle', null, true);
-  const hello = currentPet === 'cat'
-    ? '¡Miau! Ahora soy Luna. ¡Vamos a trabajar tranquilos!'
-    : '¡Guau! ¡Soy Max, tu fiel compañero! ¡A darle con energía!';
-  handlePetAction({ type: 'speak', text: hello, emotion: 'excited', action: 'jump', sound: currentPet === 'cat' ? 'meow' : 'bark' });
-});
-
-function handlePetAction(data) {
-  if (!data || data.type !== 'speak') return;
-  wakeUp();
-  showSpeech(data.text);
-  const selectedSound = data.sound && data.sound !== 'none' ? data.sound : inferSound(data.text);
-  if (soundEnabled && selectedSound !== 'none') window.petAudio?.play(selectedSound);
-
-  if (data.emotion === 'excited') {
-    triggerHappyBounce();
-    tailWagSpeed = currentPet === 'cat' ? 0.1 : 0.2;
-    tailWagAmplitude = 1.4;
-  } else if (data.emotion === 'calm') {
-    tailWagSpeed = currentPet === 'cat' ? 0.02 : 0.04;
-    tailWagAmplitude = 0.7;
-  } else if (data.emotion === 'sad') {
-    tailWagSpeed = 0.008;
-    tailWagAmplitude = 0.3;
-  } else if (data.emotion === 'sleepy') {
-    goToSleep();
   }
 
-  if (data.action === 'jump') triggerHappyBounce();
-  else if (data.action === 'sleep') goToSleep();
-  else if (data.action === 'wag') {
-    tailWagSpeed = currentPet === 'cat' ? 0.09 : 0.19;
-    tailWagAmplitude = 1.35;
-  }
-}
-
-window.api.onPetAction(handlePetAction);
-
-async function sendQuickChatMessage() {
-  const query = quickChatInput.value.trim();
-  if (!query || isQuickChatSending) return;
-  isQuickChatSending = true;
-  quickChatInput.value = '';
-  quickChatInput.disabled = true;
-  quickChatSend.disabled = true;
-  quickChatReply.textContent = currentPet === 'cat' ? 'Luna está pensando…' : 'Max está pensando…';
-  quickChatHistory.push({ role: 'user', content: query });
-
-  try {
-    const reply = await window.api.aiSendMessage({
-      petType: currentPet,
-      history: quickChatHistory.slice(0, -1),
-      userMessage: query
+  if (sendBtn) sendBtn.addEventListener('click', handleSend);
+  if (input) {
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleSend();
+      if (e.key === 'Escape') toggle(false);
     });
-    quickChatHistory.push({ role: 'assistant', content: reply });
-    quickChatHistory = quickChatHistory.slice(-6);
-    localStorage.setItem(getQuickHistoryKey(), JSON.stringify(quickChatHistory));
-    const reaction = parsePetReply(reply);
-    quickChatReply.textContent = reaction.content || 'Estoy contigo.';
-    const actionPayload = { type: 'speak', ...reaction };
-    handlePetAction(actionPayload);
-    window.api.triggerPetAction(actionPayload);
-  } catch (error) {
-    quickChatReply.textContent = error.message.includes('API Key')
-      ? 'Configura una nueva API Key desde Ajustes para poder conversar.'
-      : `No pude responder: ${error.message}`;
-  } finally {
-    isQuickChatSending = false;
-    quickChatInput.disabled = false;
-    quickChatSend.disabled = false;
-    quickChatInput.focus();
   }
 }
 
-quickChatSend.addEventListener('click', sendQuickChatMessage);
-quickChatInput.addEventListener('keydown', event => {
-  if (event.key === 'Enter') sendQuickChatMessage();
-  else if (event.key === 'Escape') closeQuickChat();
-});
-
-window.api.onWindowModeBar(data => {
-  document.body.classList.remove('drag-mode');
-  document.body.classList.add('bar-mode');
-  currentPetX = Number(data?.petX) || 0;
-  document.documentElement.style.setProperty('--pet-x', `${currentPetX}px`);
-  document.documentElement.style.setProperty('--pet-y', '0px');
-  if (data?.bounce) triggerLandingBounce();
-});
-
-window.api.onWindowModeDrag(() => {
-  closeQuickChat();
-  document.body.classList.remove('bar-mode');
-  document.body.classList.add('drag-mode');
-});
-
-window.api.onUpdatePetPosition(data => {
-  if (!Number.isFinite(data?.x) || !Number.isFinite(data?.y)) return;
-  currentPetX = data.x;
-  document.documentElement.style.setProperty('--pet-x', `${currentPetX}px`);
-  document.documentElement.style.setProperty('--pet-y', `${data.y}px`);
-  if (!quickChatPanel.hidden) updateQuickChatSide();
-});
-
-window.api.onTriggerAutonomousTip(async () => {
-  if (currentVisualState === 'sleeping') return;
-  try {
-    const tip = await window.api.aiQuickTip({ petType: currentPet, context: 'work_tip' });
-    if (tip) {
-      handlePetAction({
-        type: 'speak',
-        text: tip,
-        emotion: 'calm',
-        action: 'none',
-        sound: inferSound(tip)
-      });
-    }
-  } catch (error) {
-    console.error('Error triggering autonomous tip:', error);
-  }
-});
-
-function maybeTwitchEar() {
-  if (currentVisualState === 'sleeping' || isDragging) return;
-  // ~0.25% por frame => ~1 twitch cada ~6.6s a 60fps
-  if (Math.random() > 0.0025) return;
-  const side = Math.random() < 0.5 ? 'left' : 'right';
-  const ear = petSvgWrapper.querySelector(`.pet-ear-${side}`);
-  if (!ear || ear.classList.contains('ear-twitching')) return;
-  ear.classList.add('ear-twitching');
-  // Forzar reflow para reiniciar la animacion si ya estaba aplicada
-  void ear.offsetWidth;
-  setTimeout(() => ear.classList.remove('ear-twitching'), 500);
+function initSettingsButton() {
+  const btn = document.getElementById('settings-btn');
+  if (!btn) return;
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (window.api?.openDashboard) window.api.openDashboard('pomodoro');
+  });
 }
 
-function animateTail() {
-  tailTime += tailWagSpeed;
-  maybeTwitchEar();
-  const catTail = document.getElementById('cat-tail');
-  const dogTail = document.getElementById('dog-tail');
+function setupIPCListeners() {
+  if (!window.api) return;
 
-  if (catTail) {
-    const w1 = Math.sin(tailTime) * 12 * tailWagAmplitude;
-    const w2 = Math.sin(tailTime - 0.7) * 18 * tailWagAmplitude;
-    const w3 = Math.sin(tailTime - 1.4) * 22 * tailWagAmplitude;
-    if (currentVisualState === 'walking') {
-      catTail.setAttribute('d', `M 140,110 C ${160 + w1},100 ${170 + w2},75 ${175 + w3},55`);
-    } else {
-      catTail.setAttribute('d', `M 130,130 C ${148 + w1},120 ${160 + w2},92 ${165 + w3},70`);
+  window.api.onWindowModeBar((data) => {
+    document.body.classList.add('bar-mode');
+    document.body.classList.remove('drag-mode');
+    if (data && typeof data.petX === 'number') {
+      document.documentElement.style.setProperty('--pet-x', `${data.petX}px`);
     }
-  }
-  if (dogTail) {
-    const w1 = Math.sin(tailTime * 2.5) * 8 * tailWagAmplitude;
-    const w2 = Math.sin(tailTime * 2.5 - 0.5) * 14 * tailWagAmplitude;
-    const w3 = Math.sin(tailTime * 2.5 - 1) * 18 * tailWagAmplitude;
-    if (currentVisualState === 'walking') {
-      dogTail.setAttribute('d', `M 138,110 C ${155 + w1},100 ${160 + w2},85 ${165 + w3},70`);
-    } else {
-      dogTail.setAttribute('d', `M 130,130 C ${145 + w1},118 ${151 + w2},100 ${157 + w3},84`);
+  });
+
+  window.api.onWindowModeDrag(() => {
+    document.body.classList.add('drag-mode');
+    document.body.classList.remove('bar-mode');
+  });
+
+  window.api.onUpdatePetPosition((data) => {
+    if (data && typeof data.x === 'number') {
+      document.documentElement.style.setProperty('--pet-x', `${data.x}px`);
     }
-  }
-  requestAnimationFrame(animateTail);
+    if (data && typeof data.y === 'number') {
+      document.documentElement.style.setProperty('--pet-y', `${data.y}px`);
+    }
+  });
+
+  window.api.onPetMoveState((data) => {
+    if (!data || typeof data.state !== 'string') return;
+    if (data.state === 'walking') {
+      wakeUp();
+      if (viewport) viewport.setState('walking', data.direction);
+    } else if (data.state === 'playing') {
+      wakeUp();
+      if (viewport) viewport.setState('idle');
+      if (Math.random() < 0.05) triggerHappyBounce();
+    } else if (viewport && viewport.currentState !== 'sleeping') {
+      viewport.setState('idle');
+      scheduleSleep();
+    }
+  });
+
+  window.api.onPomodoroTick((data) => {
+    if (pomodoro) pomodoro.update(data);
+  });
+
+  window.api.onPomodoroState((data) => {
+    if (pomodoro) pomodoro.update(data);
+  });
+
+  window.api.onPetSpeech((text) => {
+    if (speech) speech.show(text);
+  });
+
+  window.api.onSettingsUpdated((settings) => {
+    if (!settings) return;
+    if (settings.pet && settings.pet !== currentPet) {
+      currentPet = settings.pet;
+      if (viewport) viewport.setPetType(currentPet);
+    }
+    if (typeof settings.soundEnabled === 'boolean') {
+      soundEnabled = settings.soundEnabled;
+    }
+  });
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  setupInteraction();
-  initSettings();
-  requestAnimationFrame(animateTail);
+  viewport = new window.PetViewport();
+  speech = new window.SpeechController();
+  interaction = new window.InteractionController();
+  pomodoro = new window.PomodoroUI();
+
+  viewport.init(currentPet);
+  interaction.init();
+  pomodoro.init();
+  if (window.eyeTracker) window.eyeTracker.init();
+
+  initQuickChat();
+  initSettingsButton();
+  setupIPCListeners();
+
+  // Ear twitch every 8-15 seconds in idle
+  earTwitchTimer = setInterval(() => {
+    if (Math.random() < 0.4) triggerEarTwitch();
+  }, 10000);
+
+  scheduleSleep();
+
   setTimeout(() => {
     triggerHappyBounce();
-    showSpeech(currentPet === 'cat'
-      ? '¡Miau! Hola, soy Luna. Trabajemos juntos hoy. Haz doble clic en mí para charlar.'
-      : '¡Hola! ¡Soy Max! Hoy será un gran día de trabajo. Haz doble clic en mí.');
-  }, 2000);
+    if (speech) {
+      speech.show(currentPet === 'cat'
+        ? '¡Miau! Hola, soy Luna. Trabajemos juntos hoy. Haz doble clic en mí para charlar.'
+        : '¡Hola! ¡Soy Max! Hoy será un gran día de trabajo. Haz doble clic en mí.');
+    }
+  }, 1500);
 });

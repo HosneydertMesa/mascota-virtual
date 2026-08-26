@@ -1,5 +1,21 @@
 'use strict';
 
+const {
+  ALLOWED_EMOTIONS,
+  ALLOWED_ACTIONS,
+  ALLOWED_SOUNDS,
+  ALLOWED_INTENTS
+} = require('./pet-protocol');
+
+// Set plano derivado de ALLOWED_SOUNDS (union de cat + dog + 'none').
+// Se usa para normalizar sonidos sin saber el tipo de mascota.
+const ALLOWED_SOUNDS_FLAT = (() => {
+  const out = new Set(['none']);
+  if (ALLOWED_SOUNDS.cat) for (const s of ALLOWED_SOUNDS.cat) out.add(s);
+  if (ALLOWED_SOUNDS.dog) for (const s of ALLOWED_SOUNDS.dog) out.add(s);
+  return out;
+})();
+
 const PET_PROFILES = Object.freeze({
   cat: Object.freeze({
     maxSpeed: 105,
@@ -20,12 +36,6 @@ const PET_PROFILES = Object.freeze({
     maxWanderDistance: 650
   })
 });
-
-const ALLOWED_ACTIONS = new Set(['none', 'jump', 'walk', 'sleep', 'wag']);
-const ALLOWED_EMOTIONS = new Set(['happy', 'calm', 'sleepy', 'sad', 'excited']);
-const ALLOWED_SOUNDS = new Set(['none', 'meow', 'purr', 'bark', 'whine', 'sniff']);
-// AI-decided movement intents. 'none' = no explicit intent, fallback to action.
-const ALLOWED_INTENTS = new Set(['none', 'approach', 'retreat', 'play', 'sleep', 'wander', 'stay']);
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
@@ -57,7 +67,7 @@ function normalizeEmotion(value) {
 
 function normalizePetSound(value) {
   const normalized = typeof value === 'string' ? value.toLowerCase() : 'none';
-  return ALLOWED_SOUNDS.has(normalized) ? normalized : 'none';
+  return ALLOWED_SOUNDS_FLAT.has(normalized) ? normalized : 'none';
 }
 
 function normalizeIntent(value) {

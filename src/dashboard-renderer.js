@@ -12,6 +12,12 @@ let focusDuration = 25 * 60;
 let breakDuration = 5 * 60;
 let totalDuration = focusDuration;
 let timeLeft = focusDuration;
+// Track A — I1 adaptive: conteo de focus blocks consecutivos + flag last break
+// Persistimos en localStorage para que sobrevivan reload del dashboard.
+let focusBlocksCompleted = 0;
+let lastBreakWasLong = false;
+let pendingSessionInfo = null; // guarda {startedAt, durationSec, kind} durante la sesion
+let currentPomodoroConfig = null; // cache de la config para evitar IPC en cada tick
 
 const MAX_CHAT_MESSAGES = 40;
 // Allow-lists y parser de respuestas de la IA viven en PetProtocol (src/core/pet-protocol.js).
@@ -36,6 +42,21 @@ const saveSettingsBtn = document.getElementById('save-settings-btn');
 const catPreview = document.getElementById('cat-preview');
 const dogPreview = document.getElementById('dog-preview');
 const soundEnabledInput = document.getElementById('sound-enabled-input');
+const briefingEnabledInput = document.getElementById('briefing-enabled-input');
+const petNameInput = document.getElementById('pet-name-input');
+const petNameStatus = document.getElementById('pet-name-status');
+// Track B — W1 + W2 dashboard controls
+const silentModeInput = document.getElementById('silent-mode-input');
+const calendarPathInput = document.getElementById('calendar-path-input');
+const calendarTestBtn = document.getElementById('calendar-test-btn');
+const calendarClearBtn = document.getElementById('calendar-clear-btn');
+const calendarTestResult = document.getElementById('calendar-test-result');
+const retreatIndicator = document.getElementById('retreat-indicator');
+const moodChip = document.getElementById('mood-chip');
+const moodChipEmoji = document.getElementById('mood-chip-emoji');
+const moodChipText = document.getElementById('mood-chip-text');
+// MOOD_LABELS y MOOD_STATS vienen de window.PetMoodLabels (ver pet-mood-labels.js).
+// Compartido con los tests para que si se agrega un estado, el test avise.
 const chatPetAvatar = document.getElementById('chat-pet-avatar');
 const chatPetName = document.getElementById('chat-pet-name');
 const chatPetStatus = document.getElementById('chat-pet-status');
@@ -55,16 +76,179 @@ function setChatStatus(text, busy = false) {
 }
 
 function selectTab(tabId) {
-  if (!['pomodoro', 'chat', 'settings'].includes(tabId)) return;
+  if (!['pomodoro', 'chat', 'settings', 'memories', 'captures'].includes(tabId)) return;
   tabButtons.forEach(button => button.classList.remove('active'));
   tabPanels.forEach(panel => panel.classList.remove('active'));
   document.querySelector(`.tab-btn[data-tab="${tabId}"]`)?.classList.add('active');
   document.getElementById(`tab-${tabId}`)?.classList.add('active');
+  if (tabId === 'memories') loadMemoriesList();
+  else if (tabId === 'captures') loadCapturesList();
 }
 
 tabButtons.forEach(button => button.addEventListener('click', () => selectTab(button.dataset.tab)));
 window.api.onSwitchTab(selectTab);
 closeBtn.addEventListener('click', () => window.api.closeDashboard());
+
+/* === Track A — Pomodoro: plantilla, custom inputs, stats, adaptive === */
+
+const pomodoroTemplateSelect = document.getElementById('pomodoro-template-select');
+const customInputs = document.getElementById('custom-inputs');
+const customFocusMin = document.getElementById('custom-focus-min');
+const customBreakMin = document.getElementById('custom-break-min');
+const customLongBreakMin = document.getElementById('custom-longbreak-min');
+const customLongBreakEvery = document.getElementById('custom-longbreak-every');
+const pomodoroApplyBtn = document.getElementById('pomodoro-apply-btn');
+const pomodoroConfigStatus = document.getElementById('pomodoro-config-status');
+const statFocusToday = document.getElementById('stat-focus-today');
+const statWeekTotal = document.getElementById('stat-week-total');
+const statStreak = document.getElementById('stat-streak');
+
+function loadAdaptiveState() {
+  try {
+    const raw = localStorage.getItem('pomodoro.adaptive');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (typeof parsed.focusBlocksCompleted === 'number' && parsed.focusBlocksCompleted >= 0) {
+        focusBlocksCompleted = Math.floor(parsed.focusBlocksCompleted);
+      }
+      lastBreakWasLong = parsed.lastBreakWasLong === true;
+    }
+  } catch (_error) { /* ignore */ }
+}
+
+function saveAdaptiveState() {
+  try {
+    localStorage.setItem('pomodoro.adaptive', JSON.stringify({ focusBlocksCompleted, lastBreakWasLong }));
+  } catch (_error) { /* ignore */ }
+}
+
+function applyTemplate(config) {
+  if (!config || typeof config !== 'object') return;
+  const templateId = config.templateId || 'classic';
+  const isCustom = templateId === 'custom';
+  // Para templates prefijados, el server (main) es la fuente de verdad;
+  // los custom values se usan solo si el user selecciono custom.
+  let focusMin;
+  let breakMin;
+  let longBreakMin;
+  let longBreakEvery;
+  if (isCustom) {
+    focusMin = config.customFocusMin;
+    breakMin = config.customBreakMin;
+    longBreakMin = config.customLongBreakMin;
+    longBreakEvery = config.customLongBreakEvery;
+    customFocusMin.value = String(focusMin);
+    customBreakMin.value = String(breakMin);
+    customLongBreakMin.value = String(longBreakMin);
+    customLongBreakEvery.value = String(longBreakEvery);
+  } else {
+    const tpl = window.PomodoroTemplates && window.PomodoroTemplates.getTemplate(templateId);
+    if (tpl) {
+      focusMin = tpl.focusMin;
+      breakMin = tpl.breakMin;
+      longBreakMin = tpl.longBreakMin;
+      longBreakEvery = tpl.longBreakEvery;
+    } else {
+      // fallback a classic
+      focusMin = 25; breakMin = 5; longBreakMin = 15; longBreakEvery = 4;
+    }
+  }
+  // Aplicar al timer (solo si no esta corriendo, para no pisar un pomodoro en curso)
+  if (timerState === 'idle') {
+    focusDuration = focusMin * 60;
+    breakDuration = breakMin * 60;
+    if (timerMode === 'focus') {
+      totalDuration = focusDuration;
+      timeLeft = focusDuration;
+    } else {
+      totalDuration = breakDuration;
+      timeLeft = breakDuration;
+    }
+    updateTimerUI();
+  } else {
+    // Si esta corriendo, solo actualizamos el current mode (no el total para no romper el timer)
+    if (timerMode === 'focus') focusDuration = focusMin * 60;
+    else breakDuration = breakMin * 60;
+  }
+  // Actualizar UI
+  pomodoroTemplateSelect.value = templateId;
+  customInputs.hidden = !isCustom;
+  // Guardar last long break settings en currentPomodoroConfig
+  currentPomodoroConfig = {
+    ...config,
+    longBreakMin,
+    longBreakEvery
+  };
+}
+
+function setConfigStatus(message, kind = '') {
+  if (!pomodoroConfigStatus) return;
+  pomodoroConfigStatus.textContent = message;
+  pomodoroConfigStatus.className = 'pomodoro-config-status' + (kind ? ' ' + kind : '');
+}
+
+function onTemplateChange() {
+  const value = pomodoroTemplateSelect.value;
+  customInputs.hidden = value !== 'custom';
+  // Si cambia a custom, no guardamos hasta que el user presione Aplicar.
+  // Si cambia a un template prefijado, guardamos inmediatamente.
+  if (value !== 'custom') {
+    saveConfig({ templateId: value });
+  }
+}
+
+async function saveConfig(partial) {
+  try {
+    const updated = await window.api.pomodoroSetConfig(partial);
+    applyTemplate(updated);
+    setConfigStatus('Plantilla aplicada.', 'success');
+  } catch (error) {
+    setConfigStatus('Error: ' + (error?.message || 'no se pudo guardar'), 'error');
+  }
+}
+
+function onApplyCustom() {
+  const focusMin = parseInt(customFocusMin.value, 10);
+  const breakMin = parseInt(customBreakMin.value, 10);
+  const longBreakMin = parseInt(customLongBreakMin.value, 10);
+  const longBreakEvery = parseInt(customLongBreakEvery.value, 10);
+  if ([focusMin, breakMin, longBreakMin, longBreakEvery].some(v => !Number.isFinite(v))) {
+    setConfigStatus('Todos los valores deben ser números.', 'error');
+    return;
+  }
+  saveConfig({ templateId: 'custom', customFocusMin: focusMin, customBreakMin: breakMin, customLongBreakMin: longBreakMin, customLongBreakEvery: longBreakEvery });
+}
+
+async function refreshStats() {
+  if (!statFocusToday || !statWeekTotal || !statStreak) return;
+  try {
+    const stats = await window.api.pomodoroGetStats();
+    statFocusToday.textContent = String((stats && stats.today && stats.today.focusCount) || 0);
+    statWeekTotal.textContent = String((stats && stats.week && stats.week.focusCount) || 0);
+    // Streak: lo computa el server en register-session, pero podemos derivarlo local
+    // con el delta de los focus blocks de hoy. Por simplicidad, usamos focus hoy
+    // como indicador: si focus hoy > 0, racha >= 1; si no, 0.
+    // Para un valor exacto, hariamos falta un IPC pomodoro:get-streak. Por ahora,
+    // usamos focusCount de hoy como proxy visible: al menos el usuario ve un
+    // numero que cambia.
+    const streak = (stats && stats.today && stats.today.focusCount) > 0 ? Math.max(1, focusBlocksCompleted) : 0;
+    statStreak.textContent = String(streak);
+  } catch (error) {
+    // Silencioso: si falla IPC, mantenemos los valores anteriores
+  }
+}
+
+pomodoroTemplateSelect.addEventListener('change', onTemplateChange);
+if (pomodoroApplyBtn) pomodoroApplyBtn.addEventListener('click', onApplyCustom);
+
+// Subscribe a milestone desde main → mostrar como speech
+window.api.onStreakMilestone(payload => {
+  if (!payload || typeof payload !== 'object') return;
+  const text = typeof payload.message === 'string' ? payload.message : `¡${payload.days || ''} días de racha!`;
+  try {
+    window.api.triggerPetAction({ type: 'speak', text, emotion: 'happy', action: 'celebrate', sound: 'short', intent: 'praise' });
+  } catch (_e) { /* ignore */ }
+});
 
 function updateApiStatus() {
   apiStatus.textContent = hasApiKey
@@ -101,6 +285,172 @@ async function initSettings() {
   soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
   soundEnabledInput.checked = soundEnabled;
   applyPetTheme();
+
+  // P7 — cargar nombre de la mascota desde el main
+  try {
+    const { name } = await window.api.getPetName();
+    if (name) petNameInput.value = name;
+    petNameStatus.textContent = name
+      ? `Actual: ${name}. Cambialo si querés.`
+      : 'Usando el nombre por defecto (Luna/Max según la mascota).';
+  } catch (error) {
+    petNameStatus.textContent = 'No se pudo cargar el nombre.';
+  }
+
+  // Track A — cargar config de pomodoro + estado adaptativo + stats
+  loadAdaptiveState();
+  try {
+    const cfg = await window.api.pomodoroGetConfig();
+    applyTemplate(cfg);
+  } catch (e) {
+    console.error('No se pudo cargar config de pomodoro:', e);
+  }
+  // HOTFIX v2.0.1 — wrap refreshStats y refreshMoodWidget en try/catch.
+  // Bug v2.0.0: si alguna tiraba (e.g. window.PetMoodLabels undefined por
+  // race condition de scripts), el resto de initSettings (silent mode,
+  // calendar, briefing, pet name) nunca corría. Resultado: solo pomodoro
+  // parecía funcionar en Settings. Reportado por el user 2026-07-22.
+  try {
+    await refreshStats();
+  } catch (e) {
+    console.error('refreshStats fallo en init:', e);
+  }
+  setInterval(refreshStats, 60_000); // refresca stats cada 60s mientras el dashboard esta abierto
+
+  // A1 — mood widget: estado + 4 stats, refresco cada 5s
+  try {
+    await refreshMoodWidget();
+  } catch (e) {
+    console.error('refreshMoodWidget fallo en init:', e);
+  }
+  setInterval(refreshMoodWidget, 5000);
+
+  // I7 + I8 — cargar estado del briefing diario (default ON si falla)
+  try {
+    const briefingState = await window.api.briefingGetState();
+    briefingEnabledInput.checked = briefingState?.enabled !== false;
+  } catch (error) {
+    console.error('No se pudo cargar el estado del briefing:', error);
+    briefingEnabledInput.checked = true;
+  }
+  briefingEnabledInput.addEventListener('change', async () => {
+    const enabled = briefingEnabledInput.checked;
+    briefingEnabledInput.disabled = true;
+    try {
+      await window.api.briefingSetEnabled(enabled);
+    } catch (error) {
+      console.error('No se pudo guardar el estado del briefing:', error);
+      briefingEnabledInput.checked = !enabled;
+    } finally {
+      briefingEnabledInput.disabled = false;
+    }
+  });
+
+  // Track B — W1 silent mode: cargar el flag actual, wire el toggle.
+  try {
+    const silentEnabled = await window.api.configGetSilentMode();
+    silentModeInput.checked = silentEnabled === true;
+  } catch (error) {
+    console.error('No se pudo cargar el estado de silent mode:', error);
+    silentModeInput.checked = false;
+  }
+  silentModeInput.addEventListener('change', async () => {
+    const enabled = silentModeInput.checked;
+    silentModeInput.disabled = true;
+    try {
+      await window.api.configSetSilentMode(enabled);
+    } catch (error) {
+      console.error('No se pudo guardar silent mode:', error);
+      silentModeInput.checked = !enabled;
+      alert('No se pudo cambiar el modo: ' + (error?.message || error));
+    } finally {
+      silentModeInput.disabled = false;
+    }
+  });
+
+  // Track B — W2 calendar: cargar el path actual, wire test + clear.
+  try {
+    const calPath = await window.api.configGetCalendarPath();
+    calendarPathInput.value = calPath || '';
+  } catch (error) {
+    console.error('No se pudo cargar el path del calendario:', error);
+  }
+  // Persistir el path al perder foco o presionar Enter (no en cada keystroke).
+  let calendarPathSaveTimer = null;
+  async function saveCalendarPath() {
+    const value = calendarPathInput.value.trim();
+    const normalized = value.length > 0 ? value : null;
+    calendarTestBtn.disabled = true;
+    calendarClearBtn.disabled = true;
+    try {
+      await window.api.configSetCalendarPath(normalized);
+    } catch (error) {
+      console.error('No se pudo guardar el path del calendario:', error);
+      alert('No se pudo guardar el path: ' + (error?.message || error));
+    } finally {
+      calendarTestBtn.disabled = false;
+      calendarClearBtn.disabled = false;
+    }
+  }
+  calendarPathInput.addEventListener('change', saveCalendarPath);
+  calendarPathInput.addEventListener('blur', saveCalendarPath);
+  calendarPathInput.addEventListener('keydown', event => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      saveCalendarPath();
+    }
+  });
+  calendarTestBtn.addEventListener('click', async () => {
+    const filePath = calendarPathInput.value.trim();
+    if (!filePath) {
+      renderCalendarTestError('Ingresa una ruta primero.');
+      return;
+    }
+    calendarTestBtn.disabled = true;
+    try {
+      const result = await window.api.calendarTestPath(filePath);
+      if (result && result.ok) {
+        renderCalendarTestSuccess(result.count, result.events);
+      } else {
+        renderCalendarTestError(result?.error || 'Error desconocido.');
+      }
+    } catch (error) {
+      renderCalendarTestError(error?.message || 'No se pudo probar el path.');
+    } finally {
+      calendarTestBtn.disabled = false;
+    }
+  });
+  calendarClearBtn.addEventListener('click', async () => {
+    calendarPathInput.value = '';
+    try {
+      await window.api.configSetCalendarPath(null);
+      renderCalendarTestClear();
+    } catch (error) {
+      console.error('No se pudo limpiar el path:', error);
+    }
+  });
+
+  // Subscribe al cambio de silent mode (de otras fuentes: atajo global).
+  window.api.onSilentModeChanged(({ silentMode }) => {
+    if (silentModeInput.checked !== silentMode) {
+      silentModeInput.checked = silentMode === true;
+    }
+  });
+
+  // Subscribe al cambio de retreat (W2). Muestra un indicador con el
+  // nombre del evento cuando esta activo.
+  window.api.onRetreatChanged(({ active, summary, until }) => {
+    if (active && summary) {
+      const untilText = formatRetreatTime(until);
+      retreatIndicator.textContent = untilText
+        ? `En reunion "${summary}" hasta las ${untilText}`
+        : `En reunion "${summary}"`;
+      retreatIndicator.hidden = false;
+    } else {
+      retreatIndicator.hidden = true;
+      retreatIndicator.textContent = '';
+    }
+  });
 
   catPreview.innerHTML = window.catSVG;
   dogPreview.innerHTML = window.dogSVG;
@@ -148,6 +498,20 @@ saveSettingsBtn.addEventListener('click', async () => {
     soundEnabled = soundEnabledInput.checked;
     localStorage.setItem('soundEnabled', String(soundEnabled));
     window.api.syncSettings({ pet: currentPet, soundEnabled });
+
+    // P7 — guardar nombre de la mascota
+    const newPetName = petNameInput.value.trim();
+    if (newPetName) {
+      try {
+        const result = await window.api.setPetName(newPetName);
+        if (result?.name) {
+          petNameStatus.textContent = `Guardado como: ${result.name}.`;
+        }
+      } catch (error) {
+        alert(`Nombre inválido: ${error.message}`);
+      }
+    }
+
     updateApiStatus();
     alert('¡Ajustes guardados correctamente!');
   } catch (error) {
@@ -183,15 +547,31 @@ window.api.onSettingsUpdated(settings => {
   renderChatHistory();
 });
 
-function updateTimerUI() {
-  const minutes = Math.floor(timeLeft / 60).toString().padStart(2, '0');
-  const seconds = (timeLeft % 60).toString().padStart(2, '0');
+function updateTimerUI(data) {
+  const remaining = typeof data?.remainingSec === 'number' ? data.remainingSec : timeLeft;
+  const total = typeof data?.totalDurationSec === 'number' ? data.totalDurationSec : (totalDuration || 25 * 60);
+  const minutes = Math.floor(remaining / 60).toString().padStart(2, '0');
+  const seconds = (remaining % 60).toString().padStart(2, '0');
   timerTime.textContent = `${minutes}:${seconds}`;
-  timerProgress.style.strokeDashoffset = 502.6 * (1 - timeLeft / totalDuration);
-  const isFocus = timerMode === 'focus';
+  timerProgress.style.strokeDashoffset = 502.6 * (1 - remaining / total);
+  
+  const mode = data?.mode || timerMode;
+  const isFocus = mode === 'focus';
   timerStatus.textContent = isFocus ? 'Enfoque' : 'Descanso';
   timerStatus.style.color = isFocus ? 'var(--primary)' : 'var(--success)';
   timerProgress.style.stroke = isFocus ? 'var(--primary)' : 'var(--success)';
+
+  const status = data?.status || timerState;
+  if (status === 'running') {
+    timerToggleBtn.querySelector('span').textContent = 'Pausar';
+    timerToggleBtn.querySelector('svg').innerHTML = '<rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect>';
+  } else if (status === 'paused') {
+    timerToggleBtn.querySelector('span').textContent = 'Reanudar';
+    timerToggleBtn.querySelector('svg').innerHTML = '<polygon points="5 3 19 12 5 21 5 3"></polygon>';
+  } else {
+    timerToggleBtn.querySelector('span').textContent = 'Iniciar';
+    timerToggleBtn.querySelector('svg').innerHTML = '<polygon points="5 3 19 12 5 21 5 3"></polygon>';
+  }
 }
 
 function playNotification() {
@@ -207,68 +587,53 @@ function playNotification() {
     oscillator.start();
     oscillator.stop(context.currentTime + 0.45);
   } catch (_error) {
-    // Soft-fail: si el audio no esta disponible, el timer sigue funcionando.
-    // Para diagnosticar, agregar log dentro de este catch en dev.
+    // Soft-fail
   }
 }
 
-function startTimer() {
-  clearInterval(timerInterval);
-  timerInterval = setInterval(async () => {
-    timeLeft--;
-    updateTimerUI();
-    if (timeLeft > 0) return;
+timerToggleBtn.addEventListener('click', async () => {
+  if (window.api?.pomodoroToggle) {
+    const state = await window.api.pomodoroToggle();
+    updateTimerUI(state);
+  }
+});
 
-    clearInterval(timerInterval);
-    timerInterval = null;
-    timerState = 'idle';
-    timerToggleBtn.querySelector('span').textContent = 'Iniciar';
+timerResetBtn.addEventListener('click', async () => {
+  if (window.api?.pomodoroReset) {
+    const state = await window.api.pomodoroReset();
+    updateTimerUI(state);
+  }
+});
+
+if (window.api?.onPomodoroTick) {
+  window.api.onPomodoroTick((data) => {
+    timeLeft = data.remainingSec;
+    totalDuration = data.totalDurationSec;
+    timerMode = data.mode;
+    timerState = data.status;
+    updateTimerUI(data);
+  });
+}
+
+if (window.api?.onPomodoroCompleted) {
+  window.api.onPomodoroCompleted(() => {
     playNotification();
-
-    const finishedMode = timerMode;
-    timerMode = finishedMode === 'focus' ? 'break' : 'focus';
-    totalDuration = timerMode === 'focus' ? focusDuration : breakDuration;
-    timeLeft = totalDuration;
-
-    try {
-      const tip = await window.api.aiQuickTip({
-        petType: currentPet,
-        context: finishedMode === 'focus' ? 'break_start' : 'focus_start'
-      });
-      if (tip) window.api.triggerPetAction({ type: 'speak', text: tip, emotion: 'calm', action: 'none', sound: 'none', intent: 'none' });
-    } catch (error) {
-      console.error('Error getting Pomodoro tip:', error);
-    }
-    updateTimerUI();
-  }, 1000);
+    refreshStats();
+  });
 }
 
-timerToggleBtn.addEventListener('click', () => {
-  if (timerState === 'idle' || timerState === 'paused') {
-    timerState = 'running';
-    timerToggleBtn.querySelector('span').textContent = 'Pausar';
-    timerToggleBtn.querySelector('svg').innerHTML = '<rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect>';
-    startTimer();
-  } else {
-    timerState = 'paused';
-    timerToggleBtn.querySelector('span').textContent = 'Reanudar';
-    timerToggleBtn.querySelector('svg').innerHTML = '<polygon points="5 3 19 12 5 21 5 3"></polygon>';
-    clearInterval(timerInterval);
-    timerInterval = null;
-  }
-});
-
-timerResetBtn.addEventListener('click', () => {
-  clearInterval(timerInterval);
-  timerInterval = null;
-  timerState = 'idle';
-  timerMode = 'focus';
-  totalDuration = focusDuration;
-  timeLeft = focusDuration;
-  timerToggleBtn.querySelector('span').textContent = 'Iniciar';
-  timerToggleBtn.querySelector('svg').innerHTML = '<polygon points="5 3 19 12 5 21 5 3"></polygon>';
-  updateTimerUI();
-});
+// Cargar estado inicial del timer al abrir dashboard
+if (window.api?.pomodoroGetState) {
+  window.api.pomodoroGetState().then(state => {
+    if (state) {
+      timeLeft = state.remainingSec;
+      totalDuration = state.totalDurationSec;
+      timerMode = state.mode;
+      timerState = state.status;
+      updateTimerUI(state);
+    }
+  }).catch(() => {});
+}
 
 // Parsea respuesta de la IA via PetProtocol. Intenta JSON, fallback a tags viejos, fallback a texto libre.
 function parseReply(reply) {
@@ -366,6 +731,51 @@ chatInput.addEventListener('keydown', event => {
   if (event.key === 'Enter') sendChatMessage();
 });
 
+/* === A4 — Typing rate monitor + Do Not Disturb === */
+
+const {
+  shouldEnterDoNotDisturb,
+  shouldExitDoNotDisturb,
+  computeTypingRate
+} = window.ContextAwareness;
+
+const keystrokes = []; // rolling buffer de {ts} eventos
+let isInDnd = false;
+let lastDndCheck = 0;
+const DND_CHECK_INTERVAL_MS = 10_000; // chequea cada 10s (no es caro)
+
+chatInput.addEventListener('input', () => {
+  // Track todos los keystrokes (incluyendo paste, deletion, etc).
+  // El calculo WPM es proporcional al numero de eventos, no al texto.
+  keystrokes.push({ ts: Date.now() });
+  // Trim del buffer para que no crezca indefinidamente (mantener 5 min de historial)
+  const cutoff = Date.now() - 5 * 60_000;
+  while (keystrokes.length > 0 && keystrokes[0].ts < cutoff) {
+    keystrokes.shift();
+  }
+  maybeCheckDnd();
+});
+
+function maybeCheckDnd() {
+  const now = Date.now();
+  if (now - lastDndCheck < DND_CHECK_INTERVAL_MS) return;
+  lastDndCheck = now;
+  const shouldBeInDnd = isInDnd
+    ? !shouldExitDoNotDisturb(keystrokes)
+    : shouldEnterDoNotDisturb(keystrokes);
+  if (shouldBeInDnd !== isInDnd) {
+    isInDnd = shouldBeInDnd;
+    window.api.setDoNotDisturb(isInDnd).catch(e => console.error('DND update failed:', e));
+  }
+}
+
+// Cleanup cuando la tab se cierra/cambia (best-effort)
+window.addEventListener('beforeunload', () => {
+  if (isInDnd) {
+    window.api.setDoNotDisturb(false).catch(() => {});
+  }
+});
+
 quickPromptButtons.forEach(button => {
   button.addEventListener('click', () => {
     if (isSending) return;
@@ -378,5 +788,343 @@ window.addEventListener('DOMContentLoaded', async () => {
   await initSettings();
   updateTimerUI();
   const defaultTab = window.location.hash.substring(1);
-  selectTab(['pomodoro', 'chat', 'settings'].includes(defaultTab) ? defaultTab : 'pomodoro');
+  selectTab(['pomodoro', 'chat', 'settings', 'memories', 'captures'].includes(defaultTab) ? defaultTab : 'pomodoro');
 });
+
+/**
+ * Refresca el widget de mood: estado + 4 stats.
+ * - Llama a window.api.getMood() (IPC -> main.js -> currentMood)
+ * - Usa window.PetMood.deriveState(mood) para derivar el estado
+ * - Actualiza el chip y las 4 barras
+ * Si el mood aún no está inicializado en main, sale silenciosamente.
+ */
+async function refreshMoodWidget() {
+  if (!moodChip) return;
+  let mood;
+  try {
+    mood = await window.api.getMood();
+  } catch (error) {
+    // IPC falla (ej: dashboard abierto antes que main init) — silencioso.
+    return;
+  }
+  if (!mood || typeof mood !== 'object') return;
+
+  // HOTFIX v2.0.1 — si las dependencias de UI no estan cargadas (por
+  // cualquier razon: race de scripts, CSP, fallo de red), usar defaults
+  // en vez de tirar. Bug v2.0.0: si tiraba aca, mataba el resto de
+  // initSettings (silent mode, calendar, briefing nunca se cargaban).
+  if (!window.PetMood || typeof window.PetMood.deriveState !== 'function') return;
+  if (!window.PetMoodLabels || typeof window.PetMoodLabels.MOOD_LABELS !== 'object') return;
+  if (typeof window.PetMoodLabels.getMoodLabel !== 'function') return;
+  const state = window.PetMood.deriveState(mood);
+  const label = window.PetMoodLabels.getMoodLabel(currentPet, state);
+
+  moodChip.dataset.state = state;
+  moodChip.className = 'mood-chip mood-state-' + state;
+  if (moodChipEmoji) moodChipEmoji.textContent = label.emoji;
+  if (moodChipText) moodChipText.textContent = label.text;
+
+  for (const stat of window.PetMoodLabels.MOOD_STATS) {
+    const raw = mood[stat];
+    const value = (typeof raw === 'number' && !Number.isNaN(raw))
+      ? Math.max(0, Math.min(100, Math.round(raw)))
+      : 0;
+    const valueEl = document.getElementById('mood-stat-' + stat + '-value');
+    const barEl = document.getElementById('mood-stat-' + stat + '-bar');
+    if (valueEl) valueEl.textContent = String(value);
+    if (barEl) {
+      barEl.style.width = value + '%';
+      barEl.dataset.stat = stat;
+    }
+  }
+}
+
+/* === P3 — Recuerdos persistentes (tab Recuerdos) === */
+
+const memoriesListEl = document.getElementById('memories-list');
+const memoriesCountEl = document.getElementById('memories-count');
+const memoriesRedactInput = document.getElementById('memories-redact-input');
+const memoriesClearBtn = document.getElementById('memories-clear-btn');
+
+function formatMemoryDate(timestamp) {
+  if (typeof timestamp !== 'number') return '';
+  const d = new Date(timestamp);
+  return d.toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+async function loadMemoriesList() {
+  if (!memoriesListEl) return;
+  let store;
+  try {
+    store = await window.api.getMemories();
+  } catch (error) {
+    memoriesListEl.innerHTML = '<div class="memories-empty">No se pudieron cargar los recuerdos.</div>';
+    return;
+  }
+  if (!store || !Array.isArray(store.memories) || store.memories.length === 0) {
+    memoriesListEl.innerHTML = '<div class="memories-empty">Aun no hay recuerdos. Hablale a tu mascota y los ira guardando automaticamente.</div>';
+    memoriesCountEl.textContent = '0/50';
+    return;
+  }
+  // Sort por createdAt desc (mas reciente primero)
+  const sorted = [...store.memories].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  memoriesCountEl.textContent = `${sorted.length}/50`;
+  memoriesListEl.innerHTML = '';
+  for (const m of sorted) {
+    const item = document.createElement('div');
+    item.className = 'memory-item';
+    const text = document.createElement('div');
+    text.className = 'memory-item-text';
+    text.textContent = m.text;
+    const meta = document.createElement('div');
+    meta.className = 'memory-item-meta';
+    const dateSpan = document.createElement('span');
+    dateSpan.className = 'memory-item-date';
+    dateSpan.textContent = formatMemoryDate(m.createdAt);
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'memory-item-remove btn-icon';
+    removeBtn.setAttribute('aria-label', 'Borrar este recuerdo');
+    removeBtn.title = 'Borrar este recuerdo';
+    removeBtn.textContent = '×';
+    removeBtn.addEventListener('click', async () => {
+      if (!confirm('¿Borrar este recuerdo?')) return;
+      try {
+        await window.api.removeMemory(m.id);
+        await loadMemoriesList();
+      } catch (e) {
+        alert('No se pudo borrar: ' + e.message);
+      }
+    });
+    meta.append(dateSpan, removeBtn);
+    item.append(text, meta);
+    memoriesListEl.appendChild(item);
+  }
+  // Sincronizar el toggle con el valor del store
+  if (memoriesRedactInput) {
+    memoriesRedactInput.checked = store.redactPII !== false;
+  }
+}
+
+if (memoriesRedactInput) {
+  memoriesRedactInput.addEventListener('change', async () => {
+    const enabled = memoriesRedactInput.checked;
+    try {
+      const result = await window.api.setMemoryRedact(enabled);
+      if (result && result.changed && enabled && result.redactedCount > 0) {
+        // Mostrar feedback si se redactaron recuerdos existentes
+        const msg = `Se redactaron ${result.redactedCount} recuerdo(s) existentes.`;
+        const hint = document.getElementById('memories-redact-hint');
+        if (hint) {
+          hint.textContent = msg;
+          setTimeout(() => { hint.textContent = 'ON: los nuevos recuerdos se redactan antes de guardar. Al activarlo, los existentes tambien se redactan.'; }, 3000);
+        }
+      }
+      await loadMemoriesList();
+    } catch (e) {
+      alert('No se pudo cambiar: ' + e.message);
+    }
+  });
+}
+
+if (memoriesClearBtn) {
+  memoriesClearBtn.addEventListener('click', async () => {
+    if (!confirm('¿Borrar TODOS los recuerdos? Esta accion no se puede deshacer.')) return;
+    try {
+      const count = await window.api.clearMemories();
+      await loadMemoriesList();
+      if (count > 0) console.log(`Borrados ${count} recuerdos.`);
+    } catch (e) {
+      alert('No se pudo borrar: ' + e.message);
+    }
+  });
+}
+
+/* === I2 — Capturas rapidas (tab Capturas) === */
+
+const capturesListEl = document.getElementById('captures-list');
+const capturesCountEl = document.getElementById('captures-count');
+const clearCapturesBtn = document.getElementById('clear-captures-btn');
+const weeklyReportBtn = document.getElementById('weekly-report-btn');
+const weeklyReportOutput = document.getElementById('weekly-report-output');
+const weeklyReportActions = document.getElementById('weekly-report-actions');
+const weeklyReportCopyBtn = document.getElementById('weekly-report-copy-btn');
+
+function formatCaptureTimestamp(ts) {
+  if (typeof ts !== 'number') return '';
+  const now = Date.now();
+  const diffSec = Math.floor((now - ts) / 1000);
+  if (diffSec < 60) return 'ahora';
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `hace ${diffMin}m`;
+  const diffHour = Math.floor(diffMin / 60);
+  if (diffHour < 24) return `hace ${diffHour}h`;
+  const diffDay = Math.floor(diffHour / 24);
+  if (diffDay < 7) return `hace ${diffDay}d`;
+  const d = new Date(ts);
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  return `${day}/${month}`;
+}
+
+function truncateForPreview(text, maxChars) {
+  if (typeof text !== 'string') return '';
+  const n = typeof maxChars === 'number' && maxChars > 1 ? Math.floor(maxChars) : 60;
+  if (text.length <= n) return text;
+  return text.slice(0, n - 1) + '…';
+}
+
+async function loadCapturesList() {
+  if (!capturesListEl) return;
+  let list;
+  try {
+    list = await window.api.quickCaptureList();
+  } catch (error) {
+    capturesListEl.innerHTML = '<li class="captures-empty">No se pudieron cargar las capturas.</li>';
+    return;
+  }
+  if (!Array.isArray(list) || list.length === 0) {
+    capturesListEl.innerHTML = '<li class="captures-empty">Aun no hay capturas. Apreta Ctrl/Cmd+Shift+Q sobre la mascota para agregar una.</li>';
+    if (capturesCountEl) capturesCountEl.textContent = '0/100';
+    return;
+  }
+  if (capturesCountEl) capturesCountEl.textContent = `${list.length}/100`;
+  // Limpiar (usando textContent para no generar XSS via innerHTML)
+  capturesListEl.textContent = '';
+  for (const c of list) {
+    const li = document.createElement('li');
+    li.className = 'captures-item';
+    const text = document.createElement('span');
+    text.className = 'captures-item-text';
+    text.textContent = truncateForPreview(c.text || '', 120);
+    const time = document.createElement('span');
+    time.className = 'captures-item-time';
+    time.textContent = formatCaptureTimestamp(c.createdAt);
+    li.append(text, time);
+    capturesListEl.appendChild(li);
+  }
+}
+
+if (clearCapturesBtn) {
+  clearCapturesBtn.addEventListener('click', async () => {
+    if (!confirm('¿Borrar TODAS las capturas? Esta accion no se puede deshacer.')) return;
+    clearCapturesBtn.disabled = true;
+    try {
+      const count = await window.api.quickCaptureClear();
+      await loadCapturesList();
+      if (count > 0) console.log(`Borradas ${count} capturas.`);
+    } catch (e) {
+      alert('No se pudo borrar: ' + e.message);
+    } finally {
+      clearCapturesBtn.disabled = false;
+    }
+  });
+}
+
+/* === W3 — Reporte semanal (boton en tab Pomodoro) === */
+
+async function generateWeeklyReport() {
+  if (!weeklyReportBtn || !weeklyReportOutput) return;
+  weeklyReportBtn.disabled = true;
+  try {
+    const result = await window.api.weeklyReportGet({});
+    if (result && typeof result.markdown === 'string') {
+      weeklyReportOutput.textContent = result.markdown;
+      weeklyReportOutput.hidden = false;
+      if (weeklyReportActions) weeklyReportActions.hidden = false;
+      // Guardamos el markdown en dataset para el copy button
+      weeklyReportOutput.dataset.markdown = result.markdown;
+    } else {
+      weeklyReportOutput.textContent = 'No se pudo generar el reporte.';
+      weeklyReportOutput.hidden = false;
+      if (weeklyReportActions) weeklyReportActions.hidden = true;
+    }
+  } catch (e) {
+    weeklyReportOutput.textContent = `Error: ${e.message}`;
+    weeklyReportOutput.hidden = false;
+    if (weeklyReportActions) weeklyReportActions.hidden = true;
+  } finally {
+    weeklyReportBtn.disabled = false;
+  }
+}
+
+if (weeklyReportBtn) {
+  weeklyReportBtn.addEventListener('click', generateWeeklyReport);
+}
+
+if (weeklyReportCopyBtn) {
+  weeklyReportCopyBtn.addEventListener('click', async () => {
+    const md = weeklyReportOutput && weeklyReportOutput.dataset ? weeklyReportOutput.dataset.markdown : '';
+    if (!md) return;
+    try {
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        await navigator.clipboard.writeText(md);
+        const original = weeklyReportCopyBtn.textContent;
+        weeklyReportCopyBtn.textContent = '¡Copiado!';
+        setTimeout(() => { weeklyReportCopyBtn.textContent = original; }, 1500);
+      } else {
+        // Fallback: select text in the pre
+        const range = document.createRange();
+        range.selectNodeContents(weeklyReportOutput);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+    } catch (e) {
+      console.error('Copy failed:', e);
+    }
+  });
+}
+
+/* === Track B — W1 silent + W2 calendar helpers (dashboard) === */
+
+function formatRetreatTime(iso) {
+  if (typeof iso !== 'string' || !iso) return '';
+  try {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return '';
+    const h = String(d.getHours()).padStart(2, '0');
+    const m = String(d.getMinutes()).padStart(2, '0');
+    return `${h}:${m}`;
+  } catch (_e) {
+    return '';
+  }
+}
+
+function renderCalendarTestError(message) {
+  if (!calendarTestResult) return;
+  // textContent para no generar XSS
+  calendarTestResult.className = 'calendar-test-result error';
+  calendarTestResult.textContent = `❌ ${message}`;
+}
+
+function renderCalendarTestSuccess(count, events) {
+  if (!calendarTestResult) return;
+  calendarTestResult.className = 'calendar-test-result';
+  // Limpia cualquier contenido previo
+  calendarTestResult.textContent = '';
+  const header = document.createElement('div');
+  header.textContent = `✅ ${count} evento${count === 1 ? '' : 's'} encontrado${count === 1 ? '' : 's'}.`;
+  calendarTestResult.appendChild(header);
+  if (Array.isArray(events) && events.length > 0) {
+    const list = document.createElement('ul');
+    for (const ev of events) {
+      const li = document.createElement('li');
+      const start = formatRetreatTime(ev.start);
+      const end = formatRetreatTime(ev.end);
+      const summary = (ev.summary || '(sin titulo)');
+      // textContent para evitar XSS
+      li.textContent = start && end
+        ? `${start}–${end} · ${summary}`
+        : summary;
+      list.appendChild(li);
+    }
+    calendarTestResult.appendChild(list);
+  }
+}
+
+function renderCalendarTestClear() {
+  if (!calendarTestResult) return;
+  calendarTestResult.className = 'calendar-test-result';
+  calendarTestResult.textContent = 'Sin calendario configurado. W2 inerte.';
+}

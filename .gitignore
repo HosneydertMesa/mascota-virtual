@@ -4,6 +4,8 @@ node_modules/
 # Logs
 debug.log
 *.log
+*.log.err
+smoke-debug.*
 
 # Build / distribution
 dist/
