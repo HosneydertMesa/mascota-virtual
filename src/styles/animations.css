@@ -1,20 +1,26 @@
 /* === ANIMATIONS & KEYFRAMES === */
 
-/* Breathing */
+/* Breathing — mood offset via CSS vars so mood never overrides .pet-body transform */
+#pet-container {
+  --mood-dy: 0px;
+  --mood-rot: 0deg;
+  --mood-tail: 0deg;
+}
+
 @keyframes breathing {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.02) translateY(-1px); }
-  100% { transform: scale(1); }
+  0% { transform: scale(1) translateY(var(--mood-dy, 0px)) rotate(var(--mood-rot, 0deg)); }
+  50% { transform: scale(1.02) translateY(calc(-1px + var(--mood-dy, 0px))) rotate(var(--mood-rot, 0deg)); }
+  100% { transform: scale(1) translateY(var(--mood-dy, 0px)) rotate(var(--mood-rot, 0deg)); }
 }
 
 .anim-breath {
   animation: breathing 3s ease-in-out infinite;
 }
 
-/* Tail Wagging */
+/* Tail Wagging — mood angle composed into the keyframes */
 @keyframes wag {
-  0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(12deg); }
+  0%, 100% { transform: rotate(var(--mood-tail, 0deg)); }
+  50% { transform: rotate(calc(12deg + var(--mood-tail, 0deg))); }
 }
 
 .anim-wag {
@@ -78,7 +84,7 @@
 
 .walking-bob.cat-walk .anim-wag {
   animation: catTailWalk 1.3s infinite ease-in-out !important;
-  transform-origin: 130px 145px !important;
+  transform-origin: 148px 124px !important;
 }
 
 @keyframes catTailWalk {
@@ -98,7 +104,7 @@
 
 .walking-bob.dog-walk .anim-wag-fast {
   animation: dogTailWalk 0.24s infinite ease-in-out !important;
-  transform-origin: 130px 145px !important;
+  transform-origin: 158px 112px !important;
 }
 
 @keyframes dogTailWalk {
@@ -126,89 +132,132 @@
   50% { transform: rotate(-36deg); }
 }
 
-/* Diagonal contralateral pairing (phase A: back-left + right-paw) */
+/* Diagonal contralateral pairing (phase A: back-left + right-paw).
+   Walk is LEFT PROFILE — do not use old frontal 58px 132px here. */
 .cat-walk .back-foot-left {
   animation: catWalkSwingLeft 0.65s infinite ease-in-out;
-  transform-origin: 58px 132px;
+  transform-origin: 128px 130px;
 }
 .cat-walk .left-paw {
   animation: catWalkSwingRight 0.65s infinite ease-in-out;
-  transform-origin: 76px 132px;
+  transform-origin: 64px 134px;
 }
 .cat-walk .back-foot-right {
   animation: catWalkSwingRight 0.65s infinite ease-in-out;
-  transform-origin: 142px 132px;
+  transform-origin: 144px 132px;
 }
 .cat-walk .right-paw {
   animation: catWalkSwingLeft 0.65s infinite ease-in-out;
-  transform-origin: 110px 132px;
+  transform-origin: 84px 132px;
 }
+.cat-walk .pet-body { transform-origin: 112px 140px; }
+.cat-walk .pet-head { transform-origin: 58px 108px; }
 
 .dog-walk .back-foot-left {
   animation: dogWalkSwingLeft 0.48s infinite ease-in-out;
-  transform-origin: 56px 134px;
+  transform-origin: 154px 124px;
 }
 .dog-walk .left-paw {
   animation: dogWalkSwingRight 0.48s infinite ease-in-out;
-  transform-origin: 76px 134px;
+  transform-origin: 78px 116px;
 }
 .dog-walk .back-foot-right {
   animation: dogWalkSwingRight 0.48s infinite ease-in-out;
-  transform-origin: 144px 134px;
+  transform-origin: 116px 122px;
 }
 .dog-walk .right-paw {
   animation: dogWalkSwingLeft 0.48s infinite ease-in-out;
-  transform-origin: 110px 134px;
+  transform-origin: 58px 114px;
 }
+.dog-walk .pet-body { transform-origin: 112px 138px; }
+.dog-walk .pet-head { transform-origin: 46px 96px; }
 
-/* Mood body language on #pet-container (not chat, not dashboard chips).
-   pet-body has inline transform, so translateY uses !important. */
+/* Sit keeps old frontal pivots (Luna) / Max sit origins. */
+body[data-pet="cat"] #pet-container.sitting .anim-wag { transform-origin: 70px 140px; }
+body[data-pet="cat"] #pet-container.sitting .back-foot-left { transform-origin: 58px 132px; }
+body[data-pet="cat"] #pet-container.sitting .back-foot-right { transform-origin: 142px 132px; }
+body[data-pet="cat"] #pet-container.sitting .left-paw { transform-origin: 83px 132px; }
+body[data-pet="cat"] #pet-container.sitting .right-paw { transform-origin: 117px 132px; }
+body[data-pet="cat"] #pet-container.sitting .pet-body { transform-origin: 100px 165px; }
+body[data-pet="cat"] #pet-container.sitting .pet-head { transform-origin: 100px 105px; }
+
+body[data-pet="dog"] #pet-container.sitting .anim-wag { transform-origin: 70px 142px; }
+body[data-pet="dog"] #pet-container.sitting .back-foot-left { transform-origin: 64px 134px; }
+body[data-pet="dog"] #pet-container.sitting .back-foot-right { transform-origin: 136px 134px; }
+body[data-pet="dog"] #pet-container.sitting .left-paw { transform-origin: 83px 132px; }
+body[data-pet="dog"] #pet-container.sitting .right-paw { transform-origin: 117px 132px; }
+body[data-pet="dog"] #pet-container.sitting .pet-body { transform-origin: 100px 152px; }
+body[data-pet="dog"] #pet-container.sitting .pet-head { transform-origin: 100px 105px; }
+
+/* Luna idle standing pivots (when not walking / sitting). */
+body[data-pet="cat"] #pet-container:not(.cat-walk):not(.sitting) .anim-wag { transform-origin: 148px 118px; }
+body[data-pet="cat"] #pet-container:not(.cat-walk):not(.sitting) .back-foot-left { transform-origin: 118px 124px; }
+body[data-pet="cat"] #pet-container:not(.cat-walk):not(.sitting) .back-foot-right { transform-origin: 146px 122px; }
+body[data-pet="cat"] #pet-container:not(.cat-walk):not(.sitting) .left-paw { transform-origin: 70px 126px; }
+body[data-pet="cat"] #pet-container:not(.cat-walk):not(.sitting) .right-paw { transform-origin: 96px 124px; }
+body[data-pet="cat"] #pet-container:not(.cat-walk):not(.sitting) .pet-body { transform-origin: 112px 132px; }
+body[data-pet="cat"] #pet-container:not(.cat-walk):not(.sitting) .pet-head { transform-origin: 92px 107px; }
+
+/* Mood overlays. Do NOT set transform on .pet-body — that kills @keyframes breathing.
+   Body offset is composed into breathing via --mood-dy / --mood-rot.
+   Tail offset is composed into wag via --mood-tail (except bored: no wag). */
+#pet-container.mood-happy {
+  --mood-dy: -2px;
+  --mood-rot: 0deg;
+  --mood-tail: -18deg;
+}
 #pet-container.mood-happy .anim-wag,
 #pet-container.mood-happy .anim-wag-fast {
-  animation-duration: 0.45s;
+  animation-duration: 0.8s;
 }
-#pet-container.mood-happy .pet-body {
-  transform: translateY(-3px) !important;
-}
-#pet-container.mood-happy .pet-ear-left { transform: rotate(-4deg); }
-#pet-container.mood-happy .pet-ear-right { transform: rotate(4deg); }
+#pet-container.mood-happy .pet-ear-left { transform: rotate(-8deg); }
+#pet-container.mood-happy .pet-ear-right { transform: rotate(8deg); }
 
+#pet-container.mood-calm {
+  --mood-dy: 0px;
+  --mood-rot: 0deg;
+  --mood-tail: 0deg;
+}
 #pet-container.mood-calm .anim-wag {
   animation-duration: 1.2s;
 }
-#pet-container.mood-calm .pet-body {
-  transform: translateY(0) !important;
-}
 
+#pet-container.mood-sleepy {
+  --mood-dy: 3px;
+  --mood-rot: 0deg;
+  --mood-tail: 16deg;
+}
 #pet-container.mood-sleepy .anim-wag,
 #pet-container.mood-sleepy .anim-wag-fast {
   animation-duration: 2.8s;
 }
-#pet-container.mood-sleepy .pet-body {
-  transform: translateY(4px) !important;
-}
-#pet-container.mood-sleepy .pet-ear-left { transform: rotate(-10deg); }
-#pet-container.mood-sleepy .pet-ear-right { transform: rotate(10deg); }
+#pet-container.mood-sleepy .pet-ear-left { transform: rotate(10deg); }
+#pet-container.mood-sleepy .pet-ear-right { transform: rotate(-10deg); }
 
+#pet-container.mood-sad {
+  --mood-dy: 5px;
+  --mood-rot: 2deg;
+  --mood-tail: 28deg;
+}
 #pet-container.mood-sad .anim-wag,
 #pet-container.mood-sad .anim-wag-fast {
   animation-duration: 2.4s;
 }
-#pet-container.mood-sad .pet-body {
-  transform: translateY(5px) !important;
-}
-#pet-container.mood-sad .pet-ear-left,
-#pet-container.mood-sad .pet-ear-right { transform: rotate(-12deg); }
+#pet-container.mood-sad .pet-ear-left { transform: rotate(18deg); }
+#pet-container.mood-sad .pet-ear-right { transform: rotate(-18deg); }
 
+#pet-container.mood-bored {
+  --mood-dy: 1px;
+  --mood-rot: -3deg;
+  --mood-tail: 6deg;
+}
 #pet-container.mood-bored .anim-wag,
 #pet-container.mood-bored .anim-wag-fast {
-  animation-duration: 1.8s;
+  animation: none;
+  transform: rotate(6deg);
 }
-#pet-container.mood-bored .pet-body {
-  transform: translateY(2px) !important;
-}
-#pet-container.mood-bored .pet-ear-left { transform: rotate(6deg); }
-#pet-container.mood-bored .pet-ear-right { transform: rotate(-3deg); }
+#pet-container.mood-bored .pet-ear-left { transform: rotate(14deg); }
+#pet-container.mood-bored .pet-ear-right { transform: rotate(4deg); }
 
 /* Landing bounce */
 @keyframes landingBounce {

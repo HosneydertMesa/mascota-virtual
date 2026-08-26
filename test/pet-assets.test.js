@@ -45,11 +45,11 @@ test('cat idle SVG: 2 pupilas (una por ojo)', () => {
   assert.equal(countPetPupils(catIdleSVG), 2);
 });
 
-test('cat idle SVG: anchors de pupila en el centro de cada ojo (82,72) y (118,72)', () => {
+test('cat idle SVG: anchors de pupila en el centro de cada ojo (74,74) y (110,74)', () => {
   const anchors = extractPupilAnchors(catIdleSVG);
   assert.equal(anchors.length, 2);
-  assert.deepEqual(anchors[0], { x: 82, y: 72 });
-  assert.deepEqual(anchors[1], { x: 118, y: 72 });
+  assert.deepEqual(anchors[0], { x: 74, y: 74 });
+  assert.deepEqual(anchors[1], { x: 110, y: 74 });
 });
 
 test('cat idle SVG: viewBox 0 0 200 200', () => {
@@ -62,10 +62,10 @@ test('cat walk SVG: 1 pupila (un ojo visible en perfil)', () => {
   assert.equal(countPetPupils(catWalkSVG), 1);
 });
 
-test('cat walk SVG: anchor en (42, 78) (centro del ojo de perfil)', () => {
+test('cat walk SVG: anchor en (52, 96) (centro del ojo de perfil)', () => {
   const anchors = extractPupilAnchors(catWalkSVG);
   assert.equal(anchors.length, 1);
-  assert.deepEqual(anchors[0], { x: 42, y: 78 });
+  assert.deepEqual(anchors[0], { x: 52, y: 96 });
 });
 
 // --- Cat sleep (sin pupilas, ojos cerrados) ---
@@ -80,11 +80,11 @@ test('dog idle SVG: 2 pupilas (una por ojo)', () => {
   assert.equal(countPetPupils(dogIdleSVG), 2);
 });
 
-test('dog idle SVG: anchors en (80, 74) y (120, 74)', () => {
+test('dog idle SVG: anchors en (80, 70) y (120, 70)', () => {
   const anchors = extractPupilAnchors(dogIdleSVG);
   assert.equal(anchors.length, 2);
-  assert.deepEqual(anchors[0], { x: 80, y: 74 });
-  assert.deepEqual(anchors[1], { x: 120, y: 74 });
+  assert.deepEqual(anchors[0], { x: 80, y: 70 });
+  assert.deepEqual(anchors[1], { x: 120, y: 70 });
 });
 
 // --- Dog walk ---
@@ -93,10 +93,10 @@ test('dog walk SVG: 1 pupila (perfil)', () => {
   assert.equal(countPetPupils(dogWalkSVG), 1);
 });
 
-test('dog walk SVG: anchor en (42, 76)', () => {
+test('dog walk SVG: anchor en (42, 70)', () => {
   const anchors = extractPupilAnchors(dogWalkSVG);
   assert.equal(anchors.length, 1);
-  assert.deepEqual(anchors[0], { x: 42, y: 76 });
+  assert.deepEqual(anchors[0], { x: 42, y: 70 });
 });
 
 // --- Dog sleep (sin pupilas) ---
@@ -108,7 +108,10 @@ test('dog sleep SVG: 0 pupilas (ojos cerrados)', () => {
 // --- Compatibilidad con el renderer ---
 
 test('todas las pupilas tienen data-anchor-x e data-anchor-y numericos', () => {
-  const allSvgs = [catIdleSVG, catWalkSVG, dogIdleSVG, dogWalkSVG];
+  const allSvgs = [
+    catIdleSVG, catWalkSVG, catSitSVG, catLaySVG, catStretchSVG,
+    dogIdleSVG, dogWalkSVG, dogSitSVG, dogLaySVG, dogStretchSVG
+  ];
   for (const svg of allSvgs) {
     const anchors = extractPupilAnchors(svg);
     for (const a of anchors) {
@@ -119,7 +122,10 @@ test('todas las pupilas tienen data-anchor-x e data-anchor-y numericos', () => {
 });
 
 test('ninguna pupila queda fuera del viewBox (0..200)', () => {
-  const allSvgs = [catIdleSVG, catWalkSVG, dogIdleSVG, dogWalkSVG];
+  const allSvgs = [
+    catIdleSVG, catWalkSVG, catSitSVG, catLaySVG, catStretchSVG,
+    dogIdleSVG, dogWalkSVG, dogSitSVG, dogLaySVG, dogStretchSVG
+  ];
   for (const svg of allSvgs) {
     const anchors = extractPupilAnchors(svg);
     for (const a of anchors) {
@@ -127,6 +133,24 @@ test('ninguna pupila queda fuera del viewBox (0..200)', () => {
       assert.ok(a.y >= 0 && a.y <= 200, `anchor y fuera de rango: ${a.y}`);
     }
   }
+});
+
+test('cat sit/lay/stretch: pupilas y anchors de produccion', () => {
+  assert.equal(countPetPupils(catSitSVG), 2);
+  assert.deepEqual(extractPupilAnchors(catSitSVG), [{ x: 82, y: 72 }, { x: 118, y: 72 }]);
+  assert.equal(countPetPupils(catLaySVG), 2);
+  assert.deepEqual(extractPupilAnchors(catLaySVG), [{ x: 82, y: 90 }, { x: 118, y: 90 }]);
+  assert.equal(countPetPupils(catStretchSVG), 2);
+  assert.deepEqual(extractPupilAnchors(catStretchSVG), [{ x: 62, y: 106 }, { x: 98, y: 106 }]);
+});
+
+test('dog sit/lay/stretch: pupilas y anchors de produccion', () => {
+  assert.equal(countPetPupils(dogSitSVG), 2);
+  assert.deepEqual(extractPupilAnchors(dogSitSVG), [{ x: 80, y: 74 }, { x: 120, y: 74 }]);
+  assert.equal(countPetPupils(dogLaySVG), 2);
+  assert.deepEqual(extractPupilAnchors(dogLaySVG), [{ x: 64, y: 88 }, { x: 92, y: 88 }]);
+  assert.equal(countPetPupils(dogStretchSVG), 2);
+  assert.deepEqual(extractPupilAnchors(dogStretchSVG), [{ x: 46, y: 92 }, { x: 72, y: 90 }]);
 });
 
 // --- Walk cycle: patas individuales con clase para CSS swing ---
@@ -150,8 +174,31 @@ function countLegGroups(svg) {
   return out;
 }
 
+/** Inner HTML of the first <g class="...pet-body..."> (depth-matched). */
+function petBodyInner(svg) {
+  const openRe = /<g([^>]*class="[^"]*\bpet-body\b[^"]*"[^>]*)>/;
+  const m = openRe.exec(svg);
+  if (!m) return null;
+  let pos = m.index + m[0].length;
+  let depth = 1;
+  while (pos < svg.length && depth > 0) {
+    const nxtOpen = svg.indexOf('<g', pos);
+    const nxtClose = svg.indexOf('</g>', pos);
+    if (nxtClose === -1) return svg.slice(m.index + m[0].length);
+    if (nxtOpen !== -1 && nxtOpen < nxtClose) {
+      depth += 1;
+      pos = nxtOpen + 2;
+    } else {
+      depth -= 1;
+      if (depth === 0) return svg.slice(m.index + m[0].length, nxtClose);
+      pos = nxtClose + 4;
+    }
+  }
+  return svg.slice(m.index + m[0].length);
+}
+
 test('cat walk frames: 4 patas con clase (back-foot-left/right + left-paw/right-paw)', () => {
-  const frames = [catWalk1SVG, catWalk2SVG, catWalk3SVG, catWalk4SVG];
+  const frames = [catWalkSVG, catWalk1SVG, catWalk2SVG, catWalk3SVG, catWalk4SVG];
   for (const svg of frames) {
     const counts = countLegGroups(svg);
     for (const cls of LEG_CLASSES) {
@@ -161,7 +208,7 @@ test('cat walk frames: 4 patas con clase (back-foot-left/right + left-paw/right-
 });
 
 test('dog walk frames: 4 patas con clase (back-foot-left/right + left-paw/right-paw)', () => {
-  const frames = [dogWalk1SVG, dogWalk2SVG, dogWalk3SVG, dogWalk4SVG];
+  const frames = [dogWalkSVG, dogWalk1SVG, dogWalk2SVG, dogWalk3SVG, dogWalk4SVG];
   for (const svg of frames) {
     const counts = countLegGroups(svg);
     for (const cls of LEG_CLASSES) {
@@ -170,31 +217,48 @@ test('dog walk frames: 4 patas con clase (back-foot-left/right + left-paw/right-
   }
 });
 
-// --- sit / lay / stretch: exports distintos (no aliases de idle/sleep/walk) ---
-// Slice 1 MOTION: Designer entregará arte después. Hasta entonces el markup
-// se reusa, pero cada export DEBE ser un string distinto (data-pose) para
-// que PetViewport no pinte el mismo binding que idle/sleep/walk.
+test('4 patas son sibling <g>s, nunca anidadas en .pet-body', () => {
+  const all = [
+    catIdleSVG, catWalkSVG, catSleepSVG, catSitSVG, catLaySVG, catStretchSVG,
+    dogIdleSVG, dogWalkSVG, dogSleepSVG, dogSitSVG, dogLaySVG, dogStretchSVG
+  ];
+  for (const svg of all) {
+    const inner = petBodyInner(svg);
+    assert.ok(inner !== null, 'missing .pet-body group');
+    for (const cls of LEG_CLASSES) {
+      assert.equal(inner.includes(`class="${cls}"`), false,
+        `leg class="${cls}" nested inside .pet-body`);
+      assert.equal(countLegGroups(svg)[cls], 1, `missing sibling class="${cls}"`);
+    }
+  }
+});
+
+// --- sit / lay / stretch: poses reales distintas (no aliases, no data-pose copies) ---
 
 test('cat sit/lay/stretch no son aliases de idle/sleep/walk', () => {
   assert.notEqual(catSitSVG, catIdleSVG);
-  assert.notEqual(catSitBlinkSVG, catIdleSVG);
   assert.notEqual(catLaySVG, catSleepSVG);
-  assert.notEqual(catLayBreatheSVG, catSleepSVG);
+  assert.notEqual(catLaySVG, catSitSVG);
+  assert.notEqual(catStretchSVG, catIdleSVG);
+  assert.notEqual(catStretchSVG, catWalkSVG);
   assert.notEqual(catStretchSVG, catWalk1SVG);
-  assert.match(catSitSVG, /data-pose="sit"/);
-  assert.match(catLaySVG, /data-pose="lay"/);
-  assert.match(catStretchSVG, /data-pose="stretch"/);
+  assert.notEqual(catSitSVG, catWalkSVG);
+  assert.doesNotMatch(catSitSVG, /data-pose=/);
+  assert.doesNotMatch(catLaySVG, /data-pose=/);
+  assert.doesNotMatch(catStretchSVG, /data-pose=/);
 });
 
 test('dog sit/lay/stretch no son aliases de idle/sleep/walk', () => {
   assert.notEqual(dogSitSVG, dogIdleSVG);
-  assert.notEqual(dogSitBlinkSVG, dogIdleSVG);
   assert.notEqual(dogLaySVG, dogSleepSVG);
-  assert.notEqual(dogLayBreatheSVG, dogSleepSVG);
+  assert.notEqual(dogLaySVG, dogSitSVG);
+  assert.notEqual(dogStretchSVG, dogIdleSVG);
+  assert.notEqual(dogStretchSVG, dogWalkSVG);
   assert.notEqual(dogStretchSVG, dogWalk1SVG);
-  assert.match(dogSitSVG, /data-pose="sit"/);
-  assert.match(dogLaySVG, /data-pose="lay"/);
-  assert.match(dogStretchSVG, /data-pose="stretch"/);
+  assert.notEqual(dogSitSVG, dogWalkSVG);
+  assert.doesNotMatch(dogSitSVG, /data-pose=/);
+  assert.doesNotMatch(dogLaySVG, /data-pose=/);
+  assert.doesNotMatch(dogStretchSVG, /data-pose=/);
 });
 
 // --- Walk cycle CSS: canonical file is animations.css (not dashboard.css) ---
@@ -277,6 +341,14 @@ function animationPeriod(css, selector, keyframeName) {
   return m ? parseFloat(m[1]) : null;
 }
 
+function extractRule(css, selector) {
+  const re = new RegExp(
+    selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*\\{([^}]*)\\}'
+  );
+  const m = css.match(re);
+  return m ? m[1] : null;
+}
+
 test('animations.css: reglas .cat-walk + .dog-walk para las 4 patas (animation + transform-origin)', () => {
   const css = readCss(ANIM_CSS_PATH);
   const expected = [
@@ -334,7 +406,7 @@ test('animations.css: gait Luna ≠ Max (swing y bob de Luna mas contenidos)', (
   assert.ok(catBob < dogBob, `cat bob ${catBob}px should be < dog ${dogBob}px`);
 });
 
-test('animations.css: transform-origin de las patas apunta a la cadera real del SVG', () => {
+test('animations.css: walk origins son perfil (no frontal 58,132); sit conserva frontal', () => {
   const css = readCss(ANIM_CSS_PATH);
   const badOrigins = [
     'transform-origin: 121px 115px',
@@ -345,8 +417,41 @@ test('animations.css: transform-origin de las patas apunta a la cadera real del 
   for (const bad of badOrigins) {
     assert.ok(!css.includes(bad), `animations.css still has OLD transform-origin: ${bad}`);
   }
-  assert.match(css, /transform-origin:\s*58px\s+132px/);
-  assert.match(css, /transform-origin:\s*56px\s+134px/);
+
+  const catBfl = extractRule(css, '.cat-walk .back-foot-left');
+  const catBfr = extractRule(css, '.cat-walk .back-foot-right');
+  const catLp = extractRule(css, '.cat-walk .left-paw');
+  const catRp = extractRule(css, '.cat-walk .right-paw');
+  assert.ok(catBfl, 'missing .cat-walk .back-foot-left rule');
+  assert.match(catBfl, /transform-origin:\s*128px\s+130px/);
+  assert.doesNotMatch(catBfl, /58px\s+132px/);
+  assert.match(catBfr, /transform-origin:\s*144px\s+132px/);
+  assert.match(catLp, /transform-origin:\s*64px\s+134px/);
+  assert.match(catRp, /transform-origin:\s*84px\s+132px/);
+
+  const dogBfl = extractRule(css, '.dog-walk .back-foot-left');
+  const dogBfr = extractRule(css, '.dog-walk .back-foot-right');
+  const dogLp = extractRule(css, '.dog-walk .left-paw');
+  const dogRp = extractRule(css, '.dog-walk .right-paw');
+  assert.ok(dogBfl, 'missing .dog-walk .back-foot-left rule');
+  assert.match(dogBfl, /transform-origin:\s*154px\s+124px/);
+  assert.doesNotMatch(dogBfl, /56px\s+134px/);
+  assert.match(dogBfr, /transform-origin:\s*116px\s+122px/);
+  assert.match(dogLp, /transform-origin:\s*78px\s+116px/);
+  assert.match(dogRp, /transform-origin:\s*58px\s+114px/);
+
+  const catSitBfl = extractRule(css, 'body[data-pet="cat"] #pet-container.sitting .back-foot-left');
+  assert.ok(catSitBfl, 'missing Luna sit back-foot-left origin');
+  assert.match(catSitBfl, /transform-origin:\s*58px\s+132px/);
+
+  const catWalkTail = extractRule(css, '.walking-bob.cat-walk .anim-wag');
+  assert.ok(catWalkTail, 'missing Luna walk tail origin rule');
+  assert.match(catWalkTail, /transform-origin:\s*148px\s+124px/);
+  assert.doesNotMatch(catWalkTail, /130px\s+145px/);
+
+  const dogWalkTail = extractRule(css, '.walking-bob.dog-walk .anim-wag-fast');
+  assert.ok(dogWalkTail, 'missing Max walk tail origin rule');
+  assert.match(dogWalkTail, /transform-origin:\s*158px\s+112px/);
 });
 
 test('animations.css: tail sway amplitude es >= 30deg', () => {
@@ -373,7 +478,7 @@ test('dashboard.css no redefine walk gait (un solo canonical: animations.css)', 
     'dashboard.css still has .cat-walk .back-foot-left (move gait to animations.css)');
 });
 
-test('animations.css: mood-* mueve cola, orejas y pet-body', () => {
+test('animations.css: mood-* mueve cola y orejas sin pisar breathing de .pet-body', () => {
   const css = readCss(ANIM_CSS_PATH);
   for (const mood of ['happy', 'calm', 'sleepy', 'sad', 'bored']) {
     assert.ok(css.includes('#pet-container.mood-' + mood),
@@ -381,7 +486,13 @@ test('animations.css: mood-* mueve cola, orejas y pet-body', () => {
   }
   assert.match(css, /mood-happy[\s\S]*anim-wag/);
   assert.match(css, /mood-sleepy[\s\S]*pet-ear|mood-sad[\s\S]*pet-ear/);
-  assert.match(css, /mood-(sleepy|sad)[\s\S]*pet-body[\s\S]*translateY/);
+  const breath = extractKeyframeBody(css, 'breathing');
+  assert.ok(breath, 'missing @keyframes breathing');
+  assert.match(breath, /var\(--mood-dy/);
+  assert.match(breath, /var\(--mood-rot/);
+  assert.doesNotMatch(css, /#pet-container\.mood-\w+\s+\.pet-body\s*\{[^}]*transform:/);
+  assert.doesNotMatch(css, /mood-calm[\s\S]{0,180}translateY\(\s*0\s*\)\s*!important/);
+  assert.match(css, /#pet-container\.mood-bored[\s\S]{0,220}animation:\s*none/);
 });
 
 test('pet-viewport.js: walking no reactiva el swap de 167ms', () => {
