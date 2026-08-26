@@ -551,21 +551,13 @@
 
 
 /* === 3. KEYFRAME ANIMATIONS === */
-/* Breathing */
-@keyframes breathing {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.03) translateY(-1px); }
-  100% { transform: scale(1); }
-}
+/* breathing + wag keyframes live in animations.css (canonical).
+   Do not redefine them here — this file is imported after
+   animations.css and would win the cascade, dropping mood vars
+   (--mood-dy / --mood-rot / --mood-tail). Same class of bug as walk gait. */
 
 .anim-breath {
   animation: breathing 3s ease-in-out infinite;
-}
-
-/* Tail Wagging */
-@keyframes wag {
-  0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(15deg); }
 }
 
 .anim-wag {

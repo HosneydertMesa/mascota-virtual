@@ -271,6 +271,7 @@ const fs = require('fs');
 const path = require('path');
 const ANIM_CSS_PATH = path.join(__dirname, '..', 'src', 'styles', 'animations.css');
 const DASH_CSS_PATH = path.join(__dirname, '..', 'src', 'styles', 'dashboard.css');
+const STYLES_ENTRY_PATH = path.join(__dirname, '..', 'src', 'styles.css');
 
 function readCss(filePath) {
   return fs.readFileSync(filePath, 'utf8');
@@ -281,19 +282,62 @@ function readCss(filePath) {
  * Returns the body between the opening { and the matching closing }.
  */
 function extractKeyframeBody(css, name) {
-  const idx = css.indexOf('@keyframes ' + name);
-  if (idx === -1) return null;
-  const braceStart = css.indexOf('{', idx);
-  if (braceStart === -1) return null;
-  let depth = 1;
-  let i = braceStart + 1;
-  while (i < css.length && depth > 0) {
-    if (css[i] === '{') depth++;
-    else if (css[i] === '}') depth--;
-    i++;
+  const bodies = extractKeyframeBodies(css, name);
+  return bodies.length ? bodies[0] : null;
+}
+
+function stripCssComments(css) {
+  return css.replace(/\/\*[\s\S]*?\*\//g, '');
+}
+
+/**
+ * All @keyframes <name> bodies in document order. Later ones win the CSS
+ * cascade when stylesheets are concatenated in @import order.
+ * Comments are stripped so a mention of "@keyframes breathing" in a
+ * comment cannot masquerade as the winning definition.
+ */
+function extractKeyframeBodies(css, name) {
+  css = stripCssComments(css);
+  const bodies = [];
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const re = new RegExp('@keyframes\\s+' + escaped + '(?![A-Za-z0-9_-])', 'g');
+  let m;
+  while ((m = re.exec(css)) !== null) {
+    const braceStart = css.indexOf('{', m.index);
+    if (braceStart === -1) break;
+    let depth = 1;
+    let i = braceStart + 1;
+    while (i < css.length && depth > 0) {
+      if (css[i] === '{') depth++;
+      else if (css[i] === '}') depth--;
+      i++;
+    }
+    if (depth !== 0) break;
+    bodies.push(css.slice(braceStart + 1, i - 1));
+    re.lastIndex = i;
   }
-  if (depth !== 0) return null;
-  return css.slice(braceStart + 1, i - 1);
+  return bodies;
+}
+
+function lastKeyframeBody(css, name) {
+  const bodies = extractKeyframeBodies(css, name);
+  return bodies.length ? bodies[bodies.length - 1] : null;
+}
+
+/**
+ * Resolve @import in order, same cascade Electron sees from styles.css.
+ * A test that only greps animations.css misses later redefinitions.
+ */
+function flattenCss(entryPath, seen = new Set()) {
+  const abs = path.resolve(entryPath);
+  if (seen.has(abs)) return '';
+  seen.add(abs);
+  const css = fs.readFileSync(abs, 'utf8');
+  const dir = path.dirname(abs);
+  return css.replace(
+    /@import\s+(?:url\(\s*)?['"]([^'"]+)['"]\s*\)?\s*;/g,
+    (_, rel) => flattenCss(path.join(dir, rel), seen) + '\n'
+  );
 }
 
 /**
@@ -493,6 +537,43 @@ test('animations.css: mood-* mueve cola y orejas sin pisar breathing de .pet-bod
   assert.doesNotMatch(css, /#pet-container\.mood-\w+\s+\.pet-body\s*\{[^}]*transform:/);
   assert.doesNotMatch(css, /mood-calm[\s\S]{0,180}translateY\(\s*0\s*\)\s*!important/);
   assert.match(css, /#pet-container\.mood-bored[\s\S]{0,220}animation:\s*none/);
+});
+
+// --- Mood keyframes must WIN the cascade, not only exist in animations.css ---
+// Slice 1 composed --mood-dy/--mood-rot into breathing and --mood-tail into wag.
+// dashboard.css was still redefining both without those vars. styles.css
+// imports dashboard AFTER animations, so the later @keyframes won and calm
+// looked like the default. Grepping animations.css alone cannot catch this.
+
+test('CSS cascade: winning @keyframes breathing y wag componen mood vars', () => {
+  const bundled = flattenCss(STYLES_ENTRY_PATH);
+  const breath = lastKeyframeBody(bundled, 'breathing');
+  assert.ok(breath, 'no winning @keyframes breathing after flattening styles.css');
+  assert.match(breath, /var\(--mood-dy/,
+    'winning @keyframes breathing dropped --mood-dy (later stylesheet won the cascade)');
+  assert.match(breath, /var\(--mood-rot/,
+    'winning @keyframes breathing dropped --mood-rot (later stylesheet won the cascade)');
+
+  const wag = lastKeyframeBody(bundled, 'wag');
+  assert.ok(wag, 'no winning @keyframes wag after flattening styles.css');
+  assert.match(wag, /var\(--mood-tail/,
+    'winning @keyframes wag dropped --mood-tail (later stylesheet won the cascade)');
+});
+
+test('dashboard.css: si redefine breathing/wag, debe incluir mood vars', () => {
+  const dash = readCss(DASH_CSS_PATH);
+  const breaths = extractKeyframeBodies(dash, 'breathing');
+  for (const body of breaths) {
+    assert.match(body, /var\(--mood-dy/,
+      'dashboard.css @keyframes breathing reintroduced without --mood-dy');
+    assert.match(body, /var\(--mood-rot/,
+      'dashboard.css @keyframes breathing reintroduced without --mood-rot');
+  }
+  const wags = extractKeyframeBodies(dash, 'wag');
+  for (const body of wags) {
+    assert.match(body, /var\(--mood-tail/,
+      'dashboard.css @keyframes wag reintroduced without --mood-tail');
+  }
 });
 
 test('pet-viewport.js: walking no reactiva el swap de 167ms', () => {
