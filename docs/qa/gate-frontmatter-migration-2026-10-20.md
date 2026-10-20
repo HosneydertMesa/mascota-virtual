@@ -60,4 +60,15 @@ checked_at: 2026-10-20
 - El repo `sdlc` tiene el cambio en la rama `feat/gate-frontmatter`; el PR a `main` es un paso aparte.
 - El secret `GATE_SDLC_TOKEN` del CI todavía no existe: es un PAT *fine-grained* con lectura de `HosneydertMesa/sdlc` y hay que generarlo desde la cuenta de GitHub. Hasta entonces el workflow `gate` avisa con un warning y no evalúa el gate en los PRs — con el secret configurado corre y bloquea si el PR no cumple.
 
+## Nota posterior al sign-off (publicación)
+
+Mientras se publicaba la migración, otro agente pusheó a `main` 14 commits (sus PR #2 y #3: slice 1 MOTION y el fix de cascade de breathing/wag) sobre la base previa a la migración. Se integraron sin conflictos.
+
+Consecuencias, todas verificadas:
+
+- Sus 5 docs nuevos (2 planes, 2 reviews, 1 QA) venían en formato legacy, sin frontmatter. Con `frontmatter.mode: require` rompían el gate, así que se documentaron con los mismos valores reales que ya traían en el cuerpo (criterios de aceptación, veredicto y conteo de severidad, evidencia de tests). **El repo tiene ahora 55 docs y los 55 pasan el validador.**
+- `npm test`: **863/863**. Eran 845 antes del merge; la diferencia son los tests nuevos del otro agente (los 33 del gate bespoke ya no están, se retiraron con el tool).
+- Suite Pester del repo `sdlc`: **341/341**. Eran 336: el plugin ganó tests (fix del validador, soft-fail del CI, fix del hook `pre-push`, fix del push de tags).
+- El release quedó en `v2.1.0` (`4c6d9f1`), con `main` y el tag publicados.
+
 Sign-off: Mavis 2026-10-20
