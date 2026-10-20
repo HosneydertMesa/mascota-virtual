@@ -7,6 +7,22 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { queryForegroundApp, startDetector, stopDetector } = require('../src/services/app-detector');
 
+/**
+ * queryForegroundApp short-circuits unless process.platform === 'win32'.
+ * Tests that assert PowerShell / executor behavior must run as win32.
+ */
+function withWin32(fn) {
+  return async () => {
+    const orig = process.platform;
+    Object.defineProperty(process, 'platform', { value: 'win32', configurable: true });
+    try {
+      return await fn();
+    } finally {
+      Object.defineProperty(process, 'platform', { value: orig, configurable: true });
+    }
+  };
+}
+
 // Mock executor: simula child_process.exec con un callback.
 // mockFn(cmd, options, callback) → callback(err, stdout)
 function mockExecutor(stdout, err = null) {
@@ -24,50 +40,50 @@ function mockExecutor(stdout, err = null) {
 // queryForegroundApp
 // ============================================================
 
-test('queryForegroundApp: parsea JSON válido de stdout', async () => {
+test('queryForegroundApp: parsea JSON válido de stdout', withWin32(async () => {
   const executor = mockExecutor('{"name":"chrome","title":"GitHub","pid":1234}');
   const result = await queryForegroundApp(executor);
   assert.equal(result.name, 'chrome');
   assert.equal(result.title, 'GitHub');
   assert.equal(result.pid, 1234);
   assert.equal(result.error, undefined);
-});
+}));
 
-test('queryForegroundApp: stdout vacío → { name: "", title: "", pid: 0 }', async () => {
+test('queryForegroundApp: stdout vacío → { name: "", title: "", pid: 0 }', withWin32(async () => {
   const executor = mockExecutor('');
   const result = await queryForegroundApp(executor);
   assert.equal(result.name, '');
   assert.equal(result.title, '');
   assert.equal(result.pid, 0);
-});
+}));
 
-test('queryForegroundApp: stdout "{}" → vacío (no hay ventana)', async () => {
+test('queryForegroundApp: stdout "{}" → vacío (no hay ventana)', withWin32(async () => {
   const executor = mockExecutor('{}');
   const result = await queryForegroundApp(executor);
   assert.equal(result.name, '');
-});
+}));
 
-test('queryForegroundApp: stdout con JSON malformado → error en result', async () => {
+test('queryForegroundApp: stdout con JSON malformado → error en result', withWin32(async () => {
   const executor = mockExecutor('esto no es json');
   const result = await queryForegroundApp(executor);
   assert.equal(result.name, '');
   assert.equal(result.error, 'parse failed');
-});
+}));
 
-test('queryForegroundApp: error de exec → error en result', async () => {
+test('queryForegroundApp: error de exec → error en result', withWin32(async () => {
   const executor = mockExecutor(null, new Error('spawn failed'));
   const result = await queryForegroundApp(executor);
   assert.equal(result.name, '');
   assert.ok(result.error.includes('spawn failed'));
-});
+}));
 
-test('queryForegroundApp: campos faltantes en JSON → defaults vacíos', async () => {
+test('queryForegroundApp: campos faltantes en JSON → defaults vacíos', withWin32(async () => {
   const executor = mockExecutor('{}');
   const result = await queryForegroundApp(executor);
   assert.equal(result.name, '');
   assert.equal(result.title, '');
   assert.equal(result.pid, 0);
-});
+}));
 
 test('queryForegroundApp: non-Windows → no exec, returns {name:""} con platform info', async () => {
   // Forzamos el check de platform salvando y restaurando.
@@ -83,7 +99,7 @@ test('queryForegroundApp: non-Windows → no exec, returns {name:""} con platfor
   }
 });
 
-test('queryForegroundApp: comando empieza con powershell', async () => {
+test('queryForegroundApp: comando empieza con powershell', withWin32(async () => {
   let capturedCmd = null;
   const executor = (cmd, options, callback) => {
     capturedCmd = cmd;
@@ -93,9 +109,9 @@ test('queryForegroundApp: comando empieza con powershell', async () => {
   assert.ok(capturedCmd.startsWith('powershell '), `expected powershell prefix, got: ${capturedCmd.slice(0, 50)}`);
   assert.ok(capturedCmd.includes('-NoProfile'), 'debe tener flag -NoProfile');
   assert.ok(capturedCmd.includes('-Command'), 'debe tener flag -Command');
-});
+}));
 
-test('queryForegroundApp: usa timeout configurado', async () => {
+test('queryForegroundApp: usa timeout configurado', withWin32(async () => {
   let capturedOptions = null;
   const executor = (cmd, options, callback) => {
     capturedOptions = options;
@@ -104,13 +120,13 @@ test('queryForegroundApp: usa timeout configurado', async () => {
   await queryForegroundApp(executor, 12345);
   assert.equal(capturedOptions.timeout, 12345);
   assert.equal(capturedOptions.windowsHide, true);
-});
+}));
 
 // ============================================================
 // startDetector
 // ============================================================
 
-test('startDetector: onChange solo se llama cuando CAMBIA la category', async () => {
+test('startDetector: onChange solo se llama cuando CAMBIA la category', withWin32(async () => {
   const responses = [
     '{"name":"chrome","title":"x","pid":1}',     // → browser
     '{"name":"chrome","title":"y","pid":1}',     // browser (mismo, no callback)
@@ -147,7 +163,7 @@ test('startDetector: onChange solo se llama cuando CAMBIA la category', async ()
   if (calls.length > 0) {
     assert.equal(calls[0].category, 'browser');
   }
-});
+}));
 
 test('startDetector: requiere callback onChange', () => {
   assert.throws(() => startDetector(null), TypeError);

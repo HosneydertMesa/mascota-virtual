@@ -51,14 +51,15 @@ test('startMoodTick: tick manual aplica decay si hay minutos transcurridos', () 
 });
 
 test('startMoodTick: tick sin tiempo transcurrido → no llama setMood', () => {
-  const initial = createInitialMood(); // lastDecayAt = Date.now()
+  const frozenNow = 1_700_000_000_000;
+  const initial = { ...createInitialMood(), lastDecayAt: frozenNow };
   let current = initial;
   const calls = { setMood: 0 };
   const handle = startMoodTick({
     getMood: () => current,
     setMood: (m) => { current = m; calls.setMood++; },
     intervalMs: 60_000,
-    now: () => Date.now(), // mismo momento
+    now: () => frozenNow,
     setIntervalFn: () => 999,
     clearIntervalFn: () => {}
   });
