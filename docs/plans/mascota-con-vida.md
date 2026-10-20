@@ -1,3 +1,34 @@
+---
+id: mascota-con-vida
+status: approved
+created: 2026-07-27
+size: M
+files:
+  - src/core/pet-animations.js
+  - src/core/pet-protocol.js
+  - src/assets/cat.js
+  - src/assets/dog.js
+  - src/renderer.js
+  - src/styles.css
+  - test/pet-animations.test.js
+  - test/pet-protocol.test.js
+  - AGENTS.md
+acceptance:
+  - "M1: 18 SVGs nuevos (4 frames de walk + sit, lay y stretch para cat y dog) y el allow-list de pet-protocol acepta las nuevas actions sit, lay y stretch con los intents rest_sit, rest_lay y rest_stretch"
+  - "M2: el renderer recorre los walk frames multi-frame a ~6fps con cross-fade suave entre states y un state machine con transiciones validas e invalidas controladas"
+  - "M3: el look-at-cursor rota la cabeza hacia el cursor cuando esta cerca"
+  - "M4: el mood afecta el movimiento de forma gradual (lerp en la velocidad y amplitud del tail wag)"
+  - "M5: squash and stretch en el walk con polish del landing bounce"
+  - "M6: tests del state machine y del performance budget, changelog y AGENTS.md actualizado"
+  - "Success criteria: 6 estados visuales (idle, walking, sleeping, sitting, laying, stretching), parpadeo cada 3-5s, rAF por debajo de 16ms/frame en idle, npm run sdlc:dev y npm run smoke verdes, cero regresiones en pomodoro, quick chat y dashboard"
+risks:
+  - "Perf regression en el rAF: benchmark antes y despues manteniendo menos de 16ms por frame"
+  - "SVG bloat por encima de 20KB por frame: viewBox y paths minificados, gzip en build"
+  - "Cuteness regression: review iterativo con gate visual por milestone"
+  - "Incompatibilidad con pet-protocol: extender las allow-lists sin romper el contrato"
+  - "Asset generation falla porque M3 no da calidad: plan B de SVG hand-coded con paths simples"
+---
+
 # Mascota con Vida — Visuals + Movement Upgrade
 
 **Status:** Draft (Gate 1 — PLAN)

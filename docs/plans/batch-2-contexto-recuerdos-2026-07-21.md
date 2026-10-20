@@ -1,3 +1,41 @@
+---
+id: batch-2-contexto-recuerdos-2026-07-21
+status: approved
+created: 2026-07-21
+size: M
+files:
+  - src/core/pet-memories.js
+  - src/services/memories-store.js
+  - src/services/memory-extractor.js
+  - src/core/context-awareness.js
+  - src/services/input-monitor.js
+  - src/services/ai.js
+  - src/renderer.js
+  - src/dashboard.html
+  - src/dashboard-renderer.js
+  - src/styles.css
+  - preload.js
+  - main.js
+  - test/pet-memories.test.js
+  - test/memories-store.test.js
+  - test/context-awareness.test.js
+  - docs/deliverables/v1.6.0-changelog.md
+acceptance:
+  - "P3: el chat con la frase mi nombre es Jorge produce la memoria El usuario se llama Jorge y aparece en la lista de recuerdos"
+  - "P3: en una nueva sesion el system prompt contiene los recuerdos relevantes rankeados por TF-IDF (top 5, verificado con dataset sintetico)"
+  - "P3: el toggle de PII redacta emails en el storage y en el system prompt, y no hay PII leakage en los logs"
+  - "P3: los tests cubren rank, dedup, redaccion de PII, persistencia y overflow (>50 recuerdos), y npm run clear-memories borra todo"
+  - "A3: sin mover el mouse 10 min la mascota muestra el tip llevas 10 min sin actividad, un break"
+  - "A4: con typing rate > 80 WPM por 2 min los autonomous tips se silencian, y el buffer de typing solo cuenta rate (no guarda contenido)"
+  - "Metricas de exito: 30+ tests verdes en P3 y 15+ en A3/A4, npm run sdlc:dev verde, sdlc:strict APPROVED, review adversarial con 0 MUST-FIX y QA sign-off con smoke test"
+risks:
+  - "P3 puede leakear PII del chat personal: redaccion PII automatica por regex (emails, phones, tarjetas), opt-in y tests con corpus sintetico"
+  - "El RAG con TF-IDF puede rankear mal: tests con dataset sintetico y fallback a top-N por recencia"
+  - "A3/A4 pueden disparar tips molestos: umbrales generosos (10 min idle, 80 WPM), cooldown de 5 min y toggle en Settings"
+  - "El buffer de typing consume memoria: solo cuenta rate en ventana rolling de 30s, cap a 1000 events"
+  - "Conflictos de merge en main.js y preload.js entre tracks: merge manual de 3-5 lineas"
+---
+
 # Plan: batch-2-contexto-recuerdos
 
 **Fecha**: 2026-07-21

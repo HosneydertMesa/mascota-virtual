@@ -1,3 +1,24 @@
+---
+id: pet-animation-capa1
+status: approved
+created: 2026-07-21
+size: M
+files:
+  - src/core/pet-motion.js
+  - src/renderer.js
+  - src/styles.css
+  - src/services/ai.js
+  - main.js
+  - test/pet-motion.test.js
+  - test/ai.test.js
+acceptance:
+  - "Las orejas del gato se mueven aleatoriamente cada 5-10s y las del perro siguen con un retardo leve sobre la cola"
+  - "Cuando la IA devuelve [INTENT: approach] la mascota se acerca al cursor y con [INTENT: stay] deja de moverse"
+  - "Si la intent es invalida o falta no rompe nada y hace fallback al action actual (walk o sleep)"
+  - "Los tests pasan: 19 existentes mas ~6 nuevos, y npm run sdlc:dev queda verde"
+risks: []
+---
+
 # Plan: pet-animation-capa1
 
 > Walk-cycle + idle micro-animations. Capa 1 del review de movimiento.

@@ -1,3 +1,34 @@
+---
+id: batch-1-vida-interna-2026-07-21
+status: approved
+created: 2026-07-21
+size: L
+files:
+  - src/core/pet-mood.js
+  - src/services/mood-store.js
+  - src/assets/cat.js
+  - src/assets/dog.js
+  - src/renderer.js
+  - src/dashboard-renderer.js
+  - src/services/ai.js
+  - src/styles.css
+  - main.js
+  - test/pet-mood.test.js
+  - test/micro-presence.test.js
+  - docs/deliverables/v1.4.0-changelog.md
+acceptance:
+  - "A1 mood: el estado interno { energy, happiness, curiosity, hunger } se persiste entre sesiones en pet-mood.json y el decay por tick de un minuto baja la energy de forma visible tras 30 min sin chat"
+  - "A1 mood: cada chat con la IA sube la happiness y el system prompt incluye el mood, de modo que la IA responde distinto segun el mood"
+  - "M1-M4 micro presence: la mascota respira visiblemente, las pupilas siguen el cursor, de noche se dilatan y bosteza cada ~5 min en idle sugiriendo un break"
+  - "P7 custom name: el nombre se guarda en JSON desde Settings y la IA lo usa en sus respuestas"
+  - "Criterios de salida del batch: 150+ tests verdes, npm run sdlc:strict verde, tag v1.4.0 (o v1.4.0 + v1.4.1), changelog en docs/deliverables y smoke test manual de 10-15 min"
+risks:
+  - "Worker 1 (mood) se atrasa: worker 2 puede mergear primero porque el mood no bloquea la micro presencia"
+  - "Decay del mood demasiado rapido o lento: se testea con valores extremos (24h sin chat)"
+  - "Las pupilas se ven raras con los SVG existentes: revisar los SVG de cat/dog antes de iterar con screenshots"
+  - "El custom name choca con el system prompt (longitud, caracteres raros): se valida en Settings con fallback a Luna/Max"
+---
+
 # Plan: batch-1-vida-interna
 
 **Fecha**: 2026-07-21

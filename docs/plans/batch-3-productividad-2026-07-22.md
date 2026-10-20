@@ -1,3 +1,53 @@
+---
+id: batch-3-productividad-2026-07-22
+status: approved
+created: 2026-07-22
+size: M
+files:
+  - src/core/pomodoro-templates.js
+  - src/core/pomodoro-adaptive.js
+  - src/core/pomodoro-streak.js
+  - src/core/quick-capture.js
+  - src/core/weekly-report.js
+  - src/core/daily-briefing.js
+  - src/services/pomodoro-store.js
+  - src/services/quick-capture-store.js
+  - src/services/daily-briefing-store.js
+  - src/dashboard.html
+  - src/dashboard-renderer.js
+  - src/renderer.js
+  - src/pet.html
+  - src/styles.css
+  - preload.js
+  - main.js
+  - package.json
+  - test/pomodoro-templates.test.js
+  - test/pomodoro-adaptive.test.js
+  - test/pomodoro-streak.test.js
+  - test/pomodoro-store.test.js
+  - test/quick-capture.test.js
+  - test/quick-capture-store.test.js
+  - test/weekly-report.test.js
+  - test/daily-briefing.test.js
+  - test/daily-briefing-store.test.js
+  - docs/deliverables/v1.7.0-changelog.md
+acceptance:
+  - "Track A (W4): el dashboard permite cambiar entre 4 plantillas de pomodoro y persiste la seleccion; la plantilla custom valida focus entre 5-120 min y break entre 1-30 min"
+  - "Track A (I1): despues de 4 focus blocks el 5to break es largo (15 min) y el focus siguiente no entra en long break porque el contador se resetea"
+  - "Track A (W5): el dashboard muestra los stats correctos (focus hoy, total semana, racha) y la racha se calcula con fecha local, no UTC, con el mensaje de milestone (3 y 7 dias) por speech"
+  - "Track A: pomodoro-sessions.json no crece mas de 90 dias y pasan 55+ tests nuevos"
+  - "Track B (I2): Cmd+Shift+Q abre el overlay flotante con textarea de 200 chars y contador visible, Enter guarda, Esc cancela, click fuera cancela, y la captura persiste y se ve en la tab Capturas"
+  - "Track B (W3): el reporte semanal se genera como markdown valido, el copy-to-clipboard funciona y el score de productividad 0-100 usa la heuristica documentada; pasan 40+ tests nuevos"
+  - "Track C (I7/I8): al abrir la app entre 7-12am se muestra el briefing solo la primera vez del dia, al cerrar despues de las 18:00 aparece el summary, y el toggle en Settings apaga ambos"
+  - "Track C: el briefing menciona stats reales (focus de hoy, racha, capturas pendientes), respeta el tono cat/dog y pasa 24+ tests nuevos"
+risks:
+  - "Workers M/L se traban (leccion de batch 1): si pasan 30 min sin progreso el orquestador retoma, con rollback via git reset --hard origin/main"
+  - "PII leak en quick-captures: se reusa extractPII de memories con el toggle de Settings y tests con corpus PII"
+  - "Streak calculado mal con timezone: usar toLocaleDateString en-CA en vez de toISOString y testear con mocks de Date en distintas zonas"
+  - "El briefing se vuelve spam: se muestra 1 vez por dia con estado persistido en daily-briefing.json y toggle off"
+  - "Storage crece sin limite: prune de pomodoro sessions a 90 dias, captures a las 100 ultimas y memories a 50"
+---
+
 # Plan: batch-3-productividad
 
 **Fecha**: 2026-07-22

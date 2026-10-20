@@ -1,3 +1,34 @@
+---
+id: m3-parser-strict-mode
+status: approved
+created: 2026-07-21
+size: M
+files:
+  - src/core/pet-protocol.js
+  - src/services/ai.js
+  - src/renderer.js
+  - scripts/sdlc.js
+  - package.json
+  - test/sdlc.test.js
+  - AGENTS.md
+  - docs/sdlc/PHASES.md
+  - docs/plans/m3-parser-strict-mode.md
+  - sdlc-setup/hooks/pre-commit.sh
+  - sdlc-setup/hooks/pre-commit.ps1
+  - sdlc-setup/bin/sdlc.ps1
+  - sdlc-setup/README.md
+acceptance:
+  - "El pre-commit hook rechaza un commit feat: sin plan en docs/plans (validado en el test del hook)"
+  - "npm run sdlc:strict corre sin error en repo limpio con gates OK (exit 0) y falla con exit 1 en repo con working tree dirty"
+  - "npm run sdlc:strict falla con exit 1 si hay commits feat: o fix: sin plan, y el sub-comando strict del CLI de sdlc-setup funciona en cualquier proyecto"
+  - "Los 63/63 tests pasan, incluyendo los 5 tests nuevos de cmdStrict en test/sdlc.test.js"
+  - "El README de sdlc-setup documenta el flujo MANDATORY y el parser M3 queda extraido a src/core/pet-protocol.js con fallback JSON, tags viejos y texto libre"
+risks:
+  - "El pre-commit hook rompe commits de hotfix si alguien esta apurado: mitigacion git commit --no-verify con el plan commiteado despues"
+  - "El primer commit del plan tiene que pasar el gate: es docs(plans) y el script valida sobre la copia staged, verificado en el test de commits triviales"
+  - "Si el hook se rompe (ej. un shell sin find) el commit falla con error confuso: set -e al inicio y mensajes claros"
+---
+
 # Plan: M3 parser + strict-mode enforcement (RETROACTIVO)
 
 > Este plan documenta DOS batches de cambios que se hicieron sin gates
