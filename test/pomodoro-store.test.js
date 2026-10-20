@@ -29,6 +29,7 @@ const {
   getCurrentStreak,
   clearSessionsFile
 } = require('../src/services/pomodoro-store');
+const { getLocalDateKey } = require('../src/core/pomodoro-streak');
 
 function makeTmpDir() {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'pet-pomodoro-test-'));
@@ -39,6 +40,63 @@ function cleanupTmpDir(dir) {
 }
 
 const depsFor = (dir) => ({ userDataDir: dir });
+
+// --- Helpers de fecha (relativos al reloj, NUNCA absolutos) ------------------
+//
+// src/services/pomodoro-store.js prujea las sesiones contra Date.now() con una
+// ventana de SESSION_RETENTION_DAYS (90). Un test con fecha fija deja de ser
+// valido en cuanto el calendario real pasa esa fecha: las sesiones se prunean
+// y el fallo se ve como "actual: 0" (todo vacio) en vez de como "fecha vieja".
+// Con estos helpers los tests siguen siendo validos dentro de la ventana.
+
+/** Hoy a la hora indicada (hora local). */
+function todayAt(hours, minutes = 0, seconds = 0) {
+  const d = new Date();
+  d.setHours(hours, minutes, seconds, 0);
+  return d;
+}
+
+/** Dia `index` de la semana actual (0 = lunes, 2 = miercoles). */
+function weekdayOfCurrentWeek(index, hours = 10, minutes = 0) {
+  const d = todayAt(hours, minutes);
+  const dow = (d.getDay() + 6) % 7; // 0 = lunes
+  d.setDate(d.getDate() - dow + index);
+  return d;
+}
+
+/** Lunes a las 00:00 de la semana a la que pertenece `date`. */
+function startOfWeek(date) {
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
+  const dow = d.getDay();
+  d.setDate(d.getDate() - ((dow + 6) % 7));
+  return d;
+}
+
+/** `date` mas `n` dias. */
+function addDays(date, n) {
+  const d = new Date(date.getTime());
+  d.setDate(d.getDate() + n);
+  return d;
+}
+
+/**
+ * Un dia de la semana (0 = lunes, 3 = jueves) cuya semana (lunes a domingo)
+ * cruza un cambio de mes, dentro de la ventana de retencion para que las
+ * sesiones no se pruneen. Reproduce el caso "la semana cruza el mes" sin
+ * depender de una fecha fija del calendario.
+ */
+function dayWhoseWeekCrossesMonth(weekdayIndex, hours = 14, minutes = 30) {
+  const DAY = 24 * 60 * 60 * 1000;
+  for (let back = 1; back <= 80; back++) {
+    const d = new Date(Date.now() - back * DAY);
+    d.setHours(hours, minutes, 0, 0);
+    if ((d.getDay() + 6) % 7 !== weekdayIndex) continue;
+    const weekStart = startOfWeek(d);
+    const weekEnd = addDays(weekStart, 7);
+    if (weekStart.getMonth() !== weekEnd.getMonth()) return d;
+  }
+  throw new Error('no se encontro un dia de esa semana que cruce el mes en los ultimos 80 dias');
+}
 
 // --- Constantes y paths ---
 
@@ -286,7 +344,7 @@ test('appendSession: prunea al insertar si la sesion es muy vieja (consistente c
 test('getStatsToday: focus de hoy cuenta, focus de ayer no', () => {
   const dir = makeTmpDir();
   try {
-    const today = new Date(2026, 6, 15, 14, 30, 0); // 15 jul 2026 14:30
+    const today = todayAt(14, 30);
     const todayTs = today.getTime();
     const yesterdayTs = todayTs - 24 * 60 * 60 * 1000;
     appendSession(depsFor(dir), { kind: 'focus', durationSec: 1500, startedAt: todayTs - 1500, endedAt: todayTs });
@@ -302,7 +360,7 @@ test('getStatsToday: focus de hoy cuenta, focus de ayer no', () => {
 test('getStatsToday: sin sesiones hoy → todo 0', () => {
   const dir = makeTmpDir();
   try {
-    const today = new Date(2026, 6, 15, 14, 30, 0);
+    const today = todayAt(14, 30);
     const stats = getStatsToday(depsFor(dir), today);
     assert.equal(stats.focusCount, 0);
     assert.equal(stats.totalFocusSeconds, 0);
@@ -315,11 +373,11 @@ test('getStatsToday: sin sesiones hoy → todo 0', () => {
 test('getStatsThisWeek: cuenta focus del lunes a domingo actual', () => {
   const dir = makeTmpDir();
   try {
-    // 15 jul 2026 es miercoles (verificado: 15/7/2026 cae miercoles)
-    const wednesday = new Date(2026, 6, 15, 14, 30, 0);
-    const monday = new Date(2026, 6, 13, 10, 0, 0); // lunes
-    const tuesday = new Date(2026, 6, 14, 10, 0, 0);
-    const lastSunday = new Date(2026, 6, 12, 10, 0, 0); // domingo anterior (fuera de esta semana)
+    // Un miercoles de la semana actual: la semana va de lunes a domingo.
+    const wednesday = weekdayOfCurrentWeek(2, 14, 30);
+    const monday = weekdayOfCurrentWeek(0, 10, 0);
+    const tuesday = weekdayOfCurrentWeek(1, 10, 0);
+    const lastSunday = addDays(monday, -1); // domingo anterior (fuera de esta semana)
     appendSession(depsFor(dir), { kind: 'focus', durationSec: 1500, startedAt: monday.getTime(), endedAt: monday.getTime() + 1500 });
     appendSession(depsFor(dir), { kind: 'focus', durationSec: 1500, startedAt: tuesday.getTime(), endedAt: tuesday.getTime() + 1500 });
     appendSession(depsFor(dir), { kind: 'focus', durationSec: 1500, startedAt: wednesday.getTime(), endedAt: wednesday.getTime() + 1500 });
@@ -337,10 +395,10 @@ test('getStatsThisWeek: cuenta focus del lunes a domingo actual', () => {
 test('getStatsThisWeek: semana cruza el mes', () => {
   const dir = makeTmpDir();
   try {
-    // 2 julio 2026 es jueves. Lunes de esa semana: 29 junio.
-    const thursday = new Date(2026, 6, 2, 14, 30, 0);
-    const monday = new Date(2026, 5, 29, 10, 0, 0);
-    const tuesday = new Date(2026, 5, 30, 10, 0, 0);
+    // Un dia cuya semana cruza un cambio de mes (dentro de la ventana de retencion).
+    const thursday = dayWhoseWeekCrossesMonth(3, 14, 30); // 3 = jueves
+    const monday = startOfWeek(thursday);
+    const tuesday = addDays(monday, 1);
     appendSession(depsFor(dir), { kind: 'focus', durationSec: 1500, startedAt: monday.getTime(), endedAt: monday.getTime() + 1500 });
     appendSession(depsFor(dir), { kind: 'focus', durationSec: 1500, startedAt: tuesday.getTime(), endedAt: tuesday.getTime() + 1500 });
     appendSession(depsFor(dir), { kind: 'focus', durationSec: 1500, startedAt: thursday.getTime(), endedAt: thursday.getTime() + 1500 });
@@ -357,15 +415,15 @@ test('getStatsThisWeek: semana cruza el mes', () => {
 test('getCompletedDays: retorna solo dias con focusCount > 0', () => {
   const dir = makeTmpDir();
   try {
-    const today = new Date(2026, 6, 15, 14, 30, 0);
-    const yesterday = new Date(2026, 6, 14, 10, 0, 0);
+    const today = todayAt(14, 30);
+    const yesterday = addDays(today, -1);
     appendSession(depsFor(dir), { kind: 'focus', durationSec: 1500, startedAt: today.getTime(), endedAt: today.getTime() + 1500 });
     appendSession(depsFor(dir), { kind: 'focus', durationSec: 1500, startedAt: yesterday.getTime(), endedAt: yesterday.getTime() + 1500 });
     const days = getCompletedDays(depsFor(dir), today, 5);
     assert.equal(days.length, 2);
     // Orden ascendente por fecha
-    assert.equal(days[0].date, '2026-07-14');
-    assert.equal(days[1].date, '2026-07-15');
+    assert.equal(days[0].date, getLocalDateKey(yesterday));
+    assert.equal(days[1].date, getLocalDateKey(today));
     assert.equal(days[1].focusCount, 1);
   } finally { cleanupTmpDir(dir); }
 });
@@ -373,7 +431,7 @@ test('getCompletedDays: retorna solo dias con focusCount > 0', () => {
 test('getCompletedDays: multiples focus en el mismo dia se cuentan', () => {
   const dir = makeTmpDir();
   try {
-    const today = new Date(2026, 6, 15, 14, 30, 0);
+    const today = todayAt(14, 30);
     appendSession(depsFor(dir), { kind: 'focus', durationSec: 1500, startedAt: today.getTime() - 4000, endedAt: today.getTime() - 2500 });
     appendSession(depsFor(dir), { kind: 'focus', durationSec: 1500, startedAt: today.getTime() - 2000, endedAt: today.getTime() - 500 });
     const days = getCompletedDays(depsFor(dir), today, 3);
@@ -387,8 +445,8 @@ test('getCompletedDays: multiples focus en el mismo dia se cuentan', () => {
 test('getCurrentStreak: delega en computeStreak', () => {
   const dir = makeTmpDir();
   try {
-    const today = new Date(2026, 6, 15, 14, 30, 0);
-    const yesterday = new Date(2026, 6, 14, 10, 0, 0);
+    const today = todayAt(14, 30);
+    const yesterday = addDays(today, -1);
     appendSession(depsFor(dir), { kind: 'focus', durationSec: 1500, startedAt: today.getTime(), endedAt: today.getTime() + 1500 });
     appendSession(depsFor(dir), { kind: 'focus', durationSec: 1500, startedAt: yesterday.getTime(), endedAt: yesterday.getTime() + 1500 });
     assert.equal(getCurrentStreak(depsFor(dir), today), 2);
@@ -410,7 +468,7 @@ test('integration: flujo completo', () => {
     saveConfig(depsFor(dir), config1);
 
     // 3. Registrar sesiones
-    const today = new Date(2026, 6, 15, 14, 30, 0);
+    const today = todayAt(14, 30);
     const todayTs = today.getTime();
     appendSession(depsFor(dir), { kind: 'focus', durationSec: 50 * 60, startedAt: todayTs - 3000_000, endedAt: todayTs - 0 });
     appendSession(depsFor(dir), { kind: 'short_break', durationSec: 600, startedAt: todayTs, endedAt: todayTs + 600 });
