@@ -1,3 +1,23 @@
+---
+id: strict-mode-by-date
+status: approved
+created: 2026-07-21
+size: M
+files:
+  - scripts/sdlc.js
+  - test/sdlc.test.js
+  - docs/deliverables/retroactivo-m3-parser-2026-07-21.md
+acceptance:
+  - "cmdStrict filtra los reviews y los qa por el mtime del archivo y solo acepta los posteriores al ultimo tag"
+  - "cmdStatus mantiene el comportamiento actual, sin filtro por fecha"
+  - "Sin tag, cmdStrict no filtra y se comporta como antes"
+  - "Un review APPROVED creado hoy pero con mtime viejo no cuenta para el gate"
+  - "Los tests pasan (66-67/66-67) con los 3-4 tests nuevos"
+risks:
+  - "Bajo: en Windows el mtime puede tener resolucion de 2s (FAT) o 100ns (NTFS), no afecta porque el filtro es por segundos"
+  - "Bajo: si se commitea un review y se corre cmdStrict en menos de 1s el mtime puede quedar antes del tag, con tolerancia de 2s y warning no bloqueante"
+---
+
 # Plan: strict-mode by date (MINOR-4 del review)
 
 > Endurecer `cmdStrict` para que NO acepte reviews/qa de features

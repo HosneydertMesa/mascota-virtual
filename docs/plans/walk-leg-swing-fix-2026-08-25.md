@@ -1,3 +1,29 @@
+---
+id: walk-leg-swing-fix-2026-08-25
+status: approved
+created: 2026-08-25
+size: M
+files:
+  - src/assets/cat.js
+  - src/assets/dog.js
+  - src/styles/dashboard.css
+  - src/styles/animations.css
+  - src/styles/pet.css
+  - src/styles/variables.css
+  - test/pet-assets.test.js
+  - test/preview/cat-walk-preview.html
+  - test/preview/walk-screenshot.py
+  - docs/walk-screenshots/walk-t0.png
+  - docs/walk-screenshots/walk-t400.png
+acceptance:
+  - "Las 4 patas tienen clase individual (back-foot-left, back-foot-right, left-paw, right-paw) en los 4 walk frames de cat y de dog (8/8)"
+  - "Las 8 reglas CSS de .cat-walk y .dog-walk apuntan al transform-origin de la cadera real del arte actual"
+  - "Los tests pasan: 17/17 en pet-assets.test.js y 867/867 en la suite completa"
+  - "Runtime evidence con headless Chromium: el getComputedStyle().transform de .back-foot-left cambia entre t=0 y t=400ms, con un swing de ~22 grados dentro del rango del keyframe"
+  - "Los screenshots walk-t0.png y walk-t400.png muestran la pata trasera del gato en posicion neutral frente a rotada"
+risks: []
+---
+
 # Plan retroactivo: Walk leg swing fix (commit `9e98c4c`)
 
 > **Status**: Closed (ya commiteado).

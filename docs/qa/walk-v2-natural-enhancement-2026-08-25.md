@@ -1,3 +1,16 @@
+---
+id: walk-v2-natural-enhancement-2026-08-25
+branch: feat/pixijs-rendering
+plan: docs/plans/walk-v2-natural-enhancement-2026-08-25.md
+review: docs/reviews/walk-v2-natural-enhancement-2026-08-25.md
+status: APPROVED
+evidence:
+  tests: "node --test test/*.test.js - 878/878 tests verdes (3 tests nuevos bidireccionales + 875 preexistentes, sin regresiones)"
+  manual: "Runtime evidence con Playwright headless Chromium (test/preview/walk-v2-runtime-evidence.py): swing medido de 51.9 grados (cat) y 51.8 grados (dog) sin frame swap, contra 22.6 y 31 grados con swap (mejora de 2.3x y 1.7x). Antes/despues visual del X button del chat panel en docs/chat-screenshots/chat-fixed.png. Sin arranque de la app Electron."
+signed_by: Mavis
+checked_at: 2026-08-25
+---
+
 # QA Sign-off: walk v2 natural enhancement
 
 > **Naturaleza**: sign-off del fix que hace que el walk de la mascota
@@ -110,3 +123,5 @@ y la runtime evidence es solida (52deg observados en browser real).
 | `docs/qa/walk-v2-natural-enhancement-2026-08-25.md` | Este sign-off |
 | `docs/walk-screenshots/walk-v2-no-swap.png` | Screenshot del fix |
 | `docs/chat-screenshots/chat-fixed.png` | Screenshot del X button visible |
+
+Sign-off: Mavis 2026-08-25

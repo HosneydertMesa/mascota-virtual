@@ -1,3 +1,24 @@
+---
+id: hotfix-v2.0.2-strict-mode-conflict-2026-07-22
+status: approved
+created: 2026-07-22
+size: M
+files:
+  - src/core/context-awareness.js
+  - test/context-awareness.test.js
+  - test/scope-conflict-regression.test.js
+  - dashboard-renderer.js
+  - package.json
+  - docs/deliverables/v2.0.2-changelog-2026-07-22.md
+acceptance:
+  - "El cuerpo de src/core/context-awareness.js queda envuelto en una IIFE: window.ContextAwareness sigue exponiendo la API y no hay colision de identificadores con el destructuring de dashboard-renderer.js"
+  - "El conflicto se reproduce y deja de ocurrir: new Function(contextAwareness + dashboardRenderer) ya no lanza SyntaxError y hay un test de regresion bidireccional con y sin IIFE"
+  - "824/824 tests verdes tras aplicar el fix y version bumpeada a 2.0.2 en package.json con changelog v2.0.2"
+risks:
+  - "Bajo: el IIFE no cambia la API publica ni module.exports, solo deja de exponer las funciones como globales del window"
+  - "El bug era latente desde v1.6.0 y los tests node --test puros no detectan colisiones de scope del browser: se agrega test/scope-conflict-regression.test.js"
+---
+
 # v2.0.2 — Hotfix: strict mode conflict en context-awareness.js
 
 **Fecha**: 2026-07-22

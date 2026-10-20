@@ -1,3 +1,16 @@
+---
+id: retroactivo-m3-parser-2026-07-21
+branch: main
+plan: docs/plans/m3-parser-strict-mode.md
+status: APPROVED
+severity:
+  critical: 0
+  major: 0
+  minor: 4
+  info: 3
+reviewed_at: 2026-07-21
+---
+
 # Code Review (RETROACTIVO): M3 model + JSON parser + strict-mode
 
 > **Naturaleza**: review retroactivo de 6 commits hechos sin pasar por gate formal.

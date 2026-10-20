@@ -1,3 +1,16 @@
+---
+id: batch-3-productividad-2026-07-22
+branch: main
+plan: null
+status: APPROVED
+severity:
+  critical: 0
+  major: 0
+  minor: 4
+  info: 7
+reviewed_at: 2026-07-22
+---
+
 # Review adversarial: batch-3-productividad
 
 **Fecha**: 2026-07-22

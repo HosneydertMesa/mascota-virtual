@@ -1,3 +1,16 @@
+---
+id: batch-2-track-b-a3-a4-context-2026-07-21
+branch: main
+plan: docs/plans/batch-2-contexto-recuerdos-2026-07-21.md
+review: docs/reviews/batch-2-track-b-a3-a4-context-2026-07-21.md
+status: APPROVED
+evidence:
+  tests: "node --test test/*.test.js - 383/383 verde (339 previos + 44 nuevos: 31 context-awareness + 13 idle-monitor); node --check - 21 archivos JS OK; node scripts/sdlc.js dev - verde"
+  manual: "Auto-verificacion: pre-commit hook verde, plan presente en docs/plans/, review adversarial APPROVED (4 MINOR diferibles), working tree limpio. El checklist de smoke test manual (A3 idle detection y cooldown, A4 typing rate y DND) quedo documentado y pendiente de ejecucion por el usuario con npm start; sin tests E2E con Electron ni tests del wire en main.js."
+signed_by: Mavis
+checked_at: 2026-07-21
+---
+
 # QA Sign-off: batch-2-track-b-a3-a4-context
 
 **Fecha**: 2026-07-21
@@ -120,3 +133,5 @@
 **Próximos**:
 - batch 3 (productividad): pomodoro adaptativo + quick capture
 - batch 4 (distribución + polish): electron-builder + auto-update + security audit → v2.0
+
+Sign-off: Mavis 2026-07-21

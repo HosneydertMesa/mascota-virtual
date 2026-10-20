@@ -1,3 +1,16 @@
+---
+id: batch-1-m2-m4-dashboard-finalize-2026-07-21
+branch: main
+plan: null
+status: APPROVED
+severity:
+  critical: 0
+  major: 0
+  minor: 3
+  info: 0
+reviewed_at: 2026-07-21
+---
+
 # Review: batch-1-m2-m4-dashboard-finalize
 
 **Fecha**: 2026-07-21

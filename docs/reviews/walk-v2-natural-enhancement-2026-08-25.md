@@ -1,3 +1,16 @@
+---
+id: walk-v2-natural-enhancement-2026-08-25
+branch: feat/pixijs-rendering
+plan: docs/plans/walk-v2-natural-enhancement-2026-08-25.md
+status: APPROVED
+severity:
+  critical: 0
+  major: 0
+  minor: 1
+  info: 1
+reviewed_at: 2026-08-25
+---
+
 # Review: walk v2 natural enhancement
 
 **Fecha**: 2026-08-25

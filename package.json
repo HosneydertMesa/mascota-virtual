@@ -9,15 +9,7 @@
     "test": "node --test test/*.test.js",
     "build": "electron-builder --win --x64",
     "build:dir": "electron-builder --dir",
-    "sdlc": "node scripts/sdlc.js",
-    "sdlc:status": "node scripts/sdlc.js status",
-    "sdlc:next": "node scripts/sdlc.js next",
-    "sdlc:dev": "node scripts/sdlc.js dev",
-    "sdlc:review": "node scripts/sdlc.js review",
-    "sdlc:qa": "node scripts/sdlc.js qa",
-    "sdlc:release": "node scripts/sdlc.js release",
-    "sdlc:strict": "node scripts/sdlc.js strict",
-    "sdlc:worktree": "node scripts/sdlc-worktree.js",
+    "worktree": "node scripts/worktree.js",
     "smoke": "node scripts/smoke-test.js"
   },
   "keywords": [
@@ -72,5 +64,11 @@
       "owner": "HosneydertMesa",
       "repo": "mascota-virtual"
     }
+  },
+  "allowScripts": {
+    "sharp@0.34.5": true,
+    "onnxruntime-node@1.30.0": true,
+    "electron-winstaller@5.4.0": true,
+    "protobufjs@7.6.6": true
   }
 }

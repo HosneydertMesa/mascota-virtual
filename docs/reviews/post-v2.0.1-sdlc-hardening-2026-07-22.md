@@ -1,3 +1,16 @@
+---
+id: post-v2.0.1-sdlc-hardening-2026-07-22
+branch: null
+plan: null
+status: APPROVED
+severity:
+  critical: 0
+  major: 0
+  minor: 2
+  info: 2
+reviewed_at: 2026-07-22
+---
+
 # Review post-v2.0.1: SDLC hardening (gate + smoke test)
 
 **Fecha**: 2026-07-22

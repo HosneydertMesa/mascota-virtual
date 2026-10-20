@@ -1,3 +1,16 @@
+---
+id: batch-4-distribucion-2026-07-22
+branch: main
+plan: null
+status: APPROVED
+severity:
+  critical: 0
+  major: 0
+  minor: 3
+  info: 5
+reviewed_at: 2026-07-22
+---
+
 # Review adversarial: batch-4-distribucion
 
 **Fecha**: 2026-07-22

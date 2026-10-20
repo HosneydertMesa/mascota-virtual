@@ -1,3 +1,16 @@
+---
+id: batch-4-distribucion-2026-07-22
+branch: main
+plan: docs/plans/batch-4-distribucion-2026-07-22.md
+review: docs/reviews/batch-4-distribucion-2026-07-22.md
+status: APPROVED
+evidence:
+  tests: "npm test - 818/818 verde (150 tests nuevos: T6 auto-updater 41, W1 silent-mode 26 y pet-config-store 23, W2 calendar-service 51, T5 performance-budget 9); npm run check - 41 archivos OK; npm run sdlc:dev - gate verde; npm audit --omit=dev - 0 vulnerabilities"
+  manual: "Smoke tests automatizados: npm install con electron-builder y electron-updater OK; npm run build:dir produce el ejecutable Mascota Virtual.exe de unos 225 MB; CSP meta tag en src/dashboard.html; workflow de release en .github/workflows/release.yml; README con seccion de Instalacion. Los smoke tests manuales (instalar el .exe, auto-update, silent mode, calendar .ics, soak test de performance) quedaron diferidos al usuario: no se pudieron correr en este entorno headless."
+signed_by: Mavis
+checked_at: 2026-07-22
+---
+
 # QA sign-off: batch-4-distribucion
 
 **Fecha**: 2026-07-22
@@ -226,3 +239,5 @@ usuarios reales). Los 5 NIT son cosméticos.
 
 **QA**: Mavis (orquestador)
 **Status**: APPROVED con caveat (QA manual del .exe deferred al user)
+
+Sign-off: Mavis 2026-07-22

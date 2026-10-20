@@ -1,3 +1,19 @@
+---
+id: skip-gates-for-trivial-commits
+status: approved
+created: 2026-07-21
+size: M
+files:
+  - scripts/sdlc.js
+  - test/sdlc.test.js
+acceptance:
+  - "cmdStrict skipea los gates REVIEW y QA si todos los commits desde el ultimo tag son triviales (chore, docs, test, style, perf, build, ci, revert)"
+  - "cmdStrict exige review y qa si hay al menos un commit no-trivial"
+  - "Sin tag y sin commits triviales se mantiene el comportamiento actual del gate"
+  - "Los tests pasan (72-73/72-73) con el caso de commits solo triviales y el caso mix feat + docs"
+risks: []
+---
+
 # Plan: skip review/qa gates cuando todos los commits son triviales
 
 > Edge case descubierto en v1.2.1: el strict mode exige review/qa
