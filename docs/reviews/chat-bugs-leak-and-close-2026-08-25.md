@@ -1,3 +1,16 @@
+---
+id: chat-bugs-leak-and-close-2026-08-25
+branch: feat/pixijs-rendering
+plan: docs/plans/chat-bugs-leak-and-close-2026-08-25.md
+status: APPROVED
+severity:
+  critical: 0
+  major: 0
+  minor: 1
+  info: 1
+reviewed_at: 2026-08-25
+---
+
 # Review: chat bugs (B1 + B2) fix
 
 **Fecha**: 2026-08-25

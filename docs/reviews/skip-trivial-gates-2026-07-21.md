@@ -1,3 +1,16 @@
+---
+id: skip-trivial-gates-2026-07-21
+branch: null
+plan: null
+status: APPROVED
+severity:
+  critical: 0
+  major: 0
+  minor: 0
+  info: 0
+reviewed_at: 2026-07-21
+---
+
 # Code Review: skip review/qa for trivial-only batches (v1.2.2)
 
 > Self-review del commit `da69536 fix(sdlc): skip review/qa gates

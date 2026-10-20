@@ -1,3 +1,16 @@
+---
+id: close-minor4-2026-07-21
+branch: main
+plan: null
+status: APPROVED
+severity:
+  critical: 0
+  major: 0
+  minor: 2
+  info: 2
+reviewed_at: 2026-07-21
+---
+
 # Code Review: cmdStrict date-filter (MINOR-4)
 
 > Self-review del commit `00a4a8a feat(sdlc): date-filter review/qa

@@ -1,3 +1,16 @@
+---
+id: pet-animation-capa1-2026-07-21
+branch: null
+plan: docs/plans/pet-animation-capa1.md
+status: APPROVED
+severity:
+  critical: 0
+  major: 0
+  minor: 4
+  info: 2
+reviewed_at: 2026-07-21
+---
+
 # Review: pet-animation-capa1
 
 **Fecha**: 2026-07-21
@@ -100,3 +113,28 @@ Los MINOR son todos mejoras incrementales que no bloquean el merge:
 - 1 es duplicación pre-existente (no introducida por este PR)
 
 Los INFO son nice-to-have.
+
+---
+
+## Nota de discrepancia del conteo de severidad (2026-10-20)
+
+El frontmatter de este review declara `severity.minor: 4` y `severity.info: 2`.
+Ese es el conteo que declaró el autor: aparece en la tabla resumen
+(`| MINOR | 4 |`, `| INFO | 2 |`) y en el veredicto ("0 CRITICAL, 0 MAJOR,
+4 MINOR, 2 INFO"), y por regla de la migración gana el conteo declarado por
+el autor sobre el conteo por headings.
+
+El conteo por headings del cuerpo da otro resultado: hay **5 headings
+`### [MINOR]`** (retreat con cursor en el centro, approach con cursor encima,
+`maybeTwitchEar` por frame, `ALLOWED_INTENTS` duplicado en 3 archivos, y
+`executePetBehavior`/`maybeTwitchEar` sin test directo) y **1 heading
+`### [INFO]`** (el magic number `18` en retreat). O sea 5/1 por headings contra
+4/2 declarado.
+
+Por qué difiere: el resumen del autor ("2 son edge cases de intents poco
+frecuentes, 1 es performance negligible documentado, 1 es duplicación
+pre-existente") solo enumera 4 de los 5 MINOR — el de Testing
+(`executePetBehavior`/`maybeTwitchEar` sin test directo) no queda contado —
+y el único heading `### [INFO]` está contado como 2 en la tabla y el veredicto.
+Se conserva el conteo declarado (4/2) y esta nota deja registrada la
+diferencia con el conteo por headings.

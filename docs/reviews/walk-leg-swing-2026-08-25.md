@@ -1,3 +1,16 @@
+---
+id: walk-leg-swing-2026-08-25
+branch: feat/pixijs-rendering
+plan: docs/plans/walk-leg-swing-fix-2026-08-25.md
+status: APPROVED
+severity:
+  critical: 0
+  major: 0
+  minor: 1
+  info: 2
+reviewed_at: 2026-08-25
+---
+
 # Review: walk-leg-swing fix
 
 **Fecha**: 2026-08-25

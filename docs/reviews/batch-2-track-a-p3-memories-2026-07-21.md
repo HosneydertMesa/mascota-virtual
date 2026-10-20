@@ -1,3 +1,16 @@
+---
+id: batch-2-track-a-p3-memories-2026-07-21
+branch: main
+plan: null
+status: APPROVED
+severity:
+  critical: 0
+  major: 0
+  minor: 4
+  info: 0
+reviewed_at: 2026-07-21
+---
+
 # Review: batch-2-track-a-p3-memories
 
 **Fecha**: 2026-07-21
