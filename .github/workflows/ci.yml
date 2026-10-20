@@ -67,9 +67,3 @@ jobs:
 
       - name: Run tests
         run: npm test
-
-      # sdlc:dev corre check + test via scripts/sdlc.js. El pre-commit hook
-      # local NO se activa en CI (no hay .git/hooks/pre-commit en el runner
-      # limpio), asi que solo valida sintaxis + tests. Si falla, CI falla.
-      - name: SDLC dev gate
-        run: npm run sdlc:dev

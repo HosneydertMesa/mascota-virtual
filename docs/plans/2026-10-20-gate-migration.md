@@ -106,8 +106,24 @@ risks:
 | 2 | `gate init` + `gate.json` perfil `strict` + borrar `scripts/sdlc.js`, `scripts/sdlc-frontmatter.js`, `test/sdlc.test.js` + `AGENTS.md` al día | `mascotaVirtual` | `refactor(sdlc): migrar al gate genérico y retirar el gate bespoke` |
 | 3 | Limpiar los 47 docs (status/severity/evidence reales, `Sign-off:` en los QA) | `mascotaVirtual` | `docs(gate): frontmatter con valores reales en plan, review y QA` |
 | 4 | Review + QA sign-off de esta migración + release v2.1.0 | `mascotaVirtual` | `chore(release): v2.1.0 — gate genérico con frontmatter` |
+| 5 | Limpiar los restos del gate bespoke que quedaron traccionados (CI, `CLAUDE.md`, skills `.mavis/skills/sdlc-*`) | `mascotaVirtual` | `fix(sdlc): quitar los restos del gate bespoke que rompian el CI y las instrucciones` |
 
 Los detalles de cada tarea (pasos exactos, código, comandos) están en el plan maestro, Tasks 5-8. Esta tabla es el índice y la fuente de verdad para los criterios de aceptación.
+
+## Tarea 5 — restos del gate bespoke (post-release)
+
+Al publicar la migración, `gate init` había generado `CLAUDE.md` **antes** de que este plan actualizara `AGENTS.md`: quedó como una copia del `AGENTS.md` viejo, con instrucciones a comandos que ya no existen (`npm run sdlc:dev`, `npm run sdlc:plan`, `node scripts/sdlc.js`, skills `/sdlc-*`).
+
+Los restos que quedan y secorrigen acá:
+
+| Resto | Problema | Corrección |
+|---|---|---|
+| `.github/workflows/ci.yml` | el paso "SDLC dev gate" corría `npm run sdlc:dev`, script que ya no existe → **el CI quedó rojo en cada push** | se elimina el paso: "Syntax check" (`npm run check`) y "Run tests" (`npm test`) ya cubren lo que hacía |
+| `CLAUDE.md` | copia obsoleta de `AGENTS.md` con el flujo del gate retirado | se regenera como copia del `AGENTS.md` actual, igual que hace `gate init` |
+| `.mavis/skills/sdlc-{doc,plan,review,team}/` | skills del bootstrap original (`b14cc66`) que enseñan el flujo bespoke | se borran: el proyecto usa `.agents/skills/gate-*` |
+
+Verificación: `npm test` verde, `npm run check` OK, `gate strict` OK, y el CI de GitHub en verde.
+
 
 ## Verificación de la tarea 3
 
