@@ -1,3 +1,16 @@
+---
+id: walk-leg-swing-2026-08-25
+branch: feat/pixijs-rendering
+plan: docs/plans/walk-leg-swing-fix-2026-08-25.md
+review: null
+status: APPROVED
+evidence:
+  tests: "npm test - 867/867 tests verdes (4 tests nuevos en pet-assets.test.js, TDD bidireccional); node --test test/pet-assets.test.js - 17/17 OK (4 nuevos + 13 preexistentes)"
+  manual: "Runtime evidence con Playwright headless Chromium (test/preview/walk-screenshot.py): el transform computado de .back-foot-left pasa de unos +2.4 grados a unos -20 grados (swing de unos 22 grados, dentro del keyframe sideWalkSwingLeft), con screenshots t0 y t400. La validacion visual final en Electron quedo pendiente: requiere que el usuario corra npm start. 3 bugs preexistentes (B1, B2, B3) quedan trackeados por separado."
+signed_by: Mavis
+checked_at: 2026-08-25
+---
+
 # QA Sign-off (RETROACTIVO): walk leg swing fix
 
 > **Naturaleza**: sign-off retroactivo del commit `9e98c4c`
@@ -134,3 +147,5 @@ Las notas son:
 | `docs/walk-screenshots/walk-t0.png`, `walk-t400.png` | Screenshots antes/despues |
 | `docs/plans/walk-leg-swing-fix-2026-08-25.md` | Plan retroactivo |
 | `docs/qa/walk-leg-swing-2026-08-25.md` | Este sign-off |
+
+Sign-off: Mavis 2026-08-25

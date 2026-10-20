@@ -1,3 +1,16 @@
+---
+id: batch-0-infra-foundation-2026-07-21
+branch: main
+plan: docs/plans/batch-0-infra-foundation-2026-07-21.md
+review: docs/reviews/batch-0-infra-foundation-2026-07-21.md
+status: APPROVED
+evidence:
+  tests: "node --test test/*.test.js - 129/129 verde (79 previos + 50 nuevos); node --check - 11 archivos JS OK; node scripts/sdlc.js dev - verde; pre-commit hook - sin secrets, sin debug statements, sin archivos grandes"
+  manual: "Auto-verificacion: working tree limpio, plan y review commiteados, smoke test documentado, riesgos residuales y plan de rollback (revert del commit 6a4a1d2) identificados. El checklist de smoke test manual (T3 powerMonitor, T4 globalShortcut, T9 logger estructurado, T1 refactor de comportamiento, T8 CI en GitHub) quedo documentado y pendiente de ejecucion por el usuario con npm start."
+signed_by: Mavis
+checked_at: 2026-07-21
+---
+
 # QA Sign-off: batch-0-infra-foundation
 
 **Fecha**: 2026-07-21
@@ -90,3 +103,5 @@
 - [x] Plan de rollback documentado (revert del commit)
 
 **SIGN-OFF** → pasa a GATE 4 (Release).
+
+Sign-off: Mavis 2026-07-21
