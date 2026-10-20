@@ -2,6 +2,9 @@
 # artefactos (plan, review y QA segun gate.json); los tests siguen en tu CI de siempre.
 # Para que sea obligatorio: marca el check "gate" como required en la branch protection.
 # Necesita el secret GATE_SDLC_TOKEN: PAT fine-grained con lectura (Contents) de HosneydertMesa/sdlc.
+# Sin ese secret el gate NO se evalua: el job avisa con un warning y pasa. Es el mismo
+# criterio que usa el CI de este repo (la regla 7 se saltea cuando el runner no tiene
+# el runtime). Con el secret puesto, el gate corre y falla si el PR no cumple.
 name: gate
 
 on:
@@ -20,20 +23,24 @@ jobs:
           fetch-depth: 0
 
       - name: Clonar gate (HosneydertMesa/sdlc)
+        id: clone
         shell: pwsh
         env:
           GATE_SDLC_TOKEN: ${{ secrets.GATE_SDLC_TOKEN }}
         run: |
           if (-not $env:GATE_SDLC_TOKEN) {
-            Write-Host '::error::Falta el secret GATE_SDLC_TOKEN (PAT fine-grained con lectura de HosneydertMesa/sdlc).'
-            exit 1
+            Write-Host '::warning::Falta el secret GATE_SDLC_TOKEN (PAT fine-grained con lectura de HosneydertMesa/sdlc). El gate NO se evalua en este PR.'
+            'gate-available=false' >> $env:GITHUB_OUTPUT
+            exit 0
           }
           # Fuera del workspace: gate strict exige working tree limpio.
           $dest = Join-Path $env:RUNNER_TEMP 'sdlc'
           git clone --quiet "https://x-access-token:$($env:GATE_SDLC_TOKEN)@github.com/HosneydertMesa/sdlc.git" $dest
           if ($LASTEXITCODE -ne 0) { exit 1 }
-          git -C $dest checkout --quiet 14e6ac63a0325870d642c69f6a0f7489755f7f38
+          git -C $dest checkout --quiet d6bbff87c1416bba70186cbf278d4528ed9c49a5
+          'gate-available=true' >> $env:GITHUB_OUTPUT
 
       - name: gate strict (artefactos del PR)
+        if: steps.clone.outputs.gate-available == 'true'
         shell: pwsh
         run: pwsh -NoProfile -File (Join-Path $env:RUNNER_TEMP 'sdlc/bin/gate.ps1') strict -ProjectPath . -Base "origin/${{ github.base_ref }}" -ArtifactsOnly

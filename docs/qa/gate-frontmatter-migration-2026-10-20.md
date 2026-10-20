@@ -58,5 +58,6 @@ checked_at: 2026-10-20
 
 - El smoke del `.exe` (arranque de Electron) no se ejecutó. La migración no toca `src/` ni `main.js`, así que no se espera regresión, pero la confirmación queda para una corrida manual.
 - El repo `sdlc` tiene el cambio en la rama `feat/gate-frontmatter`; el PR a `main` es un paso aparte.
+- El secret `GATE_SDLC_TOKEN` del CI todavía no existe: es un PAT *fine-grained* con lectura de `HosneydertMesa/sdlc` y hay que generarlo desde la cuenta de GitHub. Hasta entonces el workflow `gate` avisa con un warning y no evalúa el gate en los PRs — con el secret configurado corre y bloquea si el PR no cumple.
 
 Sign-off: Mavis 2026-10-20
