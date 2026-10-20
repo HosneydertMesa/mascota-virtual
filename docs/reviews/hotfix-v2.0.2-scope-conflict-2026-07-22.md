@@ -1,3 +1,16 @@
+---
+id: hotfix-v2.0.2-scope-conflict-2026-07-22
+branch: main
+plan: null
+status: APPROVED
+severity:
+  critical: 0
+  major: 0
+  minor: 0
+  info: 2
+reviewed_at: 2026-07-22
+---
+
 # Review — hotfix v2.0.2 (scope conflict context-awareness.js)
 
 **Fecha**: 2026-07-22

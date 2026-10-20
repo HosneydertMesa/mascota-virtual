@@ -1,3 +1,16 @@
+---
+id: batch-0-infra-foundation-2026-07-21
+branch: "feat/t1-refactor-behavior + feat/t3-powermonitor + feat/t4-global-shortcut + feat/t8-ci-github-actions + feat/t9-logging"
+plan: null
+status: APPROVED
+severity:
+  critical: 0
+  major: 0
+  minor: 6
+  info: 2
+reviewed_at: 2026-07-21
+---
+
 # Review: batch-0-infra-foundation
 
 **Fecha**: 2026-07-21
