@@ -1,6 +1,7 @@
 {
   "profile": "strict",
   "overrides": {
-    "frontmatter.mode": "require"
+    "frontmatter.mode": "require",
+    "security.severity": "high"
   }
 }
