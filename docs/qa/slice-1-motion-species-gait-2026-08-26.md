@@ -1,3 +1,13 @@
+---
+id: slice-1-motion-species-gait-2026-08-26
+status: APPROVED
+evidence:
+  tests: "node --test test/pet-assets.test.js test/idle-motion.test.js — 33/33; npm test 891/891 y npm run check exit 0 en la rama del slice. Tras fusionar la migracion al gate generico se retiraron los 33 tests del gate bespoke (test/sdlc.test.js), asi que la suite del repo queda en 863/863."
+  manual: "Sin sesion Electron/GUI en el entorno del agente: el dogfood visual (gait Luna vs Max, idle variety, clase mood-*) queda pendiente en la maquina Windows del owner. Verificado en esta maquina tras la fusion: npm test 863/863 y npm run check OK."
+signed_by: Cloud agent (slice 1 MOTION)
+checked_at: 2026-08-26
+---
+
 # QA Sign-off: slice 1 MOTION
 
 > Species gait (Luna ≠ Max), idle variety (sit / sleep / stretch), mood

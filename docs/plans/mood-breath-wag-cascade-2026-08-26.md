@@ -1,3 +1,21 @@
+---
+id: mood-breath-wag-cascade-2026-08-26
+status: approved
+size: S
+acceptance:
+  - "dashboard.css no redefine @keyframes breathing ni @keyframes wag, o si lo hace, con las mismas mood vars"
+  - "Tras flatten de styles.css, la definición ganadora de breathing incluye --mood-dy y --mood-rot"
+  - "Tras flatten, la ganadora de wag incluye --mood-tail"
+  - "El test de cascade falla si se reintroduce el bloque viejo de dashboard"
+  - "npm test y npm run check verdes"
+files:
+  - src/styles/dashboard.css
+  - src/styles/animations.css
+  - test/pet-assets.test.js
+risks:
+  - "Borrar los duplicados de dashboard.css toca el preview del dashboard, que resuelve los keyframes por nombre"
+---
+
 # Plan: mood body offset — cascade de @keyframes breathing / wag
 
 > **Status**: Open

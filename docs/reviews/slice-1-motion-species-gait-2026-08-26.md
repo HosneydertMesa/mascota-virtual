@@ -1,3 +1,13 @@
+---
+id: slice-1-motion-species-gait-2026-08-26
+status: APPROVED
+severity:
+  critical: 0
+  major: 0
+  minor: 2
+  info: 2
+---
+
 # Review: slice 1 MOTION — species gait, idle variety, mood body
 
 **Fecha**: 2026-08-26

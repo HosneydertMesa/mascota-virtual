@@ -1,3 +1,13 @@
+---
+id: mood-breath-wag-cascade-2026-08-26
+status: APPROVED
+severity:
+  critical: 0
+  major: 0
+  minor: 1
+  info: 4
+---
+
 # Review: mood body offset — cascade de breathing / wag
 
 **Fecha**: 2026-08-26

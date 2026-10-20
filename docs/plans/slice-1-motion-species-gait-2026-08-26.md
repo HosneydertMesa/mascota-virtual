@@ -1,3 +1,31 @@
+---
+id: slice-1-motion-species-gait-2026-08-26
+status: approved
+size: M
+acceptance:
+  - "Tests + npm run check verdes"
+  - "Walk CSS-distinct: Luna ~0.65s contenido, Max ~0.48s enérgico, pairing diagonal, sin swap 167ms"
+  - "Idle variety: sit 15-25s, sleep ~45s, stretch en wake/landing"
+  - "sit/sleep/lay/stretch no son aliases de binding; renderer setea esos estados"
+  - "#pet-container recibe mood-* desde api.getMood()"
+  - "Drag, fall, bar, cursor physics sin cambios"
+  - "Chat / AI / Pomodoro / PET_PROFILES / pet-mood.js sin cambios"
+files:
+  - test/pet-assets.test.js
+  - test/idle-motion.test.js
+  - src/assets/cat.js
+  - src/assets/dog.js
+  - src/styles/animations.css
+  - src/styles/dashboard.css
+  - src/renderer.js
+  - src/renderer/pet-viewport.js
+  - test/preview/cat-walk-preview.html
+risks:
+  - "Quitar el walk duplicado de dashboard.css rompe el preview: cat-walk-preview.html también importa animations.css"
+  - "Un timeout de stretch pisa el walk: los timers de idle se cancelan al walk"
+  - "Sit a los 20s bloquea el sleep a los 45s: scheduleSleep acepta sitting/laying"
+---
+
 # Plan: slice 1 MOTION — species gait, idle variety, mood body
 
 > **Status**: Open
