@@ -1,3 +1,54 @@
+---
+id: batch-4-distribucion-2026-07-22
+status: approved
+created: 2026-07-22
+size: M
+files:
+  - src/core/silent-mode.js
+  - src/core/auto-updater.js
+  - src/services/calendar-service.js
+  - src/core/context-awareness.js
+  - src/core/pet-mood.js
+  - src/core/daily-briefing.js
+  - src/services/global-shortcuts.js
+  - src/dashboard.html
+  - src/dashboard-renderer.js
+  - src/renderer.js
+  - src/index.html
+  - src/styles.css
+  - preload.js
+  - main.js
+  - package.json
+  - scripts/sdlc.js
+  - assets/icon.ico
+  - assets/icon.png
+  - .github/workflows/release.yml
+  - .github/workflows/ci.yml
+  - test/silent-mode.test.js
+  - test/calendar-service.test.js
+  - test/auto-updater.test.js
+  - test/performance-budget.test.js
+  - README.md
+  - docs/security/audit-2026-07-22.md
+  - docs/perf/baseline-2026-07-22.md
+  - docs/deliverables/v2.0.0-changelog-2026-07-22.md
+acceptance:
+  - "Gate 0.5 (security audit pre-build): 0 hits de secretos en src/, main.js y preload.js, .gitignore cubriendo node_modules/dist/.env/*.pem, npm audit sin vulnerabilidades high/critical y reporte en docs/security/audit-2026-07-22.md"
+  - "Track A (T7): npm run build produce dist/MascotaVirtual-Setup-2.0.0.exe que se instala en Windows 10/11 sin errores, la app abre y muestra la mascota, y corre sin Node.js en la maquina target"
+  - "Track A (T6): electron-updater chequea updates al abrir y cada 6h, descarga en background y notifica al cerrar, y el workflow release.yml publica el .exe en GitHub Releases con gh release list mostrando el adjunto"
+  - "Track B (W1): con silentMode en true la mascota no inicia chat, no cambia el mood, no muestra idle tips ni DND ni briefing, y las animaciones idle y el drag siguen funcionando; Cmd/Ctrl+Shift+S togglea el modo"
+  - "Track B (W2): con un .ics valido se parsean los proximos 3 eventos en el dashboard, un evento dentro de 5 min activa retreat mode (opacity 0.5, esquina, globito con la hora de fin) y al terminar el evento vuelve al estado normal"
+  - "Track C (T5): baseline medido con p95 <= 16.67ms y tras la optimizacion p95 <= 12ms y p99 <= 16ms, sin memory leaks en un soak test de 10 min y con el dashboard scrolleando smooth con 50 recuerdos + 30 capturas"
+  - "Manual QA: silent-mode, calendar y auto-updater validados en el checklist de release antes de tagear v2.0.0"
+risks:
+  - "node-ical puede traer vulnerabilidades: audit pre-build y, si falla, parser propio sobre VEVENT"
+  - "SmartScreen bloquea el instalador por ser self-signed: README explica More info, Run anyway y el cert EV queda diferido a v2.1.0"
+  - "electron-updater con el channel hackeado: solo HTTPS y verificacion de checksums por default"
+  - "electron-builder falla en Windows: probar build:dir primero y debug en el action log"
+  - "El performance pass no llega a 60fps: identificar el hot spot y diferir a v2.0.1"
+  - "Workers se pisan en main.js: worktrees separados y merge secuencial"
+---
+
 # Plan: batch-4-distribucion
 
 **Fecha**: 2026-07-22

@@ -1,3 +1,37 @@
+---
+id: batch-0-infra-foundation-2026-07-21
+status: approved
+created: 2026-07-21
+size: L
+files:
+  - src/core/pet-behavior.js
+  - src/core/pet-protocol.js
+  - src/core/pet-motion.js
+  - src/services/logger.js
+  - main.js
+  - test/pet-behavior.test.js
+  - test/logger.test.js
+  - test/powermonitor.test.js
+  - test/global-shortcut.test.js
+  - .github/workflows/ci.yml
+  - package.json
+  - README.md
+  - docs/deliverables/v1.3.0-changelog.md
+acceptance:
+  - "T1: executeBehavior(sanitizedAction, deps) es una funcion pura en src/core/pet-behavior.js, main.js solo arma deps, y hay minimo 8 tests E2E (sleep, stay, approach, retreat, play, wander, no-match) con 0 cambios funcionales observables"
+  - "T2: ALLOWED_EMOTIONS/ACTIONS/SOUNDS/INTENTS viven solo en src/core/pet-protocol.js y pet-motion.js los importa sin redeclararlos, con los tests existentes verdes"
+  - "T3: lock/suspend del OS pone isSleeping en true y lo revierte con delay de 5s, con test unitario del evento lock-screen y sin romper Windows/macOS/Linux"
+  - "T4: Cmd/Ctrl+Shift+P togglea pomodoro, Shift+S duerme la mascota y Shift+Q abre quick capture, con cleanup en app.before-quit y test de activacion"
+  - "T8: .github/workflows/ci.yml corre la matrix os [windows-latest, macos-latest, ubuntu-latest] por node [18, 20] con npm ci, npm run check, npm test y npm run sdlc:dev, con badge verde en README"
+  - "T9: src/services/logger.js expone logger.debug/info/warn/error con salida JSON-lines, redacta apiKey/password/token/authorization y rota el archivo a 5MB"
+  - "Definition of Done: las 6 features mergeadas a main, CI verde en los 3 OS, npm run sdlc:dev y npm run sdlc:strict verdes, changelog v1.3.0 y tag v1.3.0 pusheado"
+risks:
+  - "T1 excede 5 dias: reducir scope a desacoplar safeSend y extraer 2-3 funciones puras, sin tocar el resto"
+  - "T3 powerMonitor puede no funcionar igual en Windows/macOS/Linux: se cubre con la matrix de CI y fallback de warning + skip"
+  - "T4 globalShortcut choca con apps del usuario: try/catch con log warning, sin crashear, documentado en README"
+  - "T8 CI no encuentra electron en ubuntu-latest: usar npm ci con versions pineadas en package.json"
+---
+
 # Plan: batch-0-infra-foundation
 
 **Fecha**: 2026-07-21

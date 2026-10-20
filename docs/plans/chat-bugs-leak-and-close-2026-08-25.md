@@ -1,3 +1,29 @@
+---
+id: chat-bugs-leak-and-close-2026-08-25
+status: approved
+created: 2026-08-25
+size: S
+files:
+  - src/renderer.js
+  - src/styles/pet.css
+  - src/core/pet-protocol.js
+  - src/services/ai.js
+  - src/index.html
+  - src/pet-renderer-pixi.js
+  - test/ai.test.js
+  - test/pet-assets.test.js
+acceptance:
+  - "B1: el chat muestra solo el texto del content, sin el bloque think ni el JSON envolvente ni las keys de emotion/action/sound/intent"
+  - "B1: cuando la IA devuelve un JSON malformado el chat muestra el fallback local y cuando devuelve texto libre muestra ese texto"
+  - "B2: el boton X del panel del chat queda siempre visible y clickeable, nunca tapado por el overflow del reply"
+  - "B3: el head turn sigue trackeado en el plan de migracion a PIXI v2.3.0 y no bloquea el fix del chat (fuera de scope de este plan)"
+  - "Tests: se agrega un test que simula la respuesta cruda con think + JSON y verifica que parsePetReply extrae solo el content"
+  - "Escape sigue cerrando el panel (comportamiento existente que no se rompe)"
+risks:
+  - "B2 es probablemente consecuencia de B1: se agrega max-height y overflow defensivo a .quick-chat-panel y .quick-chat-reply"
+  - "PetProtocol puede no estar disponible si el script no se cargo: fallback doble que hace strip manual del think"
+---
+
 # Plan retroactivo: Chat bugs (B1 + B2 + B3 observado por HOSNE 2026-08-25)
 
 > **Status**: Open (pendiente de implementacion)

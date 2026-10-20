@@ -1,3 +1,26 @@
+---
+id: walk-v2-natural-enhancement-2026-08-25
+status: approved
+created: 2026-08-25
+size: M
+files:
+  - src/styles/dashboard.css
+  - src/styles/pet.css
+  - src/renderer/pet-viewport.js
+  - test/pet-assets.test.js
+  - test/preview/walk-v2-runtime-evidence.py
+  - test/preview/walk-cycle-capture.py
+  - docs/walk-screenshots/walk-v2-no-swap.png
+  - docs/chat-screenshots/chat-fixed.png
+acceptance:
+  - "Leg swing visible de al menos 50 grados en runtime (verificado: 51.9 cat y 51.8 dog, contra ~22 con frame swap)"
+  - "Body bob con translateY de al menos 5px (verificado: 6px cat y 10px dog)"
+  - "Tail sway con rango de al menos 30 grados (verificado: 34 grados)"
+  - "El X button del chat panel queda visible tras el fix de contraste (screenshot chat-fixed.png)"
+  - "878/878 tests verdes (875 previos + 3 nuevos) sin regresiones, con runtime evidence con Playwright"
+risks: []
+---
+
 # Plan retroactivo: walk v2 enhancement (HOSNE feedback 2026-08-25)
 
 > **Status**: Open (pendiente de commit)

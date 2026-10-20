@@ -1,3 +1,30 @@
+---
+id: mascot-companion-roadmap-2026-07-21
+status: approved
+created: 2026-07-21
+size: XL
+files:
+  - src/core/pet-motion.js
+  - src/core/pet-protocol.js
+  - src/services/ai.js
+  - src/services/pet-audio.js
+  - main.js
+  - docs/.orchestrator.lock
+acceptance:
+  - "Batch 0 (v1.3.0): se ejecuta el full refactor de executePetBehavior (T1) mas T2 modularizar ALLOWED_*, T3 powerMonitor, T4 globalShortcut, T8 CI y T9 logging estructurado"
+  - "Batch 1 (v1.4.0): mood system con 5 estados y decay (A1) mas la micro presencia M1 respiracion, M2 eye tracking, M3 pupil dilation, M4 bostezo y P7 custom name"
+  - "Batch 2 (v1.5.0/v1.6.0): recuerdos persistentes P3 con 50 recuerdos y 100% local mas context awareness A2/A3/A4"
+  - "Batch 3 (v1.7.0): pomodoro adaptativo I1, quick capture I2 y daily briefing I7/I8 con las stats visibles en el dashboard"
+  - "Batch 4 (v2.0.0): electron-builder T7, electron-updater T6, W1 modo compania silenciosa, W2 calendar .ics, T5 perf 60fps y el security audit pre y post build"
+  - "Las 5 decisiones confirmadas el 2026-07-21 quedan aplicadas: target compartido, camino conservador, P3 en batch 2, refactor T1 full y custom name P7 en batch 1"
+risks:
+  - "T1 (refactor executePetBehavior) toca mucho: se hace en batch 0 con tests E2E y si pasa de 2 dias se corta a un subset"
+  - "El mood system puede sentirse fake si la IA no lo usa: A1 tiene que cambiar el system prompt para que el M3 use el mood"
+  - "Los recuerdos persistentes pueden leakear datos sensibles: P3 es 100% local, con redaccion de PII opcional y borrado con npm run clear-memories"
+  - "Calendar awareness requiere permisos: se empieza con .ics local y OAuth queda para v3"
+  - "La orquestacion de 2 workers puede chocar en main.js: lockfile docs/.orchestrator.lock con whoami y now"
+---
+
 # Plan: mascota-companion-roadmap
 
 **Fecha**: 2026-07-21
