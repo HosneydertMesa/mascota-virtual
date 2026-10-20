@@ -1,3 +1,16 @@
+---
+id: chat-bugs-leak-and-close-2026-08-25
+branch: feat/pixijs-rendering
+plan: docs/plans/chat-bugs-leak-and-close-2026-08-25.md
+review: docs/reviews/chat-bugs-leak-and-close-2026-08-25.md
+status: APPROVED
+evidence:
+  tests: "node --test test/chat-response.test.js - 8/8 pass; npm test - 875/875 verde (8 nuevos + 867 preexistentes); node --check en src/renderer/chat-response.js y src/renderer.js - sin errores de sintaxis"
+  manual: "Runtime evidence con Playwright headless Chromium (test/preview/chat-bug-screenshot.py): el reply renderiza solo el content, sin think ni JSON envelope, con comparacion visual before/after via screenshots. La validacion manual en Electron (npm start: abrir el panel, enviar mensaje, cerrar con X y con Escape, revisar la consola) NO se realizo en este entorno."
+signed_by: Mavis
+checked_at: 2026-08-25
+---
+
 # QA Sign-off: chat bugs (B1 + B2 leak + close)
 
 > **Naturaleza**: sign-off del fix que resuelve los bugs B1 (chat muestra
@@ -173,3 +186,5 @@ Cumple los acceptance criteria del plan retroactivo:
 | `docs/chat-screenshots/chat-before.png` | NEW: screenshot del bug |
 | `docs/chat-screenshots/chat-fixed.png` | NEW: screenshot del fix |
 | `docs/chat-screenshots/chat-page.png` | NEW: full page screenshot (after) |
+
+Sign-off: Mavis 2026-08-25

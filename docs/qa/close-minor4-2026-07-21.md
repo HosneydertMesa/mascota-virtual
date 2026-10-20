@@ -1,3 +1,16 @@
+---
+id: close-minor4-2026-07-21
+branch: main
+plan: null
+review: docs/reviews/close-minor4-2026-07-21.md
+status: APPROVED
+evidence:
+  tests: "npm test - 70/70 tests pasando (7 nuevos); npm run check - sintaxis OK; npm run sdlc:status - los gates se muestran correctamente"
+  manual: "Verificado a mano npm run sdlc:strict despues del commit: 1 commit nuevo, gate PLAN con 3 planes, tag base v1.2.0 y REVIEW/QA skipped porque todavia no habia firmados. Analisis estatico de tagDate, gateReview, gateQa, cmdStrict y cmdStatus con sus edge cases; 0 bugs encontrados."
+signed_by: Mavis
+checked_at: 2026-07-21
+---
+
 # QA Sign-off: cmdStrict date-filter (MINOR-4)
 
 > Sign-off del commit `00a4a8a feat(sdlc): date-filter review/qa
@@ -73,3 +86,5 @@ porque los mtimes van a ser >= tagDate(v1.2.0).
   de este batch. Esa es exactamente la mejora buscada.
 - MINOR-2 (filtrar PLAN por fecha) queda para v1.3.0. Es más
   controversial (¿qué hace válido un plan viejo?) y necesita diseño.
+
+Sign-off: Mavis 2026-07-21

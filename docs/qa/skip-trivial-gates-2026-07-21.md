@@ -1,3 +1,16 @@
+---
+id: skip-trivial-gates-2026-07-21
+branch: main
+plan: null
+review: docs/reviews/skip-trivial-gates-2026-07-21.md
+status: APPROVED
+evidence:
+  tests: "npm test - 72/72 verde (2 tests nuevos)"
+  manual: "Verificado a mano npm run sdlc:strict: skipea review/qa cuando el rango solo tiene commits triviales y los sigue exigiendo con un mix. 0 bugs encontrados; es un cambio de logica, no de runtime."
+signed_by: Mavis
+checked_at: 2026-07-21
+---
+
 # QA Sign-off: skip review/qa for trivial-only batches (v1.2.2)
 
 > Sign-off rápido del commit `da69536`. Cambio de lógica, no de runtime.
@@ -19,3 +32,5 @@
 ## Decisión
 
 **APROBADO** para v1.2.2 (patch).
+
+Sign-off: Mavis 2026-07-21

@@ -1,3 +1,16 @@
+---
+id: batch-2-track-a-p3-memories-2026-07-21
+branch: main
+plan: docs/plans/batch-2-contexto-recuerdos-2026-07-21.md
+review: docs/reviews/batch-2-track-a-p3-memories-2026-07-21.md
+status: APPROVED
+evidence:
+  tests: "node --test test/*.test.js - 339/339 verde (243 previos + 96 nuevos: 38 pet-memories + 37 memories-store + 21 memory-extractor); node --check - 19 archivos JS OK; node scripts/sdlc.js dev - verde"
+  manual: "Auto-verificacion: pre-commit hook verde, review adversarial APPROVED (4 MINOR diferibles), working tree limpio. El checklist de smoke test manual P3.1 a P3.10 (extraccion, persistencia entre sesiones, inyeccion en el system prompt, PII redaction, dedup, prune a 50, borrado individual y total, no-XSS) quedo documentado y pendiente de ejecucion por el usuario con npm start; sin tests E2E con Electron."
+signed_by: Mavis
+checked_at: 2026-07-21
+---
+
 # QA Sign-off: batch-2-track-a-p3-memories
 
 **Fecha**: 2026-07-21
@@ -125,3 +138,5 @@
 **Recomendación de tag**: `v1.6.0-track-a` (P3 completo) → si Track B (A3+A4 context awareness) sale en la misma sesión, bump a `v1.6.0`. Si se difiere, se queda en v1.6.0-track-a y se aplica bump a v1.6.0 cuando se mergee Track B.
 
 **ETA Track B** (A3+A4): 1 sesión adicional, ~3-4 horas. Plan ya está.
+
+Sign-off: Mavis 2026-07-21

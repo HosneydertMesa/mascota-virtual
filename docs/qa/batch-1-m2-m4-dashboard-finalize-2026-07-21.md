@@ -1,3 +1,16 @@
+---
+id: batch-1-m2-m4-dashboard-finalize-2026-07-21
+branch: main
+plan: docs/plans/batch-1-vida-interna-2026-07-21.md
+review: docs/reviews/batch-1-m2-m4-dashboard-finalize-2026-07-21.md
+status: APPROVED
+evidence:
+  tests: "node --test test/*.test.js - 243/243 verde (211 previos + 32 nuevos: 13 SVG + 9 mood-labels + 12 mood-aware yawn); node --check - 7 archivos JS OK; node scripts/sdlc.js dev - verde; node scripts/sdlc-worktree.js clean - corre sin error en Windows"
+  manual: "Auto-verificacion: pre-commit hook verde, review adversarial APPROVED, working tree limpio (4 commits ahead de origin). El checklist de smoke test manual (M2 eye tracking, widget de mood en el dashboard, M4 mood-aware yawn, sdlc-worktree clean) quedo documentado y pendiente de ejecucion por el usuario con npm start; este batch no tiene tests E2E con Electron."
+signed_by: Mavis
+checked_at: 2026-07-21
+---
+
 # QA Sign-off: batch-1-m2-m4-dashboard-finalize
 
 **Fecha**: 2026-07-21
@@ -81,3 +94,5 @@
 ✅ **APROBADO** para push a `origin/main` y posterior merge. Los 4 cambios finalizan features del batch 1 que estaban parciales (M2, M4) y agregan una mejora de UX (dashboard widget). El fix de `sdlc:worktree clean` es infra, sin impacto en el usuario final.
 
 **Recomendación post-merge**: tag `v1.5.1` (patch) o `v1.6.0` (minor con feature visible) — depende si se quiere resaltar el widget como user-facing feature.
+
+Sign-off: Mavis 2026-07-21

@@ -1,3 +1,16 @@
+---
+id: pet-animation-capa1-2026-07-21
+branch: main
+plan: null
+review: docs/reviews/pet-animation-capa1-2026-07-21.md
+status: APPROVED
+evidence:
+  tests: "npm test - 41/41 tests pasan (incluye los 2 nuevos de normalizeIntent y el de system prompts con INTENTS); npm run check - 6 archivos JS validados, 0 errores"
+  manual: "Auto-checks: pre-commit hook sin secrets, sin archivos de mas de 500KB y sin debug statements; code review adversarial con 0 CRITICAL y 0 MAJOR (4 MINOR, 2 INFO); working tree limpio tras los 3 commits del feature. El checklist visual (arranque con npm start, render, drag, ear twitch, walk cycle, blink, AI intents, pomodoro, chat, settings, persistencia, safeStorage) NO se ejecuto: requiere sesion interactiva del usuario."
+signed_by: Mavis
+checked_at: 2026-07-21
+---
+
 # QA Sign-off: pet-animation-capa1
 
 **Fecha**: 2026-07-21
@@ -62,3 +75,5 @@ checklist visual manual queda pendiente de verificación por el usuario.
 
 Si el usuario encuentra issues visuales durante `npm start`, se documentan como
 issues y se hace hotfix (1.0.2) después del release 1.0.1.
+
+Sign-off: Mavis 2026-07-21

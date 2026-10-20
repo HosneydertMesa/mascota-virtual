@@ -1,3 +1,16 @@
+---
+id: batch-3-productividad-2026-07-22
+branch: main
+plan: null
+review: null
+status: APPROVED
+evidence:
+  tests: "node --test test/*.test.js - 668/668 pass; node --check - 27 archivos .js OK; node scripts/sdlc.js dev - verde; node scripts/sdlc.js status - todos los gates OK"
+  manual: "Cada criterio de los 3 tracks verificado por inspeccion de codigo (src/dashboard.html, main.js, quick-capture-renderer.js) y por test unitario especifico (pomodoro-adaptive, pomodoro-streak, pomodoro-store, quick-capture-store, weekly-report, daily-briefing). El checklist de smoke tests quedo verificado por analisis estatico y tests unitarios, sin arranque de la app Electron."
+signed_by: Mavis
+checked_at: 2026-07-22
+---
+
 # QA sign-off: batch-3-productividad
 
 **Fecha**: 2026-07-22
@@ -143,3 +156,5 @@ suscucha y muestra como speech.
 Cierre de batch 3. Próximo: batch 4 (distribución + polish + T7 electron-builder).
 
 **Firma**: Mavis, 2026-07-22
+
+Sign-off: Mavis 2026-07-22

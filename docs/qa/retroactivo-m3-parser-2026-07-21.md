@@ -1,3 +1,16 @@
+---
+id: retroactivo-m3-parser-2026-07-21
+branch: main
+plan: null
+review: docs/reviews/retroactivo-m3-parser-2026-07-21.md
+status: APPROVED
+evidence:
+  tests: "npm test - 63/63 tests pasando (incluye los 5 nuevos de cmdStrict, 142 lineas de pet-protocol y la suite de ai.js); npm run check - sintaxis de los 8 archivos JS, 8/8 OK"
+  manual: "Analisis estatico: exports de parsePetReply y ALLOWED_INTENTS en pet-protocol.js, sin tryParseJsonReply huerfano en renderer.js, sin logica de parsing duplicada en dashboard-renderer.js, DEFAULT_MODEL apuntando a M3 en ai.js, cmdStrict exportado y registrado en scripts/sdlc.js, script sdlc:strict en package.json y pre-commit hook v6 con el check MANDATORY. La app no se pudo arrancar en este entorno (PowerShell + sandbox), asi que el render del pet, el drag, el pomodoro y el chat con IA quedan sin validar; 0 bugs criticos."
+signed_by: Mavis
+checked_at: 2026-07-21
+---
+
 # QA Sign-off (RETROACTIVO): M3 model + JSON parser + strict-mode
 
 > **Naturaleza**: sign-off retroactivo del batch de 6 commits
@@ -89,3 +102,5 @@ no bloquea el release porque el parser tiene fallback robusto.
 - El pre-commit hook MANDATORY va a hacer que el próximo feature
   obligatoriamente pase por PLAN antes de que cualquier `feat:` se
   pueda commitear. Cultura nueva.
+
+Sign-off: Mavis 2026-07-21
