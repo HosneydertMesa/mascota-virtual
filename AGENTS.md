@@ -1,4 +1,4 @@
-﻿# AGENTS.md — Project Memory
+# AGENTS.md — Project Memory
 
 > **Edita este archivo para que Mavis (y Grok Build) entiendan tu proyecto.**
 > Las convenciones aquí se aplican en cada sesión, sub-agente y skill.
@@ -13,20 +13,20 @@
 > **No es opcional. No es "para features grandes". Es para TODO.**
 >
 > **Cómo se enforce**:
-> - Pre-commit hook rechaza `feat:` / `fix:` / `refactor:` sin plan en `docs/plans/`
-> - `sdlc:strict` falla si cerrás una feature sin plan + review + QA + release
-> - El orquestador (`scripts/sdlc.js`) tiene un `status` que muestra qué gate falta
+> - El hook `commit-msg` rechaza `feat:` / `fix:` / `refactor:` sin plan de la rama en `docs/plans/`
+> - `gate strict` falla si cerrás una feature sin plan + review + QA + release
+> - `gate config show` muestra qué exige este repo (perfil de `gate.json`)
 >
 > **Por qué**: Los quick fixes que se saltean el pipeline introducen bugs regresivos
 > (ejemplo real: yo mismo en esta sesión cambié de modelo AI y de formato de output
 > sin un plan, y rompí el parser 2 veces — algo que el review habría pillado).
 >
 > **Tu trabajo como dev**:
-> 1. Antes de tocar código, corré `npm run sdlc:plan "<feature>"` y seguí el flujo
+> 1. Antes de tocar código, corré `/gate-plan "<feature>"` y seguí el flujo
 > 2. Si vas a hacer "solo un cambio chico" sin plan, preguntate: ¿romperá algo?
 >    Si la respuesta es "tal vez", necesita plan igual.
-> 3. Después de implementar, **siempre** corré `npm run sdlc:dev` antes de commitear
-> 4. Antes de mergear/cerrar, **siempre** corré `npm run sdlc:review`
+> 3. Después de implementar, **siempre** corré `npm test` y `npm run check` antes de commitear
+> 4. Antes de mergear/cerrar, **siempre** corré `/gate-review` y `gate strict`
 > 5. Si te da fiaca documentar, ese es el sintoma de que el cambio es más grande de lo que pensás
 
 ---
@@ -50,17 +50,23 @@
 
 <!-- SDLC_COMMANDS_START -->
 ```bash
-# Ajustado a scripts reales de este proyecto (Electron + Node, JS puro)
+# Comandos reales de este proyecto (Electron + Node, JS puro).
+# `gate` lee la línea `test:` para correr la suite en su fase 2.
 setup:     npm install
-syntax:    npm run check          # node --check sobre los .js
 test:      npm test               # node --test test/*.test.js
-test-cov:  npx c8 npm test        # opcional, requiere `npm i -D c8`
+syntax:    npm run check          # node --check sobre los .js
+smoke:     npm run smoke          # scripts/smoke-test.js
 run:       npm start              # electron .
+worktree:  npm run worktree       # scripts/worktree.js — un worktree por worker
 clean:     Remove-Item -Recurse -Force node_modules\.cache, .parcel-cache, dist
 ```
 <!-- SDLC_COMMANDS_END -->
 
-> ⚠️ No hay `lint` / `format` / `typecheck` / `build` configurados aún (proyecto JS puro, sin TS, sin prettier/eslint). Si los agregas, rellena los comandos arriba.
+> ⚠️ No hay `lint` / `format` / `typecheck` configurados aún (proyecto JS puro, sin TS, sin prettier/eslint). Si los agregas, rellena los comandos arriba.
+>
+> **Gates**: el enforcement lo hace el CLI `gate` (setup `HosneydertMesa/sdlc`).
+> `gate config show` muestra qué exige este repo · `gate strict` es la verificación completa.
+> Los hooks viven en `.git/hooks/` y apuntan al setup de gate.
 >
 > **Ejemplo (Node/TS — para referencia, NO aplica aún):**
 ```bash
@@ -113,28 +119,50 @@ build:    npm run build
 
 > Flujo por defecto para features no triviales. Adáptalo a tu realidad.
 >
-> **Orquestador**: `node scripts/sdlc.js` (ver `docs/sdlc/PHASES.md` para detalle de cada gate).
-> Estado rápido: `npm run sdlc:status` · Siguiente gate: `npm run sdlc:next`.
+> **Orquestador**: `gate` (el CLI del setup `HosneydertMesa/sdlc`).
+> Config efectiva: `gate config show` · Verificación: `gate strict`.
+> Detalle de cada gate: `docs/sdlc/PHASES.md`.
+>
+> ```
+> 1. PLAN     →  /gate-plan "<feature>"  (output: docs/plans/<feature>.md con frontmatter)
+> 2. DESIGN   →  /gate-spec "<feature>"  (spec + plan; opcional si el diseño ya está claro)
+> 3. IMPLEMENT → /gate-team implement "<feature>"  (Leader → Implementer → Verifier)
+> 4. DEV GATE →  npm test + npm run check  (el pre-commit hook corre los checks)
+> 5. REVIEW   →  /gate-review  (output: docs/reviews/<rama>-<fecha>.md con frontmatter)
+> 6. QA       →  /gate-qa + firma humana  (output: docs/qa/<feature>-<fecha>.md con frontmatter)
+> 7. RELEASE  →  gate strict  →  gate deploy <major|minor|patch>
+> 8. DOCS     →  /gate-doc finalize "<feature>"  (DOCX con changelog en docs/deliverables/)
+> 9. DEPLOY   →  manual o via CI, segun tu pipeline
+> ```
+>
+> **Gates atajo** (no todos los features pasan los 9):
+> - Bugfix trivial → solo paso 4 (DEV)
+> - Feature mediana → 1, 3, 4, 5, 6, 7, 8
+> - Refactor sin lógica → 3, 4, 5
+> - Hotfix → 4, 5 (exprés), 7 (doc al día siguiente)
+>
+> Ver `docs/sdlc/PHASES.md` para criterios de salida de cada gate.
 
+### Frontmatter en los docs de gate
+
+Los docs de plan, review y QA arrancan con un bloque `---` de metadata YAML.
+`gate strict` los valida **por campos tipados**, no por regex sobre la prosa:
+la severidad sale de `severity.critical` / `severity.major`, y la evidencia de
+QA sale de `evidence.{tests,smoke,manual}`.
+
+- **Plan** (`docs/plans/`): `id`, `status: approved`, `size`, `acceptance` (≥1 criterio).
+- **Review** (`docs/reviews/`): `status: APPROVED`, `severity.critical: 0`, `severity.major: 0`.
+- **QA** (`docs/qa/`): `status: APPROVED`, `evidence` con al menos un campo, `signed_by`, `checked_at`.
+
+**Sin bypass**: un doc con `migrated: true` o `pending: true` no aprueba ningún
+gate. La evidencia describe lo que **realmente** se corrió: si la app no se pudo
+arrancar, no pongas `smoke`.
+
+Verificá los docs del repo:
+
+```powershell
+pwsh -NoProfile -File "<setup de gate>\scripts\check-frontmatter.ps1" -Path . -Kind all
 ```
-1. PLAN     →  /sdlc-plan "<feature>"  (output: docs/plans/<feature>.md)
-2. DESIGN   →  design doc en docs/deliverables/<feature>-design-<fecha>.docx (con /sdlc-doc design)
-3. IMPLEMENT → /sdlc-team implement "<feature>"  (Leader → Implementer → Verifier)
-4. DEV GATE →  npm run sdlc:dev  (sintaxis + tests + pre-commit hook)
-5. REVIEW   →  /sdlc-review  (captura diff con npm run sdlc:review, output: docs/reviews/)
-6. QA       →  npm run sdlc:qa  (checklist manual, sign-off en docs/qa/)
-7. RELEASE  →  npm run sdlc:release  (bump version + tag + push)
-8. DOCS     →  /sdlc-doc finalize "<feature>"  (DOCX con changelog en docs/deliverables/)
-9. DEPLOY   →  manual o via CI, segun tu pipeline
-```
-
-**Gates atajo** (no todos los features pasan los 9):
-- Bugfix trivial → solo paso 4 (DEV)
-- Feature mediana → 1, 3, 4, 5, 6, 7, 8
-- Refactor sin lógica → 3, 4, 5
-- Hotfix → 4, 5 (exprés), 7 (doc al día siguiente)
-
-Ver `docs/sdlc/PHASES.md` para criterios de salida de cada gate.
 
 ---
 
@@ -167,10 +195,14 @@ Ver `docs/sdlc/PHASES.md` para criterios de salida de cada gate.
 
 | Skill | Cuándo usarla |
 |---|---|
-| `/sdlc-plan` | Para arrancar una feature nueva |
-| `/sdlc-team` | Para implementar con Agent Team (Leader-Worker-Verifier) |
-| `/sdlc-review` | Para hacer code review adversarial |
-| `/sdlc-doc` | Para generar design doc o changelog en DOCX |
+| `/gate-spec` | Spec + plan de una feature nueva (brainstorming → plan TDD) |
+| `/gate-plan` | Para arrancar una feature nueva |
+| `/gate-team` | Para implementar con Agent Team (Leader-Worker-Verifier) |
+| `/gate-review` | Para hacer code review adversarial |
+| `/gate-debug` | Bug: causa raíz, test que falla antes del fix, fix mínimo |
+| `/gate-qa` | Corre los tests y escribe el registro de QA en `docs/qa/` |
+| `/gate-doc` | Para generar design doc o changelog en DOCX |
+| `/gate-deploy` | Bump + changelog + tag + push (corre `gate strict` antes) |
 
 ---
 
@@ -178,3 +210,14 @@ Ver `docs/sdlc/PHASES.md` para criterios de salida de cada gate.
 
 > Espacio libre. Cosas que Mavis debería saber pero no encajan en otra sección.
 
+
+## Método
+
+> Cómo trabaja el agente en este repo, con o sin superpowers.
+
+- **Evidencia antes de "listo"**: corré el comando que prueba lo que decís (tests, build) y citá su resultado (`/gate-qa`).
+- **Bugs con `/gate-debug`**: primero la causa raíz y un test que falla; después el fix.
+- **Diseño antes que código**: `/gate-spec` o `/gate-plan` para lo no trivial, y TDD en cada tarea.
+- **`/gate-review` antes de mergear**: un revisor sin la conversación; el veredicto va a `docs/reviews/`.
+- **Qué exige este repo**: `gate config show` (perfil de `gate.json`: plan, review, QA, tests).
+- Si tu harness tiene superpowers, cada skill `gate-*` lo usa; si no, trae su propio método.

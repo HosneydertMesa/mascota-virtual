@@ -27,3 +27,7 @@ Thumbs.db
 # Env
 .env
 .env.local
+# gate: enlaces a .agents/skills que gate init crea en cada maquina
+.claude/skills
+.dsh/skills
+.codex/skills

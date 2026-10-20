@@ -1,0 +1,39 @@
+# Generado por gate init. Corre gate strict sobre los commits del PR, solo la fase de
+# artefactos (plan, review y QA segun gate.json); los tests siguen en tu CI de siempre.
+# Para que sea obligatorio: marca el check "gate" como required en la branch protection.
+# Necesita el secret GATE_SDLC_TOKEN: PAT fine-grained con lectura (Contents) de HosneydertMesa/sdlc.
+name: gate
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    name: gate
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Clonar gate (HosneydertMesa/sdlc)
+        shell: pwsh
+        env:
+          GATE_SDLC_TOKEN: ${{ secrets.GATE_SDLC_TOKEN }}
+        run: |
+          if (-not $env:GATE_SDLC_TOKEN) {
+            Write-Host '::error::Falta el secret GATE_SDLC_TOKEN (PAT fine-grained con lectura de HosneydertMesa/sdlc).'
+            exit 1
+          }
+          # Fuera del workspace: gate strict exige working tree limpio.
+          $dest = Join-Path $env:RUNNER_TEMP 'sdlc'
+          git clone --quiet "https://x-access-token:$($env:GATE_SDLC_TOKEN)@github.com/HosneydertMesa/sdlc.git" $dest
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          git -C $dest checkout --quiet 14e6ac63a0325870d642c69f6a0f7489755f7f38
+
+      - name: gate strict (artefactos del PR)
+        shell: pwsh
+        run: pwsh -NoProfile -File (Join-Path $env:RUNNER_TEMP 'sdlc/bin/gate.ps1') strict -ProjectPath . -Base "origin/${{ github.base_ref }}" -ArtifactsOnly

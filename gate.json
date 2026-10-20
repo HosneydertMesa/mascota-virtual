@@ -1,0 +1,6 @@
+{
+  "profile": "strict",
+  "overrides": {
+    "frontmatter.mode": "require"
+  }
+}
