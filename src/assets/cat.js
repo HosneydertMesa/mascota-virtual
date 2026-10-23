@@ -52,6 +52,16 @@ const catIdleSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
     <ellipse cx="154" cy="167" rx="7.5" ry="4.2" fill="url(#luna-idle-cream)" stroke="#34180C" stroke-width="1.8" />
   </g>
 
+  <g class="anim-breath pet-body" style="transform-origin: 112px 132px; transform: translateY(0px) rotate(0deg);">
+    <path d="M 72,112 C 66,120 70,134 86,140 C 104,146 132,144 150,136 C 160,130 160,118 150,112 C 136,104 90,104 72,112 Z"
+          fill="url(#luna-idle-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+    <path d="M 92,110 Q 96,122 92,132" stroke="url(#luna-idle-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+    <path d="M 108,108 Q 112,120 108,132" stroke="url(#luna-idle-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+    <path d="M 124,110 Q 128,122 124,134" stroke="url(#luna-idle-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+    <path d="M 76,114 C 72,124 78,134 92,138 C 102,140 110,136 112,128 C 108,118 94,112 82,112 Z"
+          fill="url(#luna-idle-cream)" stroke="#34180C" stroke-width="1.6" stroke-linejoin="round" />
+  </g>
+
   <g class="left-paw" style="transform-origin: 70px 126px;">
     <path d="M 64,124 L 62,154 C 62,160 66,167 74,167 C 82,167 86,160 86,154 L 84,124 Z"
           fill="url(#luna-idle-cream)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
@@ -65,16 +75,6 @@ const catIdleSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
     <ellipse cx="100" cy="167" rx="8" ry="4.6" fill="url(#luna-idle-cream)" stroke="#34180C" stroke-width="2" />
     <path d="M 96,164 L 96,169" stroke="#34180C" stroke-width="1.4" stroke-linecap="round" />
     <path d="M 104,164 L 104,169" stroke="#34180C" stroke-width="1.4" stroke-linecap="round" />
-  </g>
-
-  <g class="anim-breath pet-body" style="transform-origin: 112px 132px; transform: translateY(0px) rotate(0deg);">
-    <path d="M 72,112 C 66,120 70,134 86,140 C 104,146 132,144 150,136 C 160,130 160,118 150,112 C 136,104 90,104 72,112 Z"
-          fill="url(#luna-idle-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
-    <path d="M 92,110 Q 96,122 92,132" stroke="url(#luna-idle-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
-    <path d="M 108,108 Q 112,120 108,132" stroke="url(#luna-idle-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
-    <path d="M 124,110 Q 128,122 124,134" stroke="url(#luna-idle-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
-    <path d="M 76,114 C 72,124 78,134 92,138 C 102,140 110,136 112,128 C 108,118 94,112 82,112 Z"
-          fill="url(#luna-idle-cream)" stroke="#34180C" stroke-width="1.6" stroke-linejoin="round" />
   </g>
 
   <g class="pet-head anim-breath" style="transform-origin: 92px 107px; transform: translateY(0px) rotate(0deg);">
@@ -188,19 +188,6 @@ const catWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
     <ellipse cx="150" cy="168" rx="7.5" ry="4" fill="url(#luna-walk-cream)" stroke="#34180C" stroke-width="1.8" />
   </g>
 
-  <g class="left-paw" style="transform-origin: 64px 134px;">
-    <path d="M 58,132 L 54,156 C 53,162 58,168 66,168 C 73,168 76,162 76,156 L 72,132 Z"
-          fill="url(#luna-walk-cream)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
-    <ellipse cx="64" cy="168" rx="9" ry="4.8" fill="url(#luna-walk-cream)" stroke="#34180C" stroke-width="2" />
-    <path d="M 60,165 L 60,170" stroke="#34180C" stroke-width="1.4" stroke-linecap="round" />
-    <path d="M 68,165 L 68,170" stroke="#34180C" stroke-width="1.4" stroke-linecap="round" />
-  </g>
-  <g class="right-paw" style="transform-origin: 84px 132px;">
-    <path d="M 80,130 L 84,150 C 86,152 90,156 98,154 C 102,152 102,146 98,140 L 90,130 Z"
-          fill="url(#luna-walk-cream)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
-    <ellipse cx="94" cy="154" rx="8" ry="4.2" fill="url(#luna-walk-cream)" stroke="#34180C" stroke-width="1.8" />
-  </g>
-
   <g class="anim-breath pet-body" style="transform-origin: 112px 140px; transform: translateY(0px) rotate(0deg);">
     <path d="M 70,118 C 64,126 66,140 80,148 C 96,154 128,154 146,146 C 158,140 160,126 152,116 C 142,104 118,100 94,104 C 80,106 72,110 70,118 Z"
           fill="url(#luna-walk-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
@@ -213,6 +200,19 @@ const catWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
     <path d="M 58,128 C 64,136 72,140 78,136 C 74,128 66,124 58,128 Z" fill="url(#luna-walk-fur)"/>
     <path d="M 142,128 C 136,136 128,140 122,136 C 126,128 134,124 142,128 Z" fill="url(#luna-walk-fur)"/>
 </g>
+
+  <g class="left-paw" style="transform-origin: 64px 134px;">
+    <path d="M 58,132 L 54,156 C 53,162 58,168 66,168 C 73,168 76,162 76,156 L 72,132 Z"
+          fill="url(#luna-walk-cream)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
+    <ellipse cx="64" cy="168" rx="9" ry="4.8" fill="url(#luna-walk-cream)" stroke="#34180C" stroke-width="2" />
+    <path d="M 60,165 L 60,170" stroke="#34180C" stroke-width="1.4" stroke-linecap="round" />
+    <path d="M 68,165 L 68,170" stroke="#34180C" stroke-width="1.4" stroke-linecap="round" />
+  </g>
+  <g class="right-paw" style="transform-origin: 84px 132px;">
+    <path d="M 80,130 L 84,150 C 86,152 90,156 98,154 C 102,152 102,146 98,140 L 90,130 Z"
+          fill="url(#luna-walk-cream)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
+    <ellipse cx="94" cy="154" rx="8" ry="4.2" fill="url(#luna-walk-cream)" stroke="#34180C" stroke-width="1.8" />
+  </g>
 
   <g class="pet-head anim-breath" style="transform-origin: 58px 108px; transform: translateY(0px) rotate(0deg);">
     <g class="pet-ear pet-ear-left" style="transform-origin: 46px 62px;">
@@ -302,6 +302,17 @@ const catSleepSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w
     <ellipse cx="148" cy="156" rx="6.5" ry="3.6" fill="url(#luna-sleep-cream)" stroke="#34180C" stroke-width="1.6" />
   </g>
 
+  <g class="anim-breath pet-body" style="transform-origin: 108px 138px; transform: translateY(0px) rotate(0deg);">
+    <ellipse cx="108" cy="132" rx="46" ry="34" fill="url(#luna-sleep-fur)" stroke="#34180C" stroke-width="2.2" />
+    <path d="M 118,108 Q 122,122 116,134" stroke="url(#luna-sleep-stripes)" stroke-width="3.6" stroke-linecap="round" fill="none" />
+    <path d="M 132,114 Q 134,126 128,138" stroke="url(#luna-sleep-stripes)" stroke-width="3.6" stroke-linecap="round" fill="none" />
+    <path d="M 100,112 Q 102,124 98,136" stroke="url(#luna-sleep-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+    <path d="M 92,118 C 88,130 94,142 108,146 C 118,148 126,144 130,136" fill="url(#luna-sleep-cream)" stroke="#34180C" stroke-width="1.5" stroke-linejoin="round" />
+      <!-- seam-hip -->
+    <path d="M 58,128 C 64,136 72,140 78,136 C 74,128 66,124 58,128 Z" fill="url(#luna-sleep-fur)"/>
+    <path d="M 142,128 C 136,136 128,140 122,136 C 126,128 134,124 142,128 Z" fill="url(#luna-sleep-fur)"/>
+</g>
+
   <g class="left-paw" style="transform-origin: 86px 148px;">
     <path d="M 82,146 C 78,152 80,160 88,164 C 94,166 100,162 100,156 L 96,146 Z"
           fill="url(#luna-sleep-cream)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
@@ -314,17 +325,6 @@ const catSleepSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w
           fill="url(#luna-sleep-cream)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
     <ellipse cx="108" cy="162" rx="7.5" ry="4" fill="url(#luna-sleep-cream)" stroke="#34180C" stroke-width="1.8" />
   </g>
-
-  <g class="anim-breath pet-body" style="transform-origin: 108px 138px; transform: translateY(0px) rotate(0deg);">
-    <ellipse cx="108" cy="132" rx="46" ry="34" fill="url(#luna-sleep-fur)" stroke="#34180C" stroke-width="2.2" />
-    <path d="M 118,108 Q 122,122 116,134" stroke="url(#luna-sleep-stripes)" stroke-width="3.6" stroke-linecap="round" fill="none" />
-    <path d="M 132,114 Q 134,126 128,138" stroke="url(#luna-sleep-stripes)" stroke-width="3.6" stroke-linecap="round" fill="none" />
-    <path d="M 100,112 Q 102,124 98,136" stroke="url(#luna-sleep-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
-    <path d="M 92,118 C 88,130 94,142 108,146 C 118,148 126,144 130,136" fill="url(#luna-sleep-cream)" stroke="#34180C" stroke-width="1.5" stroke-linejoin="round" />
-      <!-- seam-hip -->
-    <path d="M 58,128 C 64,136 72,140 78,136 C 74,128 66,124 58,128 Z" fill="url(#luna-sleep-fur)"/>
-    <path d="M 142,128 C 136,136 128,140 122,136 C 126,128 134,124 142,128 Z" fill="url(#luna-sleep-fur)"/>
-</g>
 
   <g class="pet-head anim-breath" style="transform-origin: 74px 122px; transform: translateY(0px) rotate(-18deg);">
     <g class="pet-ear pet-ear-left" style="transform-origin: 62px 96px;">
@@ -410,21 +410,6 @@ const catSitSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.
     <ellipse cx="146" cy="165" rx="8" ry="4.5" fill="url(#luna-sit-cream)" stroke="#34180C" stroke-width="1.8" />
   </g>
 
-  <g class="left-paw" style="transform-origin: 83px 132px;">
-    <path d="M 76,132 L 75,155 C 75,161 78,165 83,165 C 88,165 91,161 91,155 L 90,132 Z"
-          fill="url(#luna-sit-cream)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
-    <ellipse cx="83" cy="164" rx="9.5" ry="5.5" fill="url(#luna-sit-cream)" stroke="#34180C" stroke-width="2" />
-    <path d="M 79,162 L 79,167" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
-    <path d="M 86,162 L 86,167" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
-  </g>
-  <g class="right-paw" style="transform-origin: 117px 132px;">
-    <path d="M 110,132 L 109,155 C 109,161 112,165 117,165 C 122,165 125,161 125,155 L 124,132 Z"
-          fill="url(#luna-sit-cream)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
-    <ellipse cx="117" cy="164" rx="9.5" ry="5.5" fill="url(#luna-sit-cream)" stroke="#34180C" stroke-width="2" />
-    <path d="M 113,162 L 113,167" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
-    <path d="M 120,162 L 120,167" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
-  </g>
-
   <g class="anim-breath pet-body" style="transform-origin: 100px 165px; transform: translateY(0px) rotate(0deg);">
     <path d="M 68,105 C 63,122 65,140 76,150 C 88,155 112,155 124,150 C 135,140 137,122 132,105 Z"
           fill="url(#luna-sit-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
@@ -439,6 +424,21 @@ const catSitSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.
     <path d="M 58,128 C 64,136 72,140 78,136 C 74,128 66,124 58,128 Z" fill="url(#luna-sit-fur)"/>
     <path d="M 142,128 C 136,136 128,140 122,136 C 126,128 134,124 142,128 Z" fill="url(#luna-sit-fur)"/>
 </g>
+
+  <g class="left-paw" style="transform-origin: 83px 132px;">
+    <path d="M 76,132 L 75,155 C 75,161 78,165 83,165 C 88,165 91,161 91,155 L 90,132 Z"
+          fill="url(#luna-sit-cream)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
+    <ellipse cx="83" cy="164" rx="9.5" ry="5.5" fill="url(#luna-sit-cream)" stroke="#34180C" stroke-width="2" />
+    <path d="M 79,162 L 79,167" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
+    <path d="M 86,162 L 86,167" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
+  </g>
+  <g class="right-paw" style="transform-origin: 117px 132px;">
+    <path d="M 110,132 L 109,155 C 109,161 112,165 117,165 C 122,165 125,161 125,155 L 124,132 Z"
+          fill="url(#luna-sit-cream)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
+    <ellipse cx="117" cy="164" rx="9.5" ry="5.5" fill="url(#luna-sit-cream)" stroke="#34180C" stroke-width="2" />
+    <path d="M 113,162 L 113,167" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
+    <path d="M 120,162 L 120,167" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
+  </g>
 
   <g class="pet-head anim-breath" style="transform-origin: 100px 105px; transform: translateY(0px) rotate(0deg);">
     <g class="pet-ear pet-ear-left" style="transform-origin: 64px 55px;">
@@ -554,6 +554,20 @@ const catLaySVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.
     <ellipse cx="146" cy="166" rx="8" ry="4.2" fill="url(#luna-lay-cream)" stroke="#34180C" stroke-width="1.8" />
   </g>
 
+  <g class="anim-breath pet-body" style="transform-origin: 100px 148px; transform: translateY(0px) rotate(0deg);">
+    <path d="M 42,128 C 36,138 42,156 70,160 C 88,164 112,164 130,160 C 158,156 164,138 158,128 C 150,116 50,116 42,128 Z"
+          fill="url(#luna-lay-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+    <path d="M 56,130 Q 64,136 68,144" stroke="url(#luna-lay-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+    <path d="M 144,130 Q 136,136 132,144" stroke="url(#luna-lay-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+    <path d="M 60,140 Q 68,144 72,150" stroke="url(#luna-lay-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
+    <path d="M 140,140 Q 132,144 128,150" stroke="url(#luna-lay-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
+    <path d="M 78,118 C 72,128 74,142 86,150 C 94,154 106,154 114,150 C 126,142 128,128 122,118 C 114,124 86,124 78,118 Z"
+          fill="url(#luna-lay-cream)" stroke="#34180C" stroke-width="1.6" stroke-linejoin="round" />
+      <!-- seam-hip -->
+    <path d="M 58,128 C 64,136 72,140 78,136 C 74,128 66,124 58,128 Z" fill="url(#luna-lay-fur)"/>
+    <path d="M 142,128 C 136,136 128,140 122,136 C 126,128 134,124 142,128 Z" fill="url(#luna-lay-fur)"/>
+</g>
+
   <g class="left-paw" style="transform-origin: 72px 148px;">
     <path d="M 70,146 L 58,158 C 54,164 58,168 68,168 C 78,168 84,164 84,158 L 82,146 Z"
           fill="url(#luna-lay-cream)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
@@ -568,20 +582,6 @@ const catLaySVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.
     <path d="M 124,164 L 124,169" stroke="#34180C" stroke-width="1.4" stroke-linecap="round" />
     <path d="M 134,164 L 134,169" stroke="#34180C" stroke-width="1.4" stroke-linecap="round" />
   </g>
-
-  <g class="anim-breath pet-body" style="transform-origin: 100px 148px; transform: translateY(0px) rotate(0deg);">
-    <path d="M 42,128 C 36,138 42,156 70,160 C 88,164 112,164 130,160 C 158,156 164,138 158,128 C 150,116 50,116 42,128 Z"
-          fill="url(#luna-lay-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
-    <path d="M 56,130 Q 64,136 68,144" stroke="url(#luna-lay-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
-    <path d="M 144,130 Q 136,136 132,144" stroke="url(#luna-lay-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
-    <path d="M 60,140 Q 68,144 72,150" stroke="url(#luna-lay-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
-    <path d="M 140,140 Q 132,144 128,150" stroke="url(#luna-lay-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
-    <path d="M 78,118 C 72,128 74,142 86,150 C 94,154 106,154 114,150 C 126,142 128,128 122,118 C 114,124 86,124 78,118 Z"
-          fill="url(#luna-lay-cream)" stroke="#34180C" stroke-width="1.6" stroke-linejoin="round" />
-      <!-- seam-hip -->
-    <path d="M 58,128 C 64,136 72,140 78,136 C 74,128 66,124 58,128 Z" fill="url(#luna-lay-fur)"/>
-    <path d="M 142,128 C 136,136 128,140 122,136 C 126,128 134,124 142,128 Z" fill="url(#luna-lay-fur)"/>
-</g>
 
   <g class="pet-head anim-breath" style="transform-origin: 100px 123px; transform: translateY(0px) rotate(0deg);">
     <g class="pet-ear pet-ear-left" style="transform-origin: 64px 73px;">
@@ -698,6 +698,19 @@ const catStretchSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www
     <ellipse cx="158" cy="167" rx="8" ry="4.2" fill="url(#luna-stretch-cream)" stroke="#34180C" stroke-width="1.8" />
   </g>
 
+  <g class="anim-breath pet-body" style="transform-origin: 120px 120px; transform: translateY(0px) rotate(0deg);">
+    <path d="M 70,138 C 62,148 70,156 92,150 C 114,142 138,118 152,100 C 160,90 158,80 146,78 C 128,76 108,96 90,118 C 80,130 74,134 70,138 Z"
+          fill="url(#luna-stretch-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+    <path d="M 96,128 Q 108,118 118,106" stroke="url(#luna-stretch-stripes)" stroke-width="3.4" stroke-linecap="round" fill="none" />
+    <path d="M 108,120 Q 122,108 132,96" stroke="url(#luna-stretch-stripes)" stroke-width="3.4" stroke-linecap="round" fill="none" />
+    <path d="M 122,108 Q 134,96 142,88" stroke="url(#luna-stretch-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+    <path d="M 74,132 C 70,140 76,148 90,146 C 100,144 108,138 110,130 C 100,126 86,126 74,132 Z"
+          fill="url(#luna-stretch-cream)" stroke="#34180C" stroke-width="1.6" stroke-linejoin="round" />
+      <!-- seam-hip -->
+    <path d="M 58,128 C 64,136 72,140 78,136 C 74,128 66,124 58,128 Z" fill="url(#luna-stretch-fur)"/>
+    <path d="M 142,128 C 136,136 128,140 122,136 C 126,128 134,124 142,128 Z" fill="url(#luna-stretch-fur)"/>
+</g>
+
   <g class="left-paw" style="transform-origin: 42px 148px;">
     <path d="M 48,142 L 28,158 C 22,164 26,169 40,169 C 52,169 60,164 60,158 L 62,146 Z"
           fill="url(#luna-stretch-cream)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
@@ -712,19 +725,6 @@ const catStretchSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www
     <path d="M 58,165 L 58,170" stroke="#34180C" stroke-width="1.4" stroke-linecap="round" />
     <path d="M 70,165 L 70,170" stroke="#34180C" stroke-width="1.4" stroke-linecap="round" />
   </g>
-
-  <g class="anim-breath pet-body" style="transform-origin: 120px 120px; transform: translateY(0px) rotate(0deg);">
-    <path d="M 70,138 C 62,148 70,156 92,150 C 114,142 138,118 152,100 C 160,90 158,80 146,78 C 128,76 108,96 90,118 C 80,130 74,134 70,138 Z"
-          fill="url(#luna-stretch-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
-    <path d="M 96,128 Q 108,118 118,106" stroke="url(#luna-stretch-stripes)" stroke-width="3.4" stroke-linecap="round" fill="none" />
-    <path d="M 108,120 Q 122,108 132,96" stroke="url(#luna-stretch-stripes)" stroke-width="3.4" stroke-linecap="round" fill="none" />
-    <path d="M 122,108 Q 134,96 142,88" stroke="url(#luna-stretch-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
-    <path d="M 74,132 C 70,140 76,148 90,146 C 100,144 108,138 110,130 C 100,126 86,126 74,132 Z"
-          fill="url(#luna-stretch-cream)" stroke="#34180C" stroke-width="1.6" stroke-linejoin="round" />
-      <!-- seam-hip -->
-    <path d="M 58,128 C 64,136 72,140 78,136 C 74,128 66,124 58,128 Z" fill="url(#luna-stretch-fur)"/>
-    <path d="M 142,128 C 136,136 128,140 122,136 C 126,128 134,124 142,128 Z" fill="url(#luna-stretch-fur)"/>
-</g>
 
   <g class="pet-head anim-breath" style="transform-origin: 80px 139px; transform: translateY(0px) rotate(-14deg);">
     <g class="pet-ear pet-ear-left" style="transform-origin: 44px 89px;">

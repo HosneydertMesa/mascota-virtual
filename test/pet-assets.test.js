@@ -12,6 +12,8 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('fs');
+const path = require('path');
 
 const {
   catIdleSVG, catWalkSVG, catWalk1SVG, catWalk2SVG, catWalk3SVG, catWalk4SVG, catSleepSVG,
@@ -233,6 +235,84 @@ test('4 patas son sibling <g>s, nunca anidadas en .pet-body', () => {
   }
 });
 
+// --- Paint order / cascade: front paws must sit in front of the torso ---
+// Production idle Luna: cream left-paw is a straight-sided slab (L commands)
+// to the left of the body. SVG later siblings paint on top, so if .pet-body
+// comes AFTER the paws it covers the attachment and the paw reads as a
+// disconnected white rectangle. Contract: shadow, tail, back feet, body,
+// FRONT PAWS (left-paw then right-paw), head.
+
+const PRODUCTION_POSES = [
+  ['cat idle', catIdleSVG],
+  ['cat walk', catWalkSVG],
+  ['cat sleep', catSleepSVG],
+  ['cat sit', catSitSVG],
+  ['cat lay', catLaySVG],
+  ['cat stretch', catStretchSVG],
+  ['dog idle', dogIdleSVG],
+  ['dog walk', dogWalkSVG],
+  ['dog sleep', dogSleepSVG],
+  ['dog sit', dogSitSVG],
+  ['dog lay', dogLaySVG],
+  ['dog stretch', dogStretchSVG]
+];
+
+/** Index of the first class="..." that contains `className` as a whole token. */
+function firstClassIndex(svg, className) {
+  const re = new RegExp(`class="[^"]*\\b${className}\\b`);
+  const m = re.exec(svg);
+  return m ? m.index : -1;
+}
+
+test('12 production poses: front paws paint after .pet-body and before .pet-head', () => {
+  assert.equal(PRODUCTION_POSES.length, 12, 'expected idle/walk/sleep/sit/lay/stretch × cat+dog');
+  for (const [name, svg] of PRODUCTION_POSES) {
+    const body = firstClassIndex(svg, 'pet-body');
+    const left = firstClassIndex(svg, 'left-paw');
+    const right = firstClassIndex(svg, 'right-paw');
+    const head = firstClassIndex(svg, 'pet-head');
+    assert.ok(body >= 0, `${name}: missing pet-body`);
+    assert.ok(left >= 0, `${name}: missing left-paw`);
+    assert.ok(right >= 0, `${name}: missing right-paw`);
+    assert.ok(head >= 0, `${name}: missing pet-head`);
+    assert.ok(left > body,
+      `${name}: left-paw (i=${left}) must come after pet-body (i=${body})`);
+    assert.ok(right > body,
+      `${name}: right-paw (i=${right}) must come after pet-body (i=${body})`);
+    assert.ok(left < right,
+      `${name}: left-paw must precede right-paw (left=${left} right=${right})`);
+    assert.ok(head > right,
+      `${name}: pet-head (i=${head}) must come after right-paw (i=${right})`);
+  }
+});
+
+test('12 production poses: cascade is shadow → tail → back feet → body → front paws → head', () => {
+  for (const [name, svg] of PRODUCTION_POSES) {
+    const shadow = firstClassIndex(svg, 'pet-shadow');
+    const tail = firstClassIndex(svg, 'anim-wag');
+    const backL = firstClassIndex(svg, 'back-foot-left');
+    const backR = firstClassIndex(svg, 'back-foot-right');
+    const body = firstClassIndex(svg, 'pet-body');
+    const left = firstClassIndex(svg, 'left-paw');
+    const right = firstClassIndex(svg, 'right-paw');
+    const head = firstClassIndex(svg, 'pet-head');
+    assert.ok(
+      shadow >= 0 && shadow < tail && tail < backL && backL < backR && backR < body && body < left && left < right && right < head,
+      `${name}: bad cascade shadow=${shadow} tail=${tail} backL=${backL} backR=${backR} body=${body} left=${left} right=${right} head=${head}`
+    );
+  }
+});
+
+test('CSS no z-index/isolation on paw/body/head groups (SVG document order wins)', () => {
+  const cssDir = path.join(__dirname, '..', 'src', 'styles');
+  const files = ['animations.css', 'pet.css', 'dashboard.css', 'variables.css'];
+  const css = files.map((f) => fs.readFileSync(path.join(cssDir, f), 'utf8')).join('\n')
+    .replace(/\/\*[\s\S]*?\*\//g, '');
+  const fighter = /(#pet-svg[^{]*\{[^}]*(?:z-index|isolation)\s*:|\.(?:left-paw|right-paw|pet-body|pet-head)[^{]*\{[^}]*(?:z-index|isolation)\s*:)/;
+  assert.doesNotMatch(css, fighter,
+    'z-index/isolation on #pet-svg groups would override sibling paint order');
+});
+
 // --- sit / lay / stretch: poses reales distintas (no aliases, no data-pose copies) ---
 
 test('cat sit/lay/stretch no son aliases de idle/sleep/walk', () => {
@@ -266,9 +346,6 @@ test('dog sit/lay/stretch no son aliases de idle/sleep/walk', () => {
 // dogBodyWalk (dashboard ganaba por import order). Gait vive en UN archivo.
 // Luna y Max NO comparten sideWalkSwing*: cada uno tiene catWalkSwing* /
 // dogWalkSwing* con periodo, swing y bob distintos.
-
-const fs = require('fs');
-const path = require('path');
 const ANIM_CSS_PATH = path.join(__dirname, '..', 'src', 'styles', 'animations.css');
 const DASH_CSS_PATH = path.join(__dirname, '..', 'src', 'styles', 'dashboard.css');
 const STYLES_ENTRY_PATH = path.join(__dirname, '..', 'src', 'styles.css');

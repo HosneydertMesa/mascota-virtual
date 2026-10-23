@@ -1,0 +1,660 @@
+diff --git a/docs/plans/paw-paint-order-2026-08-26.md b/docs/plans/paw-paint-order-2026-08-26.md
+new file mode 100644
+index 0000000..2a66bc3
+--- /dev/null
++++ b/docs/plans/paw-paint-order-2026-08-26.md
+@@ -0,0 +1,101 @@
++# Plan: front-paw SVG paint order (Luna idle depth)
++
++> **Status**: Open
++> **Date**: 2026-08-26
++> **Author**: Cloud agent (follow-up from main after PR #2)
++> **Branch**: `cursor/paw-z-order-6c0a`
++> **Size**: S
++
++---
++
++## 1. Goal
++
++Que la pata delantera izquierda crema de Luna (y las patas frontales de
++Max) se pinten **delante** del torso en el SVG vivo. Hoy se leen como un
++rectángulo blanco con costura vertical dura contra el cuerpo, porque
++`.pet-body` cubre el anclaje de la pata.
++
++## 2. Contexto (hipótesis verificada en main)
++
++En `src/assets/cat.js` y `src/assets/dog.js`, las 12 poses de producción
++(idle / walk / sleep / sit / lay / stretch × Luna y Max) tienen el mismo
++orden de siblings `<g>`:
++
++```
++tail (.anim-wag) → back-foot-left → back-foot-right → left-paw → right-paw → .pet-body → .pet-head
++```
++
++SVG pinta siblings posteriores encima. `.pet-body` tapa el attachment de
++las patas. El path de `.left-paw` es un slab crema de lados rectos (`L`
++commands) a la izquierda del silueta del torso — por eso se ve
++desconectada.
++
++Las cuatro patas ya son `<g>` siblings (contrato de PR #2); no están
++anidadas en `.pet-body`. Walk1–4 / sitBlink / layBreathe son aliases de
++walk / sit / lay.
++
++No hay `z-index` ni `isolation` sobre esos grupos en `animations.css` /
++`pet.css` / `dashboard.css`. El cascade de gait no se toca.
++
++## 3. Fuera de scope
++
++- Redibujar paths (`d=`), gradient ids, classes, `transform-origin`
++- Gait CSS, Pixi, chat, AI, Pomodoro, `pet-motion.js`
++- Reabrir o pushear a PR #2. No mergear.
++
++## 4. Decisiones
++
++| Decisión | Elección | Por qué |
++|---|---|---|
++| Fix | Reordenar grupos sibling únicamente | Hipótesis verificada: paint order, no arte |
++| Orden destino | shadow, tail, back feet, body, left-paw, right-paw, head | Patas frontales AFTER `.pet-body` y BEFORE `.pet-head` |
++| Nested legs | Prohibido. Siguen siendo 4 `<g>` siblings | Contrato de slice 1 |
++| CSS | No tocar gait. Solo alinear z-index/isolation si pelea el DOM | Preferencia del usuario; hoy no pelea |
++| Tests | 12 poses shipped: `left-paw`/`right-paw` after `pet-body`, `pet-head` after paws | Regresión del cascade |
++
++## 5. Archivos a tocar
++
++| Archivo | Cambio |
++|---|---|
++| `src/assets/cat.js` | Reordenar `<g>` en las 6 poses (idle, walk, sleep, sit, lay, stretch) |
++| `src/assets/dog.js` | Idem, 6 poses |
++| `test/pet-assets.test.js` | Assert de orden/cascade en las 12 strings shipped |
++| `docs/plans/paw-paint-order-2026-08-26.md` | Este plan |
++| `docs/reviews/paw-paint-order-2026-08-26.md` | Review adversarial |
++
++## 6. Riesgos
++
++| Riesgo | Mitigación |
++|---|---|
++| CSS transform en `.anim-breath` crea stacking context y sigue tapando patas | Verificar que no hay z-index/isolation en grupos; si pelea, z-index mínimo **sin** tocar gait keyframes |
++| Anidar patas en `.pet-body` al mover bloques | Extraer grupos depth-matched; test sibling existente debe seguir verde |
++| Cambiar `d=` / origins por accidente | Diff solo de bloques `<g>` reordenados; no editar paths |
++
++## 7. Criterios de aceptación
++
++- [ ] Las 12 poses: primer `class` `left-paw` y `right-paw` **después** de `pet-body`
++- [ ] `pet-head` **después** de ambas patas
++- [ ] `left-paw` antes de `right-paw`
++- [ ] Las 4 patas siguen siendo siblings, nunca nested en `.pet-body`
++- [ ] Ningún cambio a `d=`, classes, transform-origins, gradient ids, gait CSS, Pixi, chat, AI
++- [ ] `npm test` y `npm run check` verdes
++- [ ] PR **nuevo** contra `main` (no reabrir #2). No mergear.
++
++## 8. Plan de testing
++
++1. RED: tests de orden fallan en main (paws before body).
++2. GREEN: reorder; mismos tests pasan.
++3. Suite completa: `npm test` + `npm run check`.
++4. Guard existente `4 patas son sibling <g>s, nunca anidadas en .pet-body` sigue pasando.
++
++## 9. Métricas
++
++- 12/12 poses con cascade correcto (idle, walk, sleep, sit, lay, stretch × cat/dog).
++- 0 archivos de gait / Pixi / chat / AI en el diff.
++
++## 10. Próximos pasos concretos
++
++1. Tests de cascade en `test/pet-assets.test.js` (TDD, verlos fallar).
++2. Reordenar grupos en las 12 poses de `cat.js` / `dog.js`.
++3. `npm test` + `npm run check`.
++4. Review + PR nuevo vs `main`.
+diff --git a/src/assets/cat.js b/src/assets/cat.js
+index 2da304e..db0bdbb 100644
+--- a/src/assets/cat.js
++++ b/src/assets/cat.js
+@@ -52,6 +52,16 @@ const catIdleSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
+     <ellipse cx="154" cy="167" rx="7.5" ry="4.2" fill="url(#luna-idle-cream)" stroke="#34180C" stroke-width="1.8" />
+   </g>
+ 
++  <g class="anim-breath pet-body" style="transform-origin: 112px 132px; transform: translateY(0px) rotate(0deg);">
++    <path d="M 72,112 C 66,120 70,134 86,140 C 104,146 132,144 150,136 C 160,130 160,118 150,112 C 136,104 90,104 72,112 Z"
++          fill="url(#luna-idle-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
++    <path d="M 92,110 Q 96,122 92,132" stroke="url(#luna-idle-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
++    <path d="M 108,108 Q 112,120 108,132" stroke="url(#luna-idle-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
++    <path d="M 124,110 Q 128,122 124,134" stroke="url(#luna-idle-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
++    <path d="M 76,114 C 72,124 78,134 92,138 C 102,140 110,136 112,128 C 108,118 94,112 82,112 Z"
++          fill="url(#luna-idle-cream)" stroke="#34180C" stroke-width="1.6" stroke-linejoin="round" />
++  </g>
++
+   <g class="left-paw" style="transform-origin: 70px 126px;">
+     <path d="M 64,124 L 62,154 C 62,160 66,167 74,167 C 82,167 86,160 86,154 L 84,124 Z"
+           fill="url(#luna-idle-cream)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
+@@ -67,16 +77,6 @@ const catIdleSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
+     <path d="M 104,164 L 104,169" stroke="#34180C" stroke-width="1.4" stroke-linecap="round" />
+   </g>
+ 
+-  <g class="anim-breath pet-body" style="transform-origin: 112px 132px; transform: translateY(0px) rotate(0deg);">
+-    <path d="M 72,112 C 66,120 70,134 86,140 C 104,146 132,144 150,136 C 160,130 160,118 150,112 C 136,104 90,104 72,112 Z"
+-          fill="url(#luna-idle-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+-    <path d="M 92,110 Q 96,122 92,132" stroke="url(#luna-idle-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+-    <path d="M 108,108 Q 112,120 108,132" stroke="url(#luna-idle-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+-    <path d="M 124,110 Q 128,122 124,134" stroke="url(#luna-idle-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+-    <path d="M 76,114 C 72,124 78,134 92,138 C 102,140 110,136 112,128 C 108,118 94,112 82,112 Z"
+-          fill="url(#luna-idle-cream)" stroke="#34180C" stroke-width="1.6" stroke-linejoin="round" />
+-  </g>
+-
+   <g class="pet-head anim-breath" style="transform-origin: 92px 107px; transform: translateY(0px) rotate(0deg);">
+     <g class="pet-ear pet-ear-left" style="transform-origin: 56px 57px;">
+       <path d="M 52,60 L 38,28 C 52,31 68,44 68,58 Z" fill="url(#luna-idle-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+@@ -188,19 +188,6 @@ const catWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
+     <ellipse cx="150" cy="168" rx="7.5" ry="4" fill="url(#luna-walk-cream)" stroke="#34180C" stroke-width="1.8" />
+   </g>
+ 
+-  <g class="left-paw" style="transform-origin: 64px 134px;">
+-    <path d="M 58,132 L 54,156 C 53,162 58,168 66,168 C 73,168 76,162 76,156 L 72,132 Z"
+-          fill="url(#luna-walk-cream)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
+-    <ellipse cx="64" cy="168" rx="9" ry="4.8" fill="url(#luna-walk-cream)" stroke="#34180C" stroke-width="2" />
+-    <path d="M 60,165 L 60,170" stroke="#34180C" stroke-width="1.4" stroke-linecap="round" />
+-    <path d="M 68,165 L 68,170" stroke="#34180C" stroke-width="1.4" stroke-linecap="round" />
+-  </g>
+-  <g class="right-paw" style="transform-origin: 84px 132px;">
+-    <path d="M 80,130 L 84,150 C 86,152 90,156 98,154 C 102,152 102,146 98,140 L 90,130 Z"
+-          fill="url(#luna-walk-cream)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
+-    <ellipse cx="94" cy="154" rx="8" ry="4.2" fill="url(#luna-walk-cream)" stroke="#34180C" stroke-width="1.8" />
+-  </g>
+-
+   <g class="anim-breath pet-body" style="transform-origin: 112px 140px; transform: translateY(0px) rotate(0deg);">
+     <path d="M 70,118 C 64,126 66,140 80,148 C 96,154 128,154 146,146 C 158,140 160,126 152,116 C 142,104 118,100 94,104 C 80,106 72,110 70,118 Z"
+           fill="url(#luna-walk-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+@@ -214,6 +201,19 @@ const catWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
+     <path d="M 142,128 C 136,136 128,140 122,136 C 126,128 134,124 142,128 Z" fill="url(#luna-walk-fur)"/>
+ </g>
+ 
++  <g class="left-paw" style="transform-origin: 64px 134px;">
++    <path d="M 58,132 L 54,156 C 53,162 58,168 66,168 C 73,168 76,162 76,156 L 72,132 Z"
++          fill="url(#luna-walk-cream)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
++    <ellipse cx="64" cy="168" rx="9" ry="4.8" fill="url(#luna-walk-cream)" stroke="#34180C" stroke-width="2" />
++    <path d="M 60,165 L 60,170" stroke="#34180C" stroke-width="1.4" stroke-linecap="round" />
++    <path d="M 68,165 L 68,170" stroke="#34180C" stroke-width="1.4" stroke-linecap="round" />
++  </g>
++  <g class="right-paw" style="transform-origin: 84px 132px;">
++    <path d="M 80,130 L 84,150 C 86,152 90,156 98,154 C 102,152 102,146 98,140 L 90,130 Z"
++          fill="url(#luna-walk-cream)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
++    <ellipse cx="94" cy="154" rx="8" ry="4.2" fill="url(#luna-walk-cream)" stroke="#34180C" stroke-width="1.8" />
++  </g>
++
+   <g class="pet-head anim-breath" style="transform-origin: 58px 108px; transform: translateY(0px) rotate(0deg);">
+     <g class="pet-ear pet-ear-left" style="transform-origin: 46px 62px;">
+       <path d="M 44,68 L 28,38 C 42,40 58,52 58,68 Z" fill="url(#luna-walk-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+@@ -302,6 +302,17 @@ const catSleepSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w
+     <ellipse cx="148" cy="156" rx="6.5" ry="3.6" fill="url(#luna-sleep-cream)" stroke="#34180C" stroke-width="1.6" />
+   </g>
+ 
++  <g class="anim-breath pet-body" style="transform-origin: 108px 138px; transform: translateY(0px) rotate(0deg);">
++    <ellipse cx="108" cy="132" rx="46" ry="34" fill="url(#luna-sleep-fur)" stroke="#34180C" stroke-width="2.2" />
++    <path d="M 118,108 Q 122,122 116,134" stroke="url(#luna-sleep-stripes)" stroke-width="3.6" stroke-linecap="round" fill="none" />
++    <path d="M 132,114 Q 134,126 128,138" stroke="url(#luna-sleep-stripes)" stroke-width="3.6" stroke-linecap="round" fill="none" />
++    <path d="M 100,112 Q 102,124 98,136" stroke="url(#luna-sleep-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
++    <path d="M 92,118 C 88,130 94,142 108,146 C 118,148 126,144 130,136" fill="url(#luna-sleep-cream)" stroke="#34180C" stroke-width="1.5" stroke-linejoin="round" />
++      <!-- seam-hip -->
++    <path d="M 58,128 C 64,136 72,140 78,136 C 74,128 66,124 58,128 Z" fill="url(#luna-sleep-fur)"/>
++    <path d="M 142,128 C 136,136 128,140 122,136 C 126,128 134,124 142,128 Z" fill="url(#luna-sleep-fur)"/>
++</g>
++
+   <g class="left-paw" style="transform-origin: 86px 148px;">
+     <path d="M 82,146 C 78,152 80,160 88,164 C 94,166 100,162 100,156 L 96,146 Z"
+           fill="url(#luna-sleep-cream)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
+@@ -315,17 +326,6 @@ const catSleepSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w
+     <ellipse cx="108" cy="162" rx="7.5" ry="4" fill="url(#luna-sleep-cream)" stroke="#34180C" stroke-width="1.8" />
+   </g>
+ 
+-  <g class="anim-breath pet-body" style="transform-origin: 108px 138px; transform: translateY(0px) rotate(0deg);">
+-    <ellipse cx="108" cy="132" rx="46" ry="34" fill="url(#luna-sleep-fur)" stroke="#34180C" stroke-width="2.2" />
+-    <path d="M 118,108 Q 122,122 116,134" stroke="url(#luna-sleep-stripes)" stroke-width="3.6" stroke-linecap="round" fill="none" />
+-    <path d="M 132,114 Q 134,126 128,138" stroke="url(#luna-sleep-stripes)" stroke-width="3.6" stroke-linecap="round" fill="none" />
+-    <path d="M 100,112 Q 102,124 98,136" stroke="url(#luna-sleep-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+-    <path d="M 92,118 C 88,130 94,142 108,146 C 118,148 126,144 130,136" fill="url(#luna-sleep-cream)" stroke="#34180C" stroke-width="1.5" stroke-linejoin="round" />
+-      <!-- seam-hip -->
+-    <path d="M 58,128 C 64,136 72,140 78,136 C 74,128 66,124 58,128 Z" fill="url(#luna-sleep-fur)"/>
+-    <path d="M 142,128 C 136,136 128,140 122,136 C 126,128 134,124 142,128 Z" fill="url(#luna-sleep-fur)"/>
+-</g>
+-
+   <g class="pet-head anim-breath" style="transform-origin: 74px 122px; transform: translateY(0px) rotate(-18deg);">
+     <g class="pet-ear pet-ear-left" style="transform-origin: 62px 96px;">
+       <path d="M 64,103 L 52,86 C 63,88 74,97 72,106 Z" fill="url(#luna-sleep-fur)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
+@@ -410,21 +410,6 @@ const catSitSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.
+     <ellipse cx="146" cy="165" rx="8" ry="4.5" fill="url(#luna-sit-cream)" stroke="#34180C" stroke-width="1.8" />
+   </g>
+ 
+-  <g class="left-paw" style="transform-origin: 83px 132px;">
+-    <path d="M 76,132 L 75,155 C 75,161 78,165 83,165 C 88,165 91,161 91,155 L 90,132 Z"
+-          fill="url(#luna-sit-cream)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
+-    <ellipse cx="83" cy="164" rx="9.5" ry="5.5" fill="url(#luna-sit-cream)" stroke="#34180C" stroke-width="2" />
+-    <path d="M 79,162 L 79,167" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
+-    <path d="M 86,162 L 86,167" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
+-  </g>
+-  <g class="right-paw" style="transform-origin: 117px 132px;">
+-    <path d="M 110,132 L 109,155 C 109,161 112,165 117,165 C 122,165 125,161 125,155 L 124,132 Z"
+-          fill="url(#luna-sit-cream)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
+-    <ellipse cx="117" cy="164" rx="9.5" ry="5.5" fill="url(#luna-sit-cream)" stroke="#34180C" stroke-width="2" />
+-    <path d="M 113,162 L 113,167" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
+-    <path d="M 120,162 L 120,167" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
+-  </g>
+-
+   <g class="anim-breath pet-body" style="transform-origin: 100px 165px; transform: translateY(0px) rotate(0deg);">
+     <path d="M 68,105 C 63,122 65,140 76,150 C 88,155 112,155 124,150 C 135,140 137,122 132,105 Z"
+           fill="url(#luna-sit-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+@@ -440,6 +425,21 @@ const catSitSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.
+     <path d="M 142,128 C 136,136 128,140 122,136 C 126,128 134,124 142,128 Z" fill="url(#luna-sit-fur)"/>
+ </g>
+ 
++  <g class="left-paw" style="transform-origin: 83px 132px;">
++    <path d="M 76,132 L 75,155 C 75,161 78,165 83,165 C 88,165 91,161 91,155 L 90,132 Z"
++          fill="url(#luna-sit-cream)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
++    <ellipse cx="83" cy="164" rx="9.5" ry="5.5" fill="url(#luna-sit-cream)" stroke="#34180C" stroke-width="2" />
++    <path d="M 79,162 L 79,167" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
++    <path d="M 86,162 L 86,167" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
++  </g>
++  <g class="right-paw" style="transform-origin: 117px 132px;">
++    <path d="M 110,132 L 109,155 C 109,161 112,165 117,165 C 122,165 125,161 125,155 L 124,132 Z"
++          fill="url(#luna-sit-cream)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
++    <ellipse cx="117" cy="164" rx="9.5" ry="5.5" fill="url(#luna-sit-cream)" stroke="#34180C" stroke-width="2" />
++    <path d="M 113,162 L 113,167" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
++    <path d="M 120,162 L 120,167" stroke="#34180C" stroke-width="1.5" stroke-linecap="round" />
++  </g>
++
+   <g class="pet-head anim-breath" style="transform-origin: 100px 105px; transform: translateY(0px) rotate(0deg);">
+     <g class="pet-ear pet-ear-left" style="transform-origin: 64px 55px;">
+       <path d="M 60,58 L 46,26 C 60,29 76,42 76,56 Z" fill="url(#luna-sit-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+@@ -554,6 +554,20 @@ const catLaySVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.
+     <ellipse cx="146" cy="166" rx="8" ry="4.2" fill="url(#luna-lay-cream)" stroke="#34180C" stroke-width="1.8" />
+   </g>
+ 
++  <g class="anim-breath pet-body" style="transform-origin: 100px 148px; transform: translateY(0px) rotate(0deg);">
++    <path d="M 42,128 C 36,138 42,156 70,160 C 88,164 112,164 130,160 C 158,156 164,138 158,128 C 150,116 50,116 42,128 Z"
++          fill="url(#luna-lay-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
++    <path d="M 56,130 Q 64,136 68,144" stroke="url(#luna-lay-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
++    <path d="M 144,130 Q 136,136 132,144" stroke="url(#luna-lay-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
++    <path d="M 60,140 Q 68,144 72,150" stroke="url(#luna-lay-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
++    <path d="M 140,140 Q 132,144 128,150" stroke="url(#luna-lay-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
++    <path d="M 78,118 C 72,128 74,142 86,150 C 94,154 106,154 114,150 C 126,142 128,128 122,118 C 114,124 86,124 78,118 Z"
++          fill="url(#luna-lay-cream)" stroke="#34180C" stroke-width="1.6" stroke-linejoin="round" />
++      <!-- seam-hip -->
++    <path d="M 58,128 C 64,136 72,140 78,136 C 74,128 66,124 58,128 Z" fill="url(#luna-lay-fur)"/>
++    <path d="M 142,128 C 136,136 128,140 122,136 C 126,128 134,124 142,128 Z" fill="url(#luna-lay-fur)"/>
++</g>
++
+   <g class="left-paw" style="transform-origin: 72px 148px;">
+     <path d="M 70,146 L 58,158 C 54,164 58,168 68,168 C 78,168 84,164 84,158 L 82,146 Z"
+           fill="url(#luna-lay-cream)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
+@@ -569,20 +583,6 @@ const catLaySVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.
+     <path d="M 134,164 L 134,169" stroke="#34180C" stroke-width="1.4" stroke-linecap="round" />
+   </g>
+ 
+-  <g class="anim-breath pet-body" style="transform-origin: 100px 148px; transform: translateY(0px) rotate(0deg);">
+-    <path d="M 42,128 C 36,138 42,156 70,160 C 88,164 112,164 130,160 C 158,156 164,138 158,128 C 150,116 50,116 42,128 Z"
+-          fill="url(#luna-lay-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+-    <path d="M 56,130 Q 64,136 68,144" stroke="url(#luna-lay-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+-    <path d="M 144,130 Q 136,136 132,144" stroke="url(#luna-lay-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+-    <path d="M 60,140 Q 68,144 72,150" stroke="url(#luna-lay-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
+-    <path d="M 140,140 Q 132,144 128,150" stroke="url(#luna-lay-stripes)" stroke-width="3" stroke-linecap="round" fill="none" />
+-    <path d="M 78,118 C 72,128 74,142 86,150 C 94,154 106,154 114,150 C 126,142 128,128 122,118 C 114,124 86,124 78,118 Z"
+-          fill="url(#luna-lay-cream)" stroke="#34180C" stroke-width="1.6" stroke-linejoin="round" />
+-      <!-- seam-hip -->
+-    <path d="M 58,128 C 64,136 72,140 78,136 C 74,128 66,124 58,128 Z" fill="url(#luna-lay-fur)"/>
+-    <path d="M 142,128 C 136,136 128,140 122,136 C 126,128 134,124 142,128 Z" fill="url(#luna-lay-fur)"/>
+-</g>
+-
+   <g class="pet-head anim-breath" style="transform-origin: 100px 123px; transform: translateY(0px) rotate(0deg);">
+     <g class="pet-ear pet-ear-left" style="transform-origin: 64px 73px;">
+       <path d="M 60,76 L 46,44 C 60,47 76,60 76,74 Z" fill="url(#luna-lay-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+@@ -698,6 +698,19 @@ const catStretchSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www
+     <ellipse cx="158" cy="167" rx="8" ry="4.2" fill="url(#luna-stretch-cream)" stroke="#34180C" stroke-width="1.8" />
+   </g>
+ 
++  <g class="anim-breath pet-body" style="transform-origin: 120px 120px; transform: translateY(0px) rotate(0deg);">
++    <path d="M 70,138 C 62,148 70,156 92,150 C 114,142 138,118 152,100 C 160,90 158,80 146,78 C 128,76 108,96 90,118 C 80,130 74,134 70,138 Z"
++          fill="url(#luna-stretch-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
++    <path d="M 96,128 Q 108,118 118,106" stroke="url(#luna-stretch-stripes)" stroke-width="3.4" stroke-linecap="round" fill="none" />
++    <path d="M 108,120 Q 122,108 132,96" stroke="url(#luna-stretch-stripes)" stroke-width="3.4" stroke-linecap="round" fill="none" />
++    <path d="M 122,108 Q 134,96 142,88" stroke="url(#luna-stretch-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
++    <path d="M 74,132 C 70,140 76,148 90,146 C 100,144 108,138 110,130 C 100,126 86,126 74,132 Z"
++          fill="url(#luna-stretch-cream)" stroke="#34180C" stroke-width="1.6" stroke-linejoin="round" />
++      <!-- seam-hip -->
++    <path d="M 58,128 C 64,136 72,140 78,136 C 74,128 66,124 58,128 Z" fill="url(#luna-stretch-fur)"/>
++    <path d="M 142,128 C 136,136 128,140 122,136 C 126,128 134,124 142,128 Z" fill="url(#luna-stretch-fur)"/>
++</g>
++
+   <g class="left-paw" style="transform-origin: 42px 148px;">
+     <path d="M 48,142 L 28,158 C 22,164 26,169 40,169 C 52,169 60,164 60,158 L 62,146 Z"
+           fill="url(#luna-stretch-cream)" stroke="#34180C" stroke-width="2" stroke-linejoin="round" />
+@@ -713,19 +726,6 @@ const catStretchSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www
+     <path d="M 70,165 L 70,170" stroke="#34180C" stroke-width="1.4" stroke-linecap="round" />
+   </g>
+ 
+-  <g class="anim-breath pet-body" style="transform-origin: 120px 120px; transform: translateY(0px) rotate(0deg);">
+-    <path d="M 70,138 C 62,148 70,156 92,150 C 114,142 138,118 152,100 C 160,90 158,80 146,78 C 128,76 108,96 90,118 C 80,130 74,134 70,138 Z"
+-          fill="url(#luna-stretch-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+-    <path d="M 96,128 Q 108,118 118,106" stroke="url(#luna-stretch-stripes)" stroke-width="3.4" stroke-linecap="round" fill="none" />
+-    <path d="M 108,120 Q 122,108 132,96" stroke="url(#luna-stretch-stripes)" stroke-width="3.4" stroke-linecap="round" fill="none" />
+-    <path d="M 122,108 Q 134,96 142,88" stroke="url(#luna-stretch-stripes)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+-    <path d="M 74,132 C 70,140 76,148 90,146 C 100,144 108,138 110,130 C 100,126 86,126 74,132 Z"
+-          fill="url(#luna-stretch-cream)" stroke="#34180C" stroke-width="1.6" stroke-linejoin="round" />
+-      <!-- seam-hip -->
+-    <path d="M 58,128 C 64,136 72,140 78,136 C 74,128 66,124 58,128 Z" fill="url(#luna-stretch-fur)"/>
+-    <path d="M 142,128 C 136,136 128,140 122,136 C 126,128 134,124 142,128 Z" fill="url(#luna-stretch-fur)"/>
+-</g>
+-
+   <g class="pet-head anim-breath" style="transform-origin: 80px 139px; transform: translateY(0px) rotate(-14deg);">
+     <g class="pet-ear pet-ear-left" style="transform-origin: 44px 89px;">
+       <path d="M 40,92 L 26,60 C 40,63 56,76 56,90 Z" fill="url(#luna-stretch-fur)" stroke="#34180C" stroke-width="2.2" stroke-linejoin="round" />
+diff --git a/src/assets/dog.js b/src/assets/dog.js
+index b2f38fd..69883a5 100644
+--- a/src/assets/dog.js
++++ b/src/assets/dog.js
+@@ -40,6 +40,16 @@ const dogIdleSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
+     <ellipse cx="144" cy="167" rx="8.5" ry="5" fill="url(#max-idle-white)" stroke="#3B1E12" stroke-width="1.8" />
+   </g>
+ 
++  <g class="pet-body anim-breath" style="transform-origin: 100px 136px;">
++    <path d="M 70,98 C 64,110 66,126 80,134 C 90,138 110,138 120,134 C 134,126 136,110 130,98 Z"
++          fill="url(#max-idle-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
++    <path d="M 82,92 C 76,104 74,116 82,124 C 88,130 94,134 100,136 C 106,134 112,130 118,124 C 126,116 124,104 118,92 C 111,102 89,102 82,92 Z"
++          fill="url(#max-idle-white)" stroke="#3B1E12" stroke-width="1.8" stroke-linejoin="round" />
++      <!-- seam-hip -->
++    <path d="M 58,128 C 64,136 72,140 78,136 C 74,128 66,124 58,128 Z" fill="url(#max-idle-fur)"/>
++    <path d="M 142,128 C 136,136 128,140 122,136 C 126,128 134,124 142,128 Z" fill="url(#max-idle-fur)"/>
++</g>
++
+   <g class="left-paw" style="transform-origin: 76px 120px;">
+     <path d="M 68,118 L 66,154 C 66,162 70,168 78,168 C 86,168 90,162 90,154 L 88,118 Z"
+           fill="url(#max-idle-white)" stroke="#3B1E12" stroke-width="2" stroke-linejoin="round" />
+@@ -55,16 +65,6 @@ const dogIdleSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
+     <path d="M 126,164 L 126,170" stroke="#3B1E12" stroke-width="1.6" stroke-linecap="round" />
+   </g>
+ 
+-  <g class="pet-body anim-breath" style="transform-origin: 100px 136px;">
+-    <path d="M 70,98 C 64,110 66,126 80,134 C 90,138 110,138 120,134 C 134,126 136,110 130,98 Z"
+-          fill="url(#max-idle-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+-    <path d="M 82,92 C 76,104 74,116 82,124 C 88,130 94,134 100,136 C 106,134 112,130 118,124 C 126,116 124,104 118,92 C 111,102 89,102 82,92 Z"
+-          fill="url(#max-idle-white)" stroke="#3B1E12" stroke-width="1.8" stroke-linejoin="round" />
+-      <!-- seam-hip -->
+-    <path d="M 58,128 C 64,136 72,140 78,136 C 74,128 66,124 58,128 Z" fill="url(#max-idle-fur)"/>
+-    <path d="M 142,128 C 136,136 128,140 122,136 C 126,128 134,124 142,128 Z" fill="url(#max-idle-fur)"/>
+-</g>
+-
+   <g class="pet-head" style="transform-origin: 100px 100px;">
+     <g class="pet-ear pet-ear-left" style="transform-origin: 58px 48px;">
+       <path d="M 60,50 C 42,50 32,66 34,88 C 36,100 46,104 52,94 C 58,84 64,70 62,50 Z" fill="url(#max-idle-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+@@ -143,6 +143,16 @@ const dogWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
+     <ellipse cx="104" cy="154" rx="8.5" ry="5" fill="url(#max-walk-white)" stroke="#3B1E12" stroke-width="1.8" />
+   </g>
+ 
++  <g class="pet-body anim-breath" style="transform-origin: 112px 138px;">
++    <path d="M 48,112 C 38,124 44,144 72,152 C 100,160 140,156 166,142 C 178,134 176,116 160,106 C 136,96 78,98 48,112 Z"
++          fill="url(#max-walk-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
++    <path d="M 54,114 C 44,126 48,142 68,148 C 84,150 96,140 98,126 C 96,114 76,106 54,114 Z"
++          fill="url(#max-walk-white)" stroke="#3B1E12" stroke-width="1.8" stroke-linejoin="round" />
++      <!-- seam-hip -->
++    <path d="M 58,128 C 64,136 72,140 78,136 C 74,128 66,124 58,128 Z" fill="url(#max-walk-fur)"/>
++    <path d="M 142,128 C 136,136 128,140 122,136 C 126,128 134,124 142,128 Z" fill="url(#max-walk-fur)"/>
++</g>
++
+   <g class="left-paw" style="transform-origin: 78px 116px;">
+     <path d="M 76,116 L 88,146 C 90,152 86,158 78,158 C 70,158 66,152 68,146 L 74,116 Z"
+           fill="url(#max-walk-white)" stroke="#3B1E12" stroke-width="2" stroke-linejoin="round" />
+@@ -158,16 +168,6 @@ const dogWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
+     <path d="M 36,166 L 36,172" stroke="#3B1E12" stroke-width="1.4" stroke-linecap="round" />
+   </g>
+ 
+-  <g class="pet-body anim-breath" style="transform-origin: 112px 138px;">
+-    <path d="M 48,112 C 38,124 44,144 72,152 C 100,160 140,156 166,142 C 178,134 176,116 160,106 C 136,96 78,98 48,112 Z"
+-          fill="url(#max-walk-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+-    <path d="M 54,114 C 44,126 48,142 68,148 C 84,150 96,140 98,126 C 96,114 76,106 54,114 Z"
+-          fill="url(#max-walk-white)" stroke="#3B1E12" stroke-width="1.8" stroke-linejoin="round" />
+-      <!-- seam-hip -->
+-    <path d="M 58,128 C 64,136 72,140 78,136 C 74,128 66,124 58,128 Z" fill="url(#max-walk-fur)"/>
+-    <path d="M 142,128 C 136,136 128,140 122,136 C 126,128 134,124 142,128 Z" fill="url(#max-walk-fur)"/>
+-</g>
+-
+   <g class="pet-head" style="transform-origin: 46px 96px;">
+     <g class="pet-ear pet-ear-left" style="transform-origin: 22px 54px;">
+       <path d="M 24,52 C 10,50 2,64 6,82 C 8,92 20,94 26,84 C 30,74 32,58 24,52 Z" fill="url(#max-walk-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+@@ -240,6 +240,16 @@ const dogSleepSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w
+     <ellipse cx="144" cy="166" rx="7.5" ry="4" fill="url(#max-sleep-white)" stroke="#3B1E12" stroke-width="1.6" />
+   </g>
+ 
++  <g class="pet-body anim-breath" style="transform-origin: 108px 148px;">
++    <path d="M 68,126 C 56,144 64,166 94,172 C 122,178 148,166 152,146 C 154,130 140,116 116,112 C 92,108 78,112 68,126 Z"
++          fill="url(#max-sleep-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
++    <path d="M 86,142 C 82,152 88,162 100,164 C 110,162 114,152 110,142 C 104,138 92,138 86,142 Z"
++          fill="url(#max-sleep-white)" stroke="#3B1E12" stroke-width="1.6" stroke-linejoin="round" />
++      <!-- seam-hip -->
++    <path d="M 58,128 C 64,136 72,140 78,136 C 74,128 66,124 58,128 Z" fill="url(#max-sleep-fur)"/>
++    <path d="M 142,128 C 136,136 128,140 122,136 C 126,128 134,124 142,128 Z" fill="url(#max-sleep-fur)"/>
++</g>
++
+   <g class="left-paw" style="transform-origin: 86px 160px;">
+     <ellipse cx="86" cy="168" rx="9" ry="5" fill="url(#max-sleep-white)" stroke="#3B1E12" stroke-width="1.8" />
+     <path d="M 82,166 L 82,171" stroke="#3B1E12" stroke-width="1.3" stroke-linecap="round" />
+@@ -251,16 +261,6 @@ const dogSleepSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w
+     <path d="M 106,167 L 106,172" stroke="#3B1E12" stroke-width="1.3" stroke-linecap="round" />
+   </g>
+ 
+-  <g class="pet-body anim-breath" style="transform-origin: 108px 148px;">
+-    <path d="M 68,126 C 56,144 64,166 94,172 C 122,178 148,166 152,146 C 154,130 140,116 116,112 C 92,108 78,112 68,126 Z"
+-          fill="url(#max-sleep-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+-    <path d="M 86,142 C 82,152 88,162 100,164 C 110,162 114,152 110,142 C 104,138 92,138 86,142 Z"
+-          fill="url(#max-sleep-white)" stroke="#3B1E12" stroke-width="1.6" stroke-linejoin="round" />
+-      <!-- seam-hip -->
+-    <path d="M 58,128 C 64,136 72,140 78,136 C 74,128 66,124 58,128 Z" fill="url(#max-sleep-fur)"/>
+-    <path d="M 142,128 C 136,136 128,140 122,136 C 126,128 134,124 142,128 Z" fill="url(#max-sleep-fur)"/>
+-</g>
+-
+   <g class="pet-head" style="transform-origin: 74px 130px;">
+     <g class="pet-ear pet-ear-left" style="transform-origin: 56px 106px;">
+       <path d="M 58,108 C 42,102 34,114 36,130 C 38,138 48,140 54,130 C 58,122 62,112 58,108 Z" fill="url(#max-sleep-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+@@ -330,6 +330,16 @@ const dogSitSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.
+     <ellipse cx="146" cy="168" rx="8" ry="4.5" fill="url(#max-sit-white)" stroke="#3B1E12" stroke-width="1.8" />
+   </g>
+ 
++  <g class="pet-body anim-breath" style="transform-origin: 100px 152px;">
++    <path d="M 68,106 C 63,124 65,144 78,152 C 88,150 112,150 122,152 C 135,144 137,124 132,106 Z"
++          fill="url(#max-sit-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
++    <path d="M 82,96 C 75,111 72,124 80,135 C 86,142 93,148 100,150 C 107,148 114,142 120,135 C 128,124 125,111 118,96 C 111,106 89,106 82,96 Z"
++          fill="url(#max-sit-white)" stroke="#3B1E12" stroke-width="1.8" stroke-linejoin="round" />
++      <!-- seam-hip -->
++    <path d="M 58,128 C 64,136 72,140 78,136 C 74,128 66,124 58,128 Z" fill="url(#max-sit-fur)"/>
++    <path d="M 142,128 C 136,136 128,140 122,136 C 126,128 134,124 142,128 Z" fill="url(#max-sit-fur)"/>
++</g>
++
+   <g class="left-paw" style="transform-origin: 83px 132px;">
+     <path d="M 76,134 L 75,158 C 75,164 78,168 83,168 C 88,168 91,164 91,158 L 90,134 Z"
+           fill="url(#max-sit-white)" stroke="#3B1E12" stroke-width="2" stroke-linejoin="round" />
+@@ -345,16 +355,6 @@ const dogSitSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.
+     <path d="M 120,164 L 120,170" stroke="#3B1E12" stroke-width="1.6" stroke-linecap="round" />
+   </g>
+ 
+-  <g class="pet-body anim-breath" style="transform-origin: 100px 152px;">
+-    <path d="M 68,106 C 63,124 65,144 78,152 C 88,150 112,150 122,152 C 135,144 137,124 132,106 Z"
+-          fill="url(#max-sit-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+-    <path d="M 82,96 C 75,111 72,124 80,135 C 86,142 93,148 100,150 C 107,148 114,142 120,135 C 128,124 125,111 118,96 C 111,106 89,106 82,96 Z"
+-          fill="url(#max-sit-white)" stroke="#3B1E12" stroke-width="1.8" stroke-linejoin="round" />
+-      <!-- seam-hip -->
+-    <path d="M 58,128 C 64,136 72,140 78,136 C 74,128 66,124 58,128 Z" fill="url(#max-sit-fur)"/>
+-    <path d="M 142,128 C 136,136 128,140 122,136 C 126,128 134,124 142,128 Z" fill="url(#max-sit-fur)"/>
+-</g>
+-
+   <g class="pet-head" style="transform-origin: 100px 105px;">
+     <g class="pet-ear pet-ear-left" style="transform-origin: 58px 52px;">
+       <path d="M 60,54 C 42,54 32,70 34,92 C 36,104 46,108 52,98 C 58,88 64,74 62,54 Z" fill="url(#max-sit-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+@@ -433,6 +433,16 @@ const dogLaySVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.
+     <ellipse cx="136" cy="170" rx="8.5" ry="4.5" fill="url(#max-lay-white)" stroke="#3B1E12" stroke-width="1.6" />
+   </g>
+ 
++  <g class="pet-body anim-breath" style="transform-origin: 110px 150px;">
++    <path d="M 44,134 C 40,150 54,166 88,170 C 120,174 156,170 174,158 C 184,150 182,136 168,128 C 144,120 72,120 44,134 Z"
++          fill="url(#max-lay-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
++    <path d="M 70,134 C 62,144 64,156 80,160 C 96,162 110,156 114,144 C 110,134 88,130 70,134 Z"
++          fill="url(#max-lay-white)" stroke="#3B1E12" stroke-width="1.6" stroke-linejoin="round" />
++      <!-- seam-hip -->
++    <path d="M 58,128 C 64,136 72,140 78,136 C 74,128 66,124 58,128 Z" fill="url(#max-lay-fur)"/>
++    <path d="M 142,128 C 136,136 128,140 122,136 C 126,128 134,124 142,128 Z" fill="url(#max-lay-fur)"/>
++</g>
++
+   <g class="left-paw" style="transform-origin: 44px 156px;">
+     <path d="M 50,152 L 26,162 C 20,164 18,170 24,172 C 30,174 42,168 50,162 Z"
+           fill="url(#max-lay-white)" stroke="#3B1E12" stroke-width="2" stroke-linejoin="round" />
+@@ -448,16 +458,6 @@ const dogLaySVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.
+     <path d="M 46,170 L 46,175" stroke="#3B1E12" stroke-width="1.3" stroke-linecap="round" />
+   </g>
+ 
+-  <g class="pet-body anim-breath" style="transform-origin: 110px 150px;">
+-    <path d="M 44,134 C 40,150 54,166 88,170 C 120,174 156,170 174,158 C 184,150 182,136 168,128 C 144,120 72,120 44,134 Z"
+-          fill="url(#max-lay-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+-    <path d="M 70,134 C 62,144 64,156 80,160 C 96,162 110,156 114,144 C 110,134 88,130 70,134 Z"
+-          fill="url(#max-lay-white)" stroke="#3B1E12" stroke-width="1.6" stroke-linejoin="round" />
+-      <!-- seam-hip -->
+-    <path d="M 58,128 C 64,136 72,140 78,136 C 74,128 66,124 58,128 Z" fill="url(#max-lay-fur)"/>
+-    <path d="M 142,128 C 136,136 128,140 122,136 C 126,128 134,124 142,128 Z" fill="url(#max-lay-fur)"/>
+-</g>
+-
+   <g class="pet-head" style="transform-origin: 76px 114px;">
+     <g class="pet-ear pet-ear-left" style="transform-origin: 50px 74px;">
+       <path d="M 52,76 C 36,72 26,86 28,106 C 30,116 42,118 48,106 C 54,94 58,84 52,76 Z" fill="url(#max-lay-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+@@ -536,6 +536,16 @@ const dogStretchSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www
+     <ellipse cx="128" cy="168" rx="9.5" ry="5" fill="url(#max-stretch-white)" stroke="#3B1E12" stroke-width="1.8" />
+   </g>
+ 
++  <g class="pet-body anim-breath" style="transform-origin: 112px 120px;">
++    <path d="M 52,144 C 70,96 118,80 158,94 C 170,100 170,118 156,126 C 128,140 86,154 58,156 C 46,156 44,148 52,144 Z"
++          fill="url(#max-stretch-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
++    <path d="M 66,140 C 80,130 112,124 134,130 C 142,134 138,144 122,148 C 98,154 78,154 66,148 C 60,146 62,142 66,140 Z"
++          fill="url(#max-stretch-white)" stroke="#3B1E12" stroke-width="1.6" stroke-linejoin="round" />
++      <!-- seam-hip -->
++    <path d="M 58,128 C 64,136 72,140 78,136 C 74,128 66,124 58,128 Z" fill="url(#max-stretch-fur)"/>
++    <path d="M 142,128 C 136,136 128,140 122,136 C 126,128 134,124 142,128 Z" fill="url(#max-stretch-fur)"/>
++</g>
++
+   <g class="left-paw" style="transform-origin: 46px 148px;">
+     <path d="M 50,146 L 22,160 C 14,164 14,170 24,172 C 34,174 48,166 54,156 Z"
+           fill="url(#max-stretch-white)" stroke="#3B1E12" stroke-width="2" stroke-linejoin="round" />
+@@ -551,16 +561,6 @@ const dogStretchSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www
+     <path d="M 48,170 L 48,176" stroke="#3B1E12" stroke-width="1.4" stroke-linecap="round" />
+   </g>
+ 
+-  <g class="pet-body anim-breath" style="transform-origin: 112px 120px;">
+-    <path d="M 52,144 C 70,96 118,80 158,94 C 170,100 170,118 156,126 C 128,140 86,154 58,156 C 46,156 44,148 52,144 Z"
+-          fill="url(#max-stretch-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+-    <path d="M 66,140 C 80,130 112,124 134,130 C 142,134 138,144 122,148 C 98,154 78,154 66,148 C 60,146 62,142 66,140 Z"
+-          fill="url(#max-stretch-white)" stroke="#3B1E12" stroke-width="1.6" stroke-linejoin="round" />
+-      <!-- seam-hip -->
+-    <path d="M 58,128 C 64,136 72,140 78,136 C 74,128 66,124 58,128 Z" fill="url(#max-stretch-fur)"/>
+-    <path d="M 142,128 C 136,136 128,140 122,136 C 126,128 134,124 142,128 Z" fill="url(#max-stretch-fur)"/>
+-</g>
+-
+   <g class="pet-head" style="transform-origin: 52px 118px;">
+     <g class="pet-ear pet-ear-left" style="transform-origin: 28px 84px;">
+       <path d="M 30,86 C 14,84 6,98 10,116 C 12,126 24,126 30,116 C 34,106 36,90 30,86 Z" fill="url(#max-stretch-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
+diff --git a/test/pet-assets.test.js b/test/pet-assets.test.js
+index 45aaa77..15de845 100644
+--- a/test/pet-assets.test.js
++++ b/test/pet-assets.test.js
+@@ -12,6 +12,8 @@
+ 
+ const test = require('node:test');
+ const assert = require('node:assert/strict');
++const fs = require('fs');
++const path = require('path');
+ 
+ const {
+   catIdleSVG, catWalkSVG, catWalk1SVG, catWalk2SVG, catWalk3SVG, catWalk4SVG, catSleepSVG,
+@@ -233,6 +235,81 @@ test('4 patas son sibling <g>s, nunca anidadas en .pet-body', () => {
+   }
+ });
+ 
++// --- Paint order / cascade: front paws must sit in front of the torso ---
++// Production idle Luna: cream left-paw is a straight-sided slab (L commands)
++// to the left of the body. SVG later siblings paint on top, so if .pet-body
++// comes AFTER the paws it covers the attachment and the paw reads as a
++// disconnected white rectangle. Contract: shadow, tail, back feet, body,
++// FRONT PAWS (left-paw then right-paw), head.
++
++const PRODUCTION_POSES = [
++  ['cat idle', catIdleSVG],
++  ['cat walk', catWalkSVG],
++  ['cat sleep', catSleepSVG],
++  ['cat sit', catSitSVG],
++  ['cat lay', catLaySVG],
++  ['cat stretch', catStretchSVG],
++  ['dog idle', dogIdleSVG],
++  ['dog walk', dogWalkSVG],
++  ['dog sleep', dogSleepSVG],
++  ['dog sit', dogSitSVG],
++  ['dog lay', dogLaySVG],
++  ['dog stretch', dogStretchSVG]
++];
++
++/** Index of the first class="..." that contains `className` as a whole token. */
++function firstClassIndex(svg, className) {
++  const re = new RegExp(`class="[^"]*\\b${className}\\b`);
++  const m = re.exec(svg);
++  return m ? m.index : -1;
++}
++
++test('12 production poses: front paws paint after .pet-body and before .pet-head', () => {
++  assert.equal(PRODUCTION_POSES.length, 12, 'expected idle/walk/sleep/sit/lay/stretch × cat+dog');
++  for (const [name, svg] of PRODUCTION_POSES) {
++    const body = firstClassIndex(svg, 'pet-body');
++    const left = firstClassIndex(svg, 'left-paw');
++    const right = firstClassIndex(svg, 'right-paw');
++    const head = firstClassIndex(svg, 'pet-head');
++    assert.ok(body >= 0, `${name}: missing pet-body`);
++    assert.ok(left >= 0, `${name}: missing left-paw`);
++    assert.ok(right >= 0, `${name}: missing right-paw`);
++    assert.ok(head >= 0, `${name}: missing pet-head`);
++    assert.ok(left > body,
++      `${name}: left-paw (i=${left}) must come after pet-body (i=${body})`);
++    assert.ok(right > body,
++      `${name}: right-paw (i=${right}) must come after pet-body (i=${body})`);
++    assert.ok(left < right,
++      `${name}: left-paw must precede right-paw (left=${left} right=${right})`);
++    assert.ok(head > right,
++      `${name}: pet-head (i=${head}) must come after right-paw (i=${right})`);
++  }
++});
++
++test('12 production poses: cascade is tail → back feet → body → front paws → head', () => {
++  for (const [name, svg] of PRODUCTION_POSES) {
++    const tail = firstClassIndex(svg, 'anim-wag');
++    const backL = firstClassIndex(svg, 'back-foot-left');
++    const backR = firstClassIndex(svg, 'back-foot-right');
++    const body = firstClassIndex(svg, 'pet-body');
++    const left = firstClassIndex(svg, 'left-paw');
++    const right = firstClassIndex(svg, 'right-paw');
++    const head = firstClassIndex(svg, 'pet-head');
++    assert.ok(tail < backL && backL < backR && backR < body && body < left && left < right && right < head,
++      `${name}: bad cascade tail=${tail} backL=${backL} backR=${backR} body=${body} left=${left} right=${right} head=${head}`);
++  }
++});
++
++test('CSS no z-index/isolation on paw/body/head groups (SVG document order wins)', () => {
++  const cssDir = path.join(__dirname, '..', 'src', 'styles');
++  const files = ['animations.css', 'pet.css', 'dashboard.css', 'variables.css'];
++  const css = files.map((f) => fs.readFileSync(path.join(cssDir, f), 'utf8')).join('\n')
++    .replace(/\/\*[\s\S]*?\*\//g, '');
++  const fighter = /(#pet-svg[^{]*\{[^}]*(?:z-index|isolation)\s*:|\.(?:left-paw|right-paw|pet-body|pet-head)[^{]*\{[^}]*(?:z-index|isolation)\s*:)/;
++  assert.doesNotMatch(css, fighter,
++    'z-index/isolation on #pet-svg groups would override sibling paint order');
++});
++
+ // --- sit / lay / stretch: poses reales distintas (no aliases, no data-pose copies) ---
+ 
+ test('cat sit/lay/stretch no son aliases de idle/sleep/walk', () => {
+@@ -266,9 +343,6 @@ test('dog sit/lay/stretch no son aliases de idle/sleep/walk', () => {
+ // dogBodyWalk (dashboard ganaba por import order). Gait vive en UN archivo.
+ // Luna y Max NO comparten sideWalkSwing*: cada uno tiene catWalkSwing* /
+ // dogWalkSwing* con periodo, swing y bob distintos.
+-
+-const fs = require('fs');
+-const path = require('path');
+ const ANIM_CSS_PATH = path.join(__dirname, '..', 'src', 'styles', 'animations.css');
+ const DASH_CSS_PATH = path.join(__dirname, '..', 'src', 'styles', 'dashboard.css');
+ 
