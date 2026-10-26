@@ -5,6 +5,62 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-10-26
+
+Primera release publicada del proyecto. La v2.1.0 quedo tagueada pero **nunca se
+publico** (el workflow de release fallaba en el build por el publish implicito
+de electron-builder sin `GH_TOKEN`); la ultima release accesible era v2.0.2.
+
+### Fixed
+
+- **fix(renderer): restaurar el contrato IPC con preload** — el commit
+  `e4c8fcf` (2026-08-25) fue un revert silencioso que bajo `src/renderer.js` de
+  944 a 199 lineas. Anadio llamadas a `window.api.onPomodoroState()` y
+  `window.api.onPetSpeech()`, APIs que `preload.js` nunca expos: el `TypeError`
+  abortaba `setupIPCListeners()` y `onSettingsUpdated` nunca se registraba, asi
+  que **cambiar de mascota (Luna/Max) desde el dashboard no actualizaba la
+  pantalla**. Ademas elimino 7 suscripciones que si funcionaban y que `main.js`
+  sigue emitiendo: `onPetAction`, `onTriggerAutonomousTip`, `onSystemEvent`,
+  `onMorningBriefing`, `onEveningSummary`, `onUpdateStatus` y `onAppChanged`
+  (la feature v2.2.0 "app-aware" no aplicaba mood por app). Las 14
+  suscripciones van ahora por `subscribeIpc()`, que aisla cada handler para que
+  uno roto no aborte los demas.
+- **fix(renderer): el badge de Pomodoro ahora cuenta** — `PomodoroUI.update()`
+  leia `state.formattedTime`, pero `main.js` emite `remainingSec`. El badge
+  quedaba clavado en el `25:00` hardcodeado del HTML. Ahora calcula `MM:SS`
+  desde `remainingSec` y acepta los 3 valores reales de `mode`
+  (`focus`/`break`/`long_break`) en vez de comparar contra `longBreak`.
+- **fix(ci): el release se publica de punta a punta** — `release.yml` corria
+  `npm run build` sin `--publish never`, asi que electron-builder disparaba el
+  publish implicito por tag **sin `GH_TOKEN`** y el build fallaba antes del
+  upload: el tag se publicaba pero la release no. **Los 4 releases anteriores
+  fallaron igual.** Ahora el build no publica, el upload sube `.exe` +
+  `latest.yml` + `.blockmap` (faltaba `latest.yml`, que es lo que lee
+  electron-updater para detectar updates) y usa `--verify-tag` en vez de
+  `--target latest`.
+- **fix(renderer): no pisar el estado del break en `pomodoro:completed`** —
+  `main.js` emite `pomodoro:tick` antes que `pomodoro:completed`, ambos con el
+  mismo payload. Un handler de `completed` que reescribiera el estado mostraba
+  `00:00` en vez del countdown del break.
+
+### Tests
+
+- **test: contrato IPC renderer <-> preload** — 9 tests que parsean el fuente y
+  assertan que el renderer no llama APIs inexistentes, que las 7 suscripciones
+  perdidas estan cableadas y que cada una va protegida. Bidireccionales:
+  reintroducir el bug los hace fallar.
+- **test: badge de Pomodoro** — 12 tests sobre `formatClock()` y `PomodoroUI.update()`
+  con los payloads reales de `main.js`.
+- **test: workflow de release** — 13 tests que parsean el YAML y assertan
+  `--publish never`, la subida de `latest.yml`, `--verify-tag` y que el token
+  vive en el step de upload.
+
+### Documentation
+
+- docs(plans): plan de restauracion del contrato IPC + fix del release + gate strict
+- docs(reviews): review adversarial del fix (APPROVED, critical 0 / major 0)
+- docs(qa): QA sign-off con evidencia de runtime real (Electron + preload real)
+
 ## [2.1.0] - 2026-10-20
 
 ### Features
