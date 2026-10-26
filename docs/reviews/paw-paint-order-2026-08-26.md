@@ -1,3 +1,16 @@
+---
+id: paw-paint-order-2026-08-26
+branch: cursor/paw-z-order-6c0a
+plan: docs/plans/paw-paint-order-2026-08-26.md
+status: APPROVED
+severity:
+  critical: 0
+  major: 0
+  minor: 0
+  info: 1
+reviewed_at: 2026-08-26
+---
+
 # Review: front-paw SVG paint order
 
 **Fecha**: 2026-08-26

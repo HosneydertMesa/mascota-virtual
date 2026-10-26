@@ -1,3 +1,21 @@
+---
+id: paw-paint-order-2026-08-26
+status: approved
+created: 2026-08-26
+size: S
+files:
+  - src/assets/cat.js
+  - src/assets/dog.js
+  - test/pet-assets.test.js
+acceptance:
+  - "En las 12 poses de produccion, left-paw y right-paw aparecen DESPUES de .pet-body en el orden de siblings del SVG"
+  - ".pet-head aparece despues de las patas, y left-paw antes que right-paw"
+  - "Las 4 patas siguen siendo siblings <g> anidados, nunca dentro de .pet-body"
+  - "npm test pasa con los tests nuevos del cascade de pintado"
+risks:
+  - "Un transform en .pet-body podria crear stacking context que vuelva a tapar las patas en algunos engines; se difiere porque la hipotesis verificada en Electron vivo es paint order de siblings"
+---
+
 # Plan: front-paw SVG paint order (Luna idle depth)
 
 > **Status**: Implemented
