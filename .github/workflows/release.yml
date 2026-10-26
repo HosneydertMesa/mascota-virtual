@@ -83,7 +83,17 @@ jobs:
           # Sin code signing cert (self-signed), pero evitamos que
           # electron-builder intente validar certs que no existen.
           CSC_IDENTITY_AUTO_DISCOVERY: false
-        run: npm run build
+        # --publish never es OBLIGATORIO. Sin este flag, electron-builder
+        # detecta el tag de git y dispara "Implicit publishing triggered by
+        # git tag" (app-builder-lib/out/publish/PublishManager.js:54). Ese
+        # publish implicito corre sin GH_TOKEN y tira:
+        #   "GitHub Personal Access Token is not set, neither
+        #    programmatically, nor using env GH_TOKEN"
+        # El build falla en este step y los steps de upload quedan skipped:
+        # el tag se publica pero la release NO. Pasaron los 4 releases
+        # historicos (v2.0.0, v2.0.1, v2.0.2, v2.1.0).
+        # La publicacion la hace el step "Upload artifacts to GitHub Release".
+        run: npm run build -- --publish never
 
       - name: List dist output
         # Debug: confirmar que el .exe se genero antes de intentar
@@ -91,26 +101,46 @@ jobs:
         shell: bash
         run: ls -la dist/
 
-      - name: Upload .exe to GitHub Release
+      - name: Upload artifacts to GitHub Release
         shell: bash
         env:
+          # El publish lo hace ESTE step, no electron-builder. Por eso el
+          # token vive aca y no en el build.
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -e
-          # Detectar el .exe generado. electron-builder usa el artifactName
-          # definido en package.json: MascotaVirtual-Setup-${version}.${ext}
-          EXE_FILE=$(ls dist/MascotaVirtual-Setup-*.exe 2>/dev/null | head -1)
+          # Detectar los artefactos generados. electron-builder usa el
+          # artifactName de package.json: MascotaVirtual-Setup-${version}.${ext}
+          EXE_FILE=$(ls dist/MascotaVirtual-Setup-*.exe 2>/dev/null | grep -v '\.blockmap$' | head -1)
           if [ -z "$EXE_FILE" ]; then
             echo "ERROR: No se encontro MascotaVirtual-Setup-*.exe en dist/"
             exit 1
           fi
-          echo "Subiendo $EXE_FILE al release $GITHUB_REF_NAME"
+
+          # latest.yml es el archivo que electron-updater consulta para
+          # detectar updates (package.json build.publish lo documenta y el
+          # README lo promete). Sin el, el auto-update no ve la release.
+          LATEST_YML="dist/latest.yml"
+          if [ ! -f "$LATEST_YML" ]; then
+            echo "ERROR: No se encontro dist/latest.yml — el auto-update no funcionara."
+            exit 1
+          fi
+
+          BLOCKMAP_FILE=$(ls dist/MascotaVirtual-Setup-*.exe.blockmap 2>/dev/null | head -1)
+          ARTIFACTS="$EXE_FILE $LATEST_YML"
+          if [ -n "$BLOCKMAP_FILE" ]; then
+            ARTIFACTS="$ARTIFACTS $BLOCKMAP_FILE"
+          fi
+
+          echo "Subiendo $ARTIFACTS al release $GITHUB_REF_NAME"
           # gh release create:
-          #   - si el tag NO existe: lo crea + sube el .exe
-          #   - si el tag YA existe (re-run): sube el .exe al release existente
-          #   --generate-notes: auto-genera las release notes desde los PRs
-          #   --draft: NO queremos draft — el orchestrator decide si marcarlo
-          gh release create "$GITHUB_REF_NAME" "$EXE_FILE" \
+          #   - si el tag NO existe: lo crea + sube los artefactos
+          #   - si el tag YA existe (re-run): sube al release existente
+          #   --verify-tag: NO crear el tag implicitamente. Si el tag no
+          #     existe, es un error del orquestador, no algo que el workflow
+          #     deba tapar. Sin esto, un push a la rama equivocada creaba un
+          #     tag fantasma apuntando a 'latest' (que no es ni rama ni commit).
+          gh release create "$GITHUB_REF_NAME" $ARTIFACTS \
             --title "Mascota Virtual $GITHUB_REF_NAME" \
             --notes "Release automatica de Mascota Virtual $GITHUB_REF_NAME.
 
@@ -122,4 +152,4 @@ jobs:
           ## Updates automaticos
           La app detecta esta version al abrirla y descarga el update en background.
           Se aplica al cerrar la app." \
-            --target "${{ github.event_name == 'push' && 'latest' || 'commitish' }}"
+            --verify-tag
