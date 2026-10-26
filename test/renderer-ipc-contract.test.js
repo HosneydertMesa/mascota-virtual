@@ -68,12 +68,79 @@ function extractPreloadApiKeys(source) {
   return keys;
 }
 
-/** Extrae todas las llamadas `window.api.onX(...)` del renderer. */
+/**
+ * Elimina comentarios (linea y bloque) respetando strings.
+ * Necesario porque el codigo documenta los bugs que corrige: un comentario
+ * que menciona `window.api.onPomodoroState()` no es una llamada real.
+ */
+function stripComments(source) {
+  let out = '';
+  let i = 0;
+  const n = source.length;
+
+  while (i < n) {
+    const ch = source[i];
+    const next = source[i + 1];
+
+    // Comentario de linea
+    if (ch === '/' && next === '/') {
+      while (i < n && source[i] !== '\n') i++;
+      continue;
+    }
+
+    // Comentario de bloque
+    if (ch === '/' && next === '*') {
+      i += 2;
+      while (i < n && !(source[i] === '*' && source[i + 1] === '/')) i++;
+      i += 2;
+      continue;
+    }
+
+    // String simple o doble: se copia literal
+    if (ch === "'" || ch === '"' || ch === '`') {
+      const quote = ch;
+      out += ch;
+      i++;
+      while (i < n) {
+        if (source[i] === '\\') {
+          out += source[i] + (source[i + 1] || '');
+          i += 2;
+          continue;
+        }
+        out += source[i];
+        if (source[i] === quote) {
+          i++;
+          break;
+        }
+        i++;
+      }
+      continue;
+    }
+
+    out += ch;
+    i++;
+  }
+
+  return out;
+}
+
+/**
+ * Extrae todas las suscripciones IPC que el renderer declara.
+ *
+ * Dos patrones validos:
+ *   - `window.api.onX(handler)`   (llamada directa)
+ *   - `subscribeIpc('onX', handler)` (llamada defensiva, la que usa el fix)
+ */
 function extractRendererSubscriptions(source) {
+  const code = stripComments(source);
   const calls = [];
-  const re = /window\.api\.(on[A-Za-z0-9_]+)\s*\(/g;
+  const direct = /window\.api\.(on[A-Za-z0-9_]+)\s*\(/g;
+  const guarded = /subscribeIpc\(\s*'(on[A-Za-z0-9_]+)'/g;
   let match;
-  while ((match = re.exec(source)) !== null) {
+  while ((match = direct.exec(code)) !== null) {
+    calls.push(match[1]);
+  }
+  while ((match = guarded.exec(code)) !== null) {
     calls.push(match[1]);
   }
   return calls;
@@ -142,20 +209,41 @@ test('REGRESION: setupIPCListeners() no puede abortar en cadena', () => {
 
   // Ninguna llamada debe estar desnuda: cada handler va protegido para que un
   // fallo en uno no impida registrar los siguientes.
-  const desnudas = calls.filter((name) => {
+  const desnudas = [];
+  for (const name of new Set(calls)) {
     const re = new RegExp(`window\\.api\\.${name}\\s*\\(`);
     const idx = body.search(re);
-    if (idx === -1) return false;
-    // Se considera "desnuda" si no hay un optional-chaining ni un typeof guard
-    // en la misma linea.
+    if (idx === -1) continue; // ya esta protegido con subscribeIpc()
     const line = body.slice(body.lastIndexOf('\n', idx) + 1, body.indexOf('\n', idx));
-    return !/\?\.|\|\| typeof|typeof window\.api/.test(line);
-  });
+    if (!/\?\.|\|\| typeof|typeof window\.api/.test(line)) {
+      desnudas.push(name);
+    }
+  }
 
   assert.deepStrictEqual(
     desnudas,
     [],
     `estas llamadas no estan protegidas (un TypeError aborta las siguientes): ${desnudas.join(', ')}`
+  );
+});
+
+test('REGRESION: cada suscripcion del renderer pasa por el guard subscribeIpc()', () => {
+  const source = readSource(RENDERER_PATH);
+  const start = source.indexOf('function setupIPCListeners()');
+  const body = source.slice(start, source.indexOf('\n}', start) + 2);
+
+  const calls = [...new Set(extractRendererSubscriptions(body))];
+
+  const desprotegidas = calls.filter((name) => {
+    const direct = new RegExp(`window\\.api\\.${name}\\s*\\(`);
+    if (!direct.test(body)) return false; // usa subscribeIpc(): ok
+    return true; // llamada directa sin proteger
+  });
+
+  assert.deepStrictEqual(
+    desprotegidas,
+    [],
+    `estas suscripciones se llaman directo y un TypeError aborta las siguientes: ${desprotegidas.join(', ')}`
   );
 });
 

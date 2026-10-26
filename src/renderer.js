@@ -252,10 +252,81 @@ function initSettingsButton() {
   });
 }
 
+// Suscribe un handler a un canal IPC de forma defensiva.
+//
+// El 2026-08-25 el commit e4c8fcf llamo window.api.onPomodoroState(), que
+// preload.js nunca expos. El TypeError aborto setupIPCListeners() y las
+// suscripciones siguientes (onSettingsUpdated) nunca se registraron: cambiar
+// de mascota en el dashboard no actualizaba la pantalla.
+//
+// Cada suscripcion va aislada: que un handler falle no puede impedir que los
+// demas queden registrados.
+function subscribeIpc(method, handler) {
+  if (typeof window === 'undefined') return false;
+  const fn = window.api && window.api[method];
+  if (typeof fn !== 'function') {
+    console.warn(`renderer: la API "${method}" no existe en el preload; suscripcion omitida.`);
+    return false;
+  }
+  try {
+    fn(handler);
+    return true;
+  } catch (error) {
+    console.error(`renderer: fallo al suscribir "${method}":`, error);
+    return false;
+  }
+}
+
+// Greeting por categoria de app en foreground (v2.2.0 — app-aware mascota).
+const APP_GREETINGS = {
+  code: '¡Modo código! A romperla.',
+  creative: '¡A crear cosas!',
+  office: '¿Trabajo de oficina? Zzz...',
+  browser: '¿Navegando?',
+  social: '¡A socializar!',
+  game: '¡A jugar!'
+};
+
+// Categorias ya saludadas: el saludo se muestra solo la primera vez.
+const SEEN_APP_CATEGORIES = new Set();
+
+// Reaccion a una accion de la mascota (IA, dashboard, quick chat).
+// Payload real (main.js:816, main.js:1421):
+//   { type: 'speak', text, emotion, action, sound }
+function handlePetAction(data) {
+  if (!data || typeof data !== 'object') return;
+  if (data.type && data.type !== 'speak') return;
+
+  if (typeof data.text === 'string' && data.text.length > 0) {
+    wakeUp();
+    if (speech) speech.show(data.text);
+  }
+
+  const selectedSound = data.sound && data.sound !== 'none' ? data.sound : null;
+  if (soundEnabled && selectedSound && window.petAudio) {
+    window.petAudio.play(selectedSound);
+  }
+
+  if (data.emotion === 'excited' || data.action === 'jump') {
+    triggerHappyBounce();
+  } else if (data.emotion === 'sleepy' || data.action === 'sleep') {
+    if (viewport) viewport.setState('sleeping');
+  }
+
+  // Acciones de pose: el estado persiste hasta que llegue otro evento.
+  if (data.action === 'sit' && viewport) {
+    viewport.setState('sitting');
+  } else if (data.action === 'lay' && viewport) {
+    viewport.setState('laying');
+  } else if (data.action === 'stretch' && viewport) {
+    viewport.setState('stretching');
+  }
+}
+
 function setupIPCListeners() {
   if (!window.api) return;
 
-  window.api.onWindowModeBar((data) => {
+  subscribeIpc('onWindowModeBar', (data) => {
     document.body.classList.add('bar-mode');
     document.body.classList.remove('drag-mode');
     if (data && typeof data.petX === 'number') {
@@ -263,12 +334,12 @@ function setupIPCListeners() {
     }
   });
 
-  window.api.onWindowModeDrag(() => {
+  subscribeIpc('onWindowModeDrag', () => {
     document.body.classList.add('drag-mode');
     document.body.classList.remove('bar-mode');
   });
 
-  window.api.onUpdatePetPosition((data) => {
+  subscribeIpc('onUpdatePetPosition', (data) => {
     if (data && typeof data.x === 'number') {
       document.documentElement.style.setProperty('--pet-x', `${data.x}px`);
     }
@@ -277,7 +348,7 @@ function setupIPCListeners() {
     }
   });
 
-  window.api.onPetMoveState((data) => {
+  subscribeIpc('onPetMoveState', (data) => {
     if (!data || typeof data.state !== 'string') return;
     if (data.state === 'walking') {
       wakeUp({ skipStretch: true });
@@ -295,19 +366,120 @@ function setupIPCListeners() {
     }
   });
 
-  window.api.onPomodoroTick((data) => {
+  // Countdown del Pomodoro. No existe un canal "pomodoro:state": el estado
+  // viaja en "pomodoro:tick" con eventKind = started | paused | tick | completed.
+  subscribeIpc('onPomodoroTick', (data) => {
     if (pomodoro) pomodoro.update(data);
   });
 
-  window.api.onPomodoroState((data) => {
-    if (pomodoro) pomodoro.update(data);
+  subscribeIpc('onPomodoroCompleted', () => {
+    if (pomodoro) pomodoro.update({ status: 'idle', mode: 'focus', remainingSec: 0 });
   });
 
-  window.api.onPetSpeech((text) => {
-    if (speech) speech.show(text);
+  // Acciones de la mascota (IA, dashboard, quick chat).
+  subscribeIpc('onPetAction', handlePetAction);
+
+  // Tips autonomos de la IA (main.js:477). Payload: void.
+  subscribeIpc('onTriggerAutonomousTip', async () => {
+    if (viewport && viewport.currentState === 'sleeping') return;
+    try {
+      const tip = await window.api.aiQuickTip({ petType: currentPet, context: 'work_tip' });
+      if (tip) {
+        handlePetAction({
+          type: 'speak',
+          text: tip,
+          emotion: 'calm',
+          action: 'none',
+          sound: 'none'
+        });
+      }
+    } catch (error) {
+      console.error('Error triggering autonomous tip:', error);
+    }
   });
 
-  window.api.onSettingsUpdated((settings) => {
+  // Eventos del SO (lock / unlock / suspend / resume) + tips de inactividad.
+  // Payload (main.js:215): { event, source, text, ts }
+  subscribeIpc('onSystemEvent', (data) => {
+    if (!data || typeof data.event !== 'string') return;
+    if (data.event === 'lock' || data.event === 'suspend') {
+      if (sleepTimeout) {
+        clearTimeout(sleepTimeout);
+        sleepTimeout = null;
+      }
+      if (viewport) viewport.setState('sleeping');
+      if (speech) speech.hide();
+    } else if (data.event === 'unlock' || data.event === 'resume') {
+      // El main espera 5s antes de marcar isSleeping=false. Mismo delay aqui
+      // para no ver un flash "despierto -> durmiendo".
+      setTimeout(() => {
+        if (viewport && viewport.currentState === 'sleeping') {
+          viewport.setState('idle');
+          if (window.api?.setSleeping) window.api.setSleeping(false);
+        }
+        scheduleIdleVariety();
+      }, 5000);
+    } else if (data.event === 'idle-break') {
+      if (typeof data.text === 'string' && data.text.length > 0 && speech) {
+        speech.show(data.text);
+      }
+    }
+  });
+
+  // Briefing matutino / resumen de la tarde. Payload (main.js:1640): { text, ts }
+  subscribeIpc('onMorningBriefing', (data) => {
+    if (!data || typeof data.text !== 'string' || data.text.length === 0) return;
+    wakeUp();
+    if (speech) speech.show(data.text, 8000);
+  });
+
+  subscribeIpc('onEveningSummary', (data) => {
+    if (!data || typeof data.text !== 'string' || data.text.length === 0) return;
+    wakeUp();
+    if (speech) speech.show(data.text, 8000);
+  });
+
+  // Aviso de actualizacion (electron-updater). Payload: { kind, version }
+  subscribeIpc('onUpdateStatus', (data) => {
+    if (!data || typeof data.kind !== 'string' || typeof data.version !== 'string') return;
+    let text = '';
+    if (typeof window.AutoUpdater === 'object' && typeof window.AutoUpdater.formatUpdateMessage === 'function') {
+      text = window.AutoUpdater.formatUpdateMessage({
+        currentVersion: '',
+        newVersion: data.version,
+        kind: data.kind
+      });
+    } else {
+      const v = data.version ? `v${data.version}` : '';
+      text = data.kind === 'downloaded'
+        ? `Update ${v} listo. Se instala al cerrar la app.`
+        : `Update ${v} downloading...`;
+    }
+    if (!text) return;
+    wakeUp();
+    if (speech) speech.show(text, 10000);
+  });
+
+  // v2.2.0 — app-aware: el main manda la categoria de la app en foreground.
+  // Payload (main.js:1803): { processName, windowTitle, category, mood, wagTargets }
+  subscribeIpc('onAppChanged', (data) => {
+    if (!data || typeof data !== 'object') return;
+
+    // El mood por categoria se aplica al contenedor (mood-* en el CSS).
+    if (data.mood) {
+      applyMoodClassTo(document.getElementById('pet-container'), data.mood);
+    }
+
+    // Saludo solo la primera vez que vemos cada categoria.
+    if (data.category && !SEEN_APP_CATEGORIES.has(data.category)) {
+      SEEN_APP_CATEGORIES.add(data.category);
+      const greeting = APP_GREETINGS[data.category] || '';
+      if (greeting && speech) speech.show(greeting);
+    }
+  });
+
+  // Cambio de mascota / sonido desde el dashboard.
+  subscribeIpc('onSettingsUpdated', (settings) => {
     if (!settings) return;
     if (settings.pet && settings.pet !== currentPet) {
       currentPet = settings.pet;
