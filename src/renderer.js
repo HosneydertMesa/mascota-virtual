@@ -368,12 +368,15 @@ function setupIPCListeners() {
 
   // Countdown del Pomodoro. No existe un canal "pomodoro:state": el estado
   // viaja en "pomodoro:tick" con eventKind = started | paused | tick | completed.
+  //
+  // NO se suscribe "pomodoro:completed" para actualizar el badge: main.js
+  // (broadcastPomodoroState, main.js:1293-1296) emite 'pomodoro:tick' PRIMERO
+  // con el estado nuevo (tras un bloque de focus, mode='break' y el countdown
+  // del break) y despues 'pomodoro:completed' con el MISMO payload. Un
+  // handler de completed que reescribiera el estado pisaria el break con el
+  // valor del focus ya terminado.
   subscribeIpc('onPomodoroTick', (data) => {
     if (pomodoro) pomodoro.update(data);
-  });
-
-  subscribeIpc('onPomodoroCompleted', () => {
-    if (pomodoro) pomodoro.update({ status: 'idle', mode: 'focus', remainingSec: 0 });
   });
 
   // Acciones de la mascota (IA, dashboard, quick chat).

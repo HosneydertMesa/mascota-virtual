@@ -173,3 +173,34 @@ test('el workflow tiene permisos de escritura de contents', () => {
     'el workflow necesita contents: write para publicar la release'
   );
 });
+
+// --- main.js: el orden de los canales de Pomodoro ---------------------------
+
+test('main.js emite pomodoro:tick ANTES que pomodoro:completed (mismo payload)', () => {
+  const mainSource = fs.readFileSync(path.join(ROOT, 'main.js'), 'utf8');
+  const fn = mainSource.slice(mainSource.indexOf('function broadcastPomodoroState'));
+
+  const tickIdx = fn.indexOf("broadcastToAllWindows('pomodoro:tick'");
+  const completedIdx = fn.indexOf("broadcastToAllWindows('pomodoro:completed'");
+
+  assert.ok(tickIdx !== -1, 'main.js debe emitir pomodoro:tick');
+  assert.ok(completedIdx !== -1, 'main.js debe emitir pomodoro:completed');
+  assert.ok(
+    tickIdx < completedIdx,
+    'pomodoro:tick debe emitirse antes: el renderer actualiza el badge con el ' +
+      'estado nuevo (break) y un handler de completed que lo reescriba lo pisaria.'
+  );
+});
+
+test('el renderer NO se suscribe a pomodoro:completed para el badge', () => {
+  const rendererSource = fs.readFileSync(path.join(ROOT, 'src', 'renderer.js'), 'utf8');
+  const start = rendererSource.indexOf('function setupIPCListeners()');
+  const body = rendererSource.slice(start, rendererSource.indexOf('\n}', start) + 2);
+
+  assert.ok(
+    !/subscribeIpc\(\s*'onPomodoroCompleted'/.test(body),
+    'el renderer no debe suscribirse a onPomodoroCompleted para actualizar el badge: ' +
+      'main.js emite pomodoro:tick con el estado nuevo y despues pomodoro:completed ' +
+      'con el mismo payload.'
+  );
+});
