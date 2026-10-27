@@ -64,10 +64,10 @@ test('cat walk SVG: 1 pupila (un ojo visible en perfil)', () => {
   assert.equal(countPetPupils(catWalkSVG), 1);
 });
 
-test('cat walk SVG: anchor en (52, 96) (centro del ojo de perfil)', () => {
+test('cat walk SVG: anchor en (52, 70) (centro del ojo de perfil)', () => {
   const anchors = extractPupilAnchors(catWalkSVG);
   assert.equal(anchors.length, 1);
-  assert.deepEqual(anchors[0], { x: 52, y: 96 });
+  assert.deepEqual(anchors[0], { x: 52, y: 70 });
 });
 
 // --- Cat sleep (sin pupilas, ojos cerrados) ---
@@ -139,11 +139,11 @@ test('ninguna pupila queda fuera del viewBox (0..200)', () => {
 
 test('cat sit/lay/stretch: pupilas y anchors de produccion', () => {
   assert.equal(countPetPupils(catSitSVG), 2);
-  assert.deepEqual(extractPupilAnchors(catSitSVG), [{ x: 82, y: 72 }, { x: 118, y: 72 }]);
+  assert.deepEqual(extractPupilAnchors(catSitSVG), [{ x: 76, y: 76 }, { x: 124, y: 76 }]);
   assert.equal(countPetPupils(catLaySVG), 2);
-  assert.deepEqual(extractPupilAnchors(catLaySVG), [{ x: 82, y: 90 }, { x: 118, y: 90 }]);
+  assert.deepEqual(extractPupilAnchors(catLaySVG), [{ x: 48, y: 116 }, { x: 76, y: 116 }]);
   assert.equal(countPetPupils(catStretchSVG), 2);
-  assert.deepEqual(extractPupilAnchors(catStretchSVG), [{ x: 62, y: 106 }, { x: 98, y: 106 }]);
+  assert.deepEqual(extractPupilAnchors(catStretchSVG), [{ x: 40, y: 126 }, { x: 66, y: 126 }]);
 });
 
 test('dog sit/lay/stretch: pupilas y anchors de produccion', () => {
@@ -544,11 +544,11 @@ test('animations.css: walk origins son perfil (no frontal 58,132); sit conserva 
   const catLp = extractRule(css, '.cat-walk .left-paw');
   const catRp = extractRule(css, '.cat-walk .right-paw');
   assert.ok(catBfl, 'missing .cat-walk .back-foot-left rule');
-  assert.match(catBfl, /transform-origin:\s*128px\s+130px/);
+  assert.match(catBfl, /transform-origin:\s*126px\s+118px/);
   assert.doesNotMatch(catBfl, /58px\s+132px/);
-  assert.match(catBfr, /transform-origin:\s*144px\s+132px/);
-  assert.match(catLp, /transform-origin:\s*64px\s+134px/);
-  assert.match(catRp, /transform-origin:\s*84px\s+132px/);
+  assert.match(catBfr, /transform-origin:\s*140px\s+114px/);
+  assert.match(catLp, /transform-origin:\s*74px\s+138px/);
+  assert.match(catRp, /transform-origin:\s*98px\s+138px/);
 
   const dogBfl = extractRule(css, '.dog-walk .back-foot-left');
   const dogBfr = extractRule(css, '.dog-walk .back-foot-right');
@@ -563,11 +563,11 @@ test('animations.css: walk origins son perfil (no frontal 58,132); sit conserva 
 
   const catSitBfl = extractRule(css, 'body[data-pet="cat"] #pet-container.sitting .back-foot-left');
   assert.ok(catSitBfl, 'missing Luna sit back-foot-left origin');
-  assert.match(catSitBfl, /transform-origin:\s*58px\s+132px/);
+  assert.match(catSitBfl, /transform-origin:\s*56px\s+148px/);
 
   const catWalkTail = extractRule(css, '.walking-bob.cat-walk .anim-wag');
   assert.ok(catWalkTail, 'missing Luna walk tail origin rule');
-  assert.match(catWalkTail, /transform-origin:\s*148px\s+124px/);
+  assert.match(catWalkTail, /transform-origin:\s*138px\s+122px/);
   assert.doesNotMatch(catWalkTail, /130px\s+145px/);
 
   const dogWalkTail = extractRule(css, '.walking-bob.dog-walk .anim-wag-fast');
@@ -851,10 +851,20 @@ const MASS_CLASSES = [
   'pet-head'
 ];
 
-/** Poses con contrato cel activo en este paso. */
+/**
+ * Poses con contrato cel activo.
+ * Paso 1 activo las 2 idle de referencia; el paso 2 extiende el contrato a
+ * las 6 poses de Luna. El ultimo campo es el conteo de pupilas esperado
+ * (2 de frente, 1 de perfil, 0 dormida).
+ */
 const CEL_POSES = [
-  ['cat idle', catIdleSVG, CAT_PALETTE],
-  ['dog idle', dogIdleSVG, DOG_PALETTE]
+  ['cat idle', catIdleSVG, CAT_PALETTE, 2],
+  ['cat walk', catWalkSVG, CAT_PALETTE, 1],
+  ['cat sleep', catSleepSVG, CAT_PALETTE, 0],
+  ['cat sit', catSitSVG, CAT_PALETTE, 2],
+  ['cat lay', catLaySVG, CAT_PALETTE, 2],
+  ['cat stretch', catStretchSVG, CAT_PALETTE, 2],
+  ['dog idle', dogIdleSVG, DOG_PALETTE, 2]
 ];
 
 /** Tags de dibujo de un SVG (sin el <svg> raiz, sus cierres ni los <g> contenedor). */
@@ -897,7 +907,7 @@ function tagsWithClass(fragment, cls) {
   return fragment.match(new RegExp(`<[^>]*class="[^"]*\\b${cls}\\b[^"]*"[^>]*>`, 'g')) || [];
 }
 
-test('cel (idle): sin degradados ni url(#...) — el sombreado es plano', () => {
+test('cel: sin degradados ni url(#...) — el sombreado es plano', () => {
   for (const [name, svg] of CEL_POSES) {
     assert.doesNotMatch(svg, /linearGradient/i, `${name}: usa linearGradient`);
     assert.doesNotMatch(svg, /radialGradient/i, `${name}: usa radialGradient`);
@@ -906,7 +916,7 @@ test('cel (idle): sin degradados ni url(#...) — el sombreado es plano', () => 
   }
 });
 
-test('cel (idle): todo fill pertenece a la paleta fija de la especie', () => {
+test('cel: todo fill pertenece a la paleta fija de la especie', () => {
   for (const [name, svg, palette] of CEL_POSES) {
     const allowed = new Set(Object.values(palette).map((c) => c.toUpperCase()));
     for (const tag of svgTags(svg)) {
@@ -926,7 +936,7 @@ test('cel (idle): todo fill pertenece a la paleta fija de la especie', () => {
   }
 });
 
-test('cel (idle): un solo color de tinta (ink de la especie) en todos los trazos', () => {
+test('cel: un solo color de tinta (ink de la especie) en todos los trazos', () => {
   for (const [name, svg, palette] of CEL_POSES) {
     const inks = new Set();
     for (const tag of svgTags(svg)) {
@@ -940,7 +950,7 @@ test('cel (idle): un solo color de tinta (ink de la especie) en todos los trazos
   }
 });
 
-test('cel (idle): cada masa tiene su cel-outline (1 por masa, >= 3 en la cabeza) y >= 1 cel-shadow plano', () => {
+test('cel: cada masa tiene su cel-outline (1 por masa, >= 3 en la cabeza) y >= 1 cel-shadow plano', () => {
   for (const [name, svg] of CEL_POSES) {
     for (const cls of MASS_CLASSES) {
       const inner = groupInner(svg, cls);
@@ -963,7 +973,7 @@ test('cel (idle): cada masa tiene su cel-outline (1 por masa, >= 3 en la cabeza)
   }
 });
 
-test('cel (idle): pesos de linea — contorno 3.2-3.6, detalle interior 1.5-2.1', () => {
+test('cel: pesos de linea — contorno 3.2-3.6, detalle interior 1.5-2.1', () => {
   for (const [name, svg] of CEL_POSES) {
     for (const tag of svgTags(svg)) {
       const raw = tagAttr(tag, 'stroke-width');
@@ -981,7 +991,7 @@ test('cel (idle): pesos de linea — contorno 3.2-3.6, detalle interior 1.5-2.1'
   }
 });
 
-test('cel (idle): la sombra de piso es el primer elemento y usa el color ground', () => {
+test('cel: la sombra de piso es el primer elemento y usa el color ground', () => {
   for (const [name, svg, palette] of CEL_POSES) {
     const tags = svgTags(svg);
     const shadow = tags.find((tag) => /class="[^"]*\bpet-shadow\b/.test(tag));
@@ -992,7 +1002,7 @@ test('cel (idle): la sombra de piso es el primer elemento y usa el color ground'
   }
 });
 
-test('cel (idle): el color ground solo aparece en la sombra de piso', () => {
+test('cel: el color ground solo aparece en la sombra de piso', () => {
   for (const [name, svg, palette] of CEL_POSES) {
     for (const tag of svgTags(svg)) {
       const fill = (tagAttr(tag, 'fill') || '').toUpperCase();
@@ -1003,10 +1013,11 @@ test('cel (idle): el color ground solo aparece en la sombra de piso', () => {
   }
 });
 
-test('cel (idle): cada pupila conserva su ancla y cae dentro de su iris', () => {
-  for (const [name, svg] of CEL_POSES) {
+test('cel: cada pupila conserva su ancla y cae dentro de su iris', () => {
+  for (const [name, svg, , expectedPupils] of CEL_POSES) {
     const pupils = svg.match(/<circle[^>]*class="[^"]*\bpet-pupil\b[^"]*"[^>]*>/g) || [];
-    assert.ok(pupils.length > 0, `${name}: sin pupilas`);
+    assert.equal(pupils.length, expectedPupils,
+      `${name}: espera ${expectedPupils} pupilas, hay ${pupils.length}`);
     const irises = svg.match(/<ellipse[^>]*>/g) || [];
     for (const pupil of pupils) {
       const cx = parseFloat(tagAttr(pupil, 'cx'));
@@ -1070,6 +1081,57 @@ test('animations.css: los pivotes idle (Luna y Max) coinciden con el transform-o
         `${species} idle: ${selector} CSS != SVG (x)`);
       assert.equal(parseFloat(cssOrigin[2]), inline.y,
         `${species} idle: ${selector} CSS != SVG (y)`);
+    }
+  }
+});
+
+// =============================================================
+// PIVOTES POR ESTADO (Luna) — cola, cuerpo y cabeza en sleep/lay/stretch.
+// Las reglas nuevas usan !important (la regla idle tiene especificidad
+// mayor), asi que el pivote idle no debe pisar la geometria de la pose.
+// =============================================================
+
+test('animations.css: Luna tiene regla de pivote por estado (sleeping/laying/stretching)', () => {
+  const css = readCss(ANIM_CSS_PATH);
+  const states = ['sleeping', 'laying', 'stretching'];
+  const groups = ['.anim-wag', '.pet-body', '.pet-head'];
+  for (const state of states) {
+    for (const selector of groups) {
+      const full = `body[data-pet="cat"] #pet-container.${state} ${selector}`;
+      const rule = extractRule(css, full);
+      assert.ok(rule, `animations.css: falta la regla de estado "${full}"`);
+      assert.match(rule, /transform-origin:\s*([-\d.]+)px\s+([-\d.]+)px/,
+        `animations.css: "${full}" sin transform-origin`);
+      assert.match(rule, /!important/,
+        `animations.css: "${full}" necesita !important (la regla idle gana en especificidad)`);
+    }
+  }
+});
+
+test('animations.css: los pivotes por estado de Luna coinciden con el transform-origin inline del SVG', () => {
+  const css = readCss(ANIM_CSS_PATH);
+  const cases = [
+    ['cat sleep', catSleepSVG, 'body[data-pet="cat"] #pet-container.sleeping'],
+    ['cat lay', catLaySVG, 'body[data-pet="cat"] #pet-container.laying'],
+    ['cat stretch', catStretchSVG, 'body[data-pet="cat"] #pet-container.stretching']
+  ];
+  const groups = [
+    ['.anim-wag', 'anim-wag'],
+    ['.pet-body', 'pet-body'],
+    ['.pet-head', 'pet-head']
+  ];
+  for (const [name, svg, prefix] of cases) {
+    for (const [selector, cls] of groups) {
+      const rule = extractRule(css, `${prefix} ${selector}`);
+      assert.ok(rule, `animations.css: falta la regla ${name} "${prefix} ${selector}"`);
+      const cssOrigin = /transform-origin:\s*([-\d.]+)px\s+([-\d.]+)px/.exec(rule);
+      assert.ok(cssOrigin, `animations.css: "${prefix} ${selector}" sin transform-origin`);
+      const inline = inlineTransformOrigin(svg, cls);
+      assert.ok(inline, `${name}: el grupo .${cls} no tiene transform-origin inline`);
+      assert.equal(parseFloat(cssOrigin[1]), inline.x,
+        `${name}: ${selector} CSS != SVG (x)`);
+      assert.equal(parseFloat(cssOrigin[2]), inline.y,
+        `${name}: ${selector} CSS != SVG (y)`);
     }
   }
 });
