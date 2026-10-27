@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mascota Virtual — Preview de las 12 poses</title>
+  <!--
+    Preview de las 12 poses de produccion (idle, walk, sleep, sit, lay,
+    stretch x Luna/Max) sobre fondo claro y fondo oscuro, con etiqueta.
+
+    No lleva el arte embebido: dibuja los SVG reales de src/assets/*.js,
+    asi que esta pagina nunca puede quedar vieja respecto de produccion.
+    Se abre en cualquier navegador (doble click) sin Playwright.
+
+    Las capturas PNG las genera test/preview/pet-poses-capture.py.
+  -->
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #1a1b1e;
+      color: #e9ecef;
+    }
+    h1 { margin: 0 0 4px; font-size: 20px; font-weight: 600; }
+    .subtitle { color: #adb5bd; font-size: 13px; margin: 0 0 24px; line-height: 1.5; }
+    .pose-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
+      gap: 16px;
+      align-items: start;
+    }
+    .pose-card {
+      background: #2c2e33;
+      border: 1px solid #3a3d43;
+      border-radius: 12px;
+      padding: 12px;
+    }
+    .pose-label {
+      margin: 0 0 10px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #ffd8a8;
+    }
+    .pose-tiles { display: flex; gap: 10px; }
+    .pose-tile { margin: 0; flex: 1; padding: 8px; border-radius: 10px; }
+    .pose-tile-light { background: #F2EFE9; }
+    .pose-tile-dark { background: #14161A; }
+    .pose-art { width: 100%; }
+    .pose-art svg { display: block; width: 100%; height: auto; }
+    .pose-bg {
+      margin-top: 6px;
+      font-size: 11px;
+      text-align: center;
+      color: #6c757d;
+    }
+    .pose-tile-dark .pose-bg { color: #adb5bd; }
+    .pose-missing { color: #ff6b6b; font-size: 12px; padding: 40px 0; text-align: center; }
+  </style>
+</head>
+<body>
+  <h1>Preview de las 12 poses de produccion</h1>
+  <p class="subtitle">
+    Luna (gato) y Max (perro) &times; idle, walk, sleep, sit, lay, stretch.
+    Cada pose se dibuja desde los SVG de <code>src/assets/</code> sobre fondo claro y fondo oscuro.
+  </p>
+
+  <div class="pose-grid">
+
+    <article class="pose-card" data-pose="cat-idle" data-species="cat" data-state="idle">
+      <h3 class="pose-label">Luna · Idle</h3>
+      <div class="pose-tiles">
+        <figure class="pose-tile pose-tile-light" data-bg="light">
+          <div class="pose-art" data-slot="light"></div>
+          <figcaption class="pose-bg">Fondo claro</figcaption>
+        </figure>
+        <figure class="pose-tile pose-tile-dark" data-bg="dark">
+          <div class="pose-art" data-slot="dark"></div>
+          <figcaption class="pose-bg">Fondo oscuro</figcaption>
+        </figure>
+      </div>
+    </article>
+
+    <article class="pose-card" data-pose="cat-walk" data-species="cat" data-state="walk">
+      <h3 class="pose-label">Luna · Walk</h3>
+      <div class="pose-tiles">
+        <figure class="pose-tile pose-tile-light" data-bg="light">
+          <div class="pose-art" data-slot="light"></div>
+          <figcaption class="pose-bg">Fondo claro</figcaption>
+        </figure>
+        <figure class="pose-tile pose-tile-dark" data-bg="dark">
+          <div class="pose-art" data-slot="dark"></div>
+          <figcaption class="pose-bg">Fondo oscuro</figcaption>
+        </figure>
+      </div>
+    </article>
+
+    <article class="pose-card" data-pose="cat-sleep" data-species="cat" data-state="sleep">
+      <h3 class="pose-label">Luna · Sleep</h3>
+      <div class="pose-tiles">
+        <figure class="pose-tile pose-tile-light" data-bg="light">
+          <div class="pose-art" data-slot="light"></div>
+          <figcaption class="pose-bg">Fondo claro</figcaption>
+        </figure>
+        <figure class="pose-tile pose-tile-dark" data-bg="dark">
+          <div class="pose-art" data-slot="dark"></div>
+          <figcaption class="pose-bg">Fondo oscuro</figcaption>
+        </figure>
+      </div>
+    </article>
+
+    <article class="pose-card" data-pose="cat-sit" data-species="cat" data-state="sit">
+      <h3 class="pose-label">Luna · Sit</h3>
+      <div class="pose-tiles">
+        <figure class="pose-tile pose-tile-light" data-bg="light">
+          <div class="pose-art" data-slot="light"></div>
+          <figcaption class="pose-bg">Fondo claro</figcaption>
+        </figure>
+        <figure class="pose-tile pose-tile-dark" data-bg="dark">
+          <div class="pose-art" data-slot="dark"></div>
+          <figcaption class="pose-bg">Fondo oscuro</figcaption>
+        </figure>
+      </div>
+    </article>
+
+    <article class="pose-card" data-pose="cat-lay" data-species="cat" data-state="lay">
+      <h3 class="pose-label">Luna · Lay</h3>
+      <div class="pose-tiles">
+        <figure class="pose-tile pose-tile-light" data-bg="light">
+          <div class="pose-art" data-slot="light"></div>
+          <figcaption class="pose-bg">Fondo claro</figcaption>
+        </figure>
+        <figure class="pose-tile pose-tile-dark" data-bg="dark">
+          <div class="pose-art" data-slot="dark"></div>
+          <figcaption class="pose-bg">Fondo oscuro</figcaption>
+        </figure>
+      </div>
+    </article>
+
+    <article class="pose-card" data-pose="cat-stretch" data-species="cat" data-state="stretch">
+      <h3 class="pose-label">Luna · Stretch</h3>
+      <div class="pose-tiles">
+        <figure class="pose-tile pose-tile-light" data-bg="light">
+          <div class="pose-art" data-slot="light"></div>
+          <figcaption class="pose-bg">Fondo claro</figcaption>
+        </figure>
+        <figure class="pose-tile pose-tile-dark" data-bg="dark">
+          <div class="pose-art" data-slot="dark"></div>
+          <figcaption class="pose-bg">Fondo oscuro</figcaption>
+        </figure>
+      </div>
+    </article>
+
+    <article class="pose-card" data-pose="dog-idle" data-species="dog" data-state="idle">
+      <h3 class="pose-label">Max · Idle</h3>
+      <div class="pose-tiles">
+        <figure class="pose-tile pose-tile-light" data-bg="light">
+          <div class="pose-art" data-slot="light"></div>
+          <figcaption class="pose-bg">Fondo claro</figcaption>
+        </figure>
+        <figure class="pose-tile pose-tile-dark" data-bg="dark">
+          <div class="pose-art" data-slot="dark"></div>
+          <figcaption class="pose-bg">Fondo oscuro</figcaption>
+        </figure>
+      </div>
+    </article>
+
+    <article class="pose-card" data-pose="dog-walk" data-species="dog" data-state="walk">
+      <h3 class="pose-label">Max · Walk</h3>
+      <div class="pose-tiles">
+        <figure class="pose-tile pose-tile-light" data-bg="light">
+          <div class="pose-art" data-slot="light"></div>
+          <figcaption class="pose-bg">Fondo claro</figcaption>
+        </figure>
+        <figure class="pose-tile pose-tile-dark" data-bg="dark">
+          <div class="pose-art" data-slot="dark"></div>
+          <figcaption class="pose-bg">Fondo oscuro</figcaption>
+        </figure>
+      </div>
+    </article>
+
+    <article class="pose-card" data-pose="dog-sleep" data-species="dog" data-state="sleep">
+      <h3 class="pose-label">Max · Sleep</h3>
+      <div class="pose-tiles">
+        <figure class="pose-tile pose-tile-light" data-bg="light">
+          <div class="pose-art" data-slot="light"></div>
+          <figcaption class="pose-bg">Fondo claro</figcaption>
+        </figure>
+        <figure class="pose-tile pose-tile-dark" data-bg="dark">
+          <div class="pose-art" data-slot="dark"></div>
+          <figcaption class="pose-bg">Fondo oscuro</figcaption>
+        </figure>
+      </div>
+    </article>
+
+    <article class="pose-card" data-pose="dog-sit" data-species="dog" data-state="sit">
+      <h3 class="pose-label">Max · Sit</h3>
+      <div class="pose-tiles">
+        <figure class="pose-tile pose-tile-light" data-bg="light">
+          <div class="pose-art" data-slot="light"></div>
+          <figcaption class="pose-bg">Fondo claro</figcaption>
+        </figure>
+        <figure class="pose-tile pose-tile-dark" data-bg="dark">
+          <div class="pose-art" data-slot="dark"></div>
+          <figcaption class="pose-bg">Fondo oscuro</figcaption>
+        </figure>
+      </div>
+    </article>
+
+    <article class="pose-card" data-pose="dog-lay" data-species="dog" data-state="lay">
+      <h3 class="pose-label">Max · Lay</h3>
+      <div class="pose-tiles">
+        <figure class="pose-tile pose-tile-light" data-bg="light">
+          <div class="pose-art" data-slot="light"></div>
+          <figcaption class="pose-bg">Fondo claro</figcaption>
+        </figure>
+        <figure class="pose-tile pose-tile-dark" data-bg="dark">
+          <div class="pose-art" data-slot="dark"></div>
+          <figcaption class="pose-bg">Fondo oscuro</figcaption>
+        </figure>
+      </div>
+    </article>
+
+    <article class="pose-card" data-pose="dog-stretch" data-species="dog" data-state="stretch">
+      <h3 class="pose-label">Max · Stretch</h3>
+      <div class="pose-tiles">
+        <figure class="pose-tile pose-tile-light" data-bg="light">
+          <div class="pose-art" data-slot="light"></div>
+          <figcaption class="pose-bg">Fondo claro</figcaption>
+        </figure>
+        <figure class="pose-tile pose-tile-dark" data-bg="dark">
+          <div class="pose-art" data-slot="dark"></div>
+          <figcaption class="pose-bg">Fondo oscuro</figcaption>
+        </figure>
+      </div>
+    </article>
+
+  </div>
+
+  <script src="../../src/assets/cat.js"></script>
+  <script src="../../src/assets/dog.js"></script>
+  <script>
+    // Cada tarjeta dibuja el SVG de PRODUCCION de su pose. La pagina no
+    // copia el arte: si el dibujo cambia en src/assets/*.js, el preview
+    // cambia con el (por eso el test prohibe arte embebido en la pagina).
+    const POSE_GLOBALS = {
+      'cat-idle': 'catIdleSVG',
+      'cat-walk': 'catWalkSVG',
+      'cat-sleep': 'catSleepSVG',
+      'cat-sit': 'catSitSVG',
+      'cat-lay': 'catLaySVG',
+      'cat-stretch': 'catStretchSVG',
+      'dog-idle': 'dogIdleSVG',
+      'dog-walk': 'dogWalkSVG',
+      'dog-sleep': 'dogSleepSVG',
+      'dog-sit': 'dogSitSVG',
+      'dog-lay': 'dogLaySVG',
+      'dog-stretch': 'dogStretchSVG'
+    };
+
+    document.querySelectorAll('.pose-card').forEach(card => {
+      const id = card.dataset.pose;
+      const globalName = POSE_GLOBALS[id];
+      const svg = globalName ? window[globalName] : null;
+      if (!svg) {
+        const missing = document.createElement('div');
+        missing.className = 'pose-missing';
+        missing.textContent = 'Falta ' + (globalName || id);
+        card.querySelector('.pose-tiles').appendChild(missing);
+        return;
+      }
+      // Los SVG de produccion traen id="pet-svg": se renombra para que
+      // las 24 copias de la pagina no repitan el mismo id.
+      card.querySelectorAll('.pose-art').forEach(slot => {
+        const markup = svg.replace('id="pet-svg"', 'id="pet-svg-' + id + '-' + slot.dataset.slot + '"');
+        slot.innerHTML = markup;
+      });
+    });
+  </script>
+</body>
+</html>

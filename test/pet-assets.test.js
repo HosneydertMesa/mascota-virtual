@@ -1452,3 +1452,184 @@ test('guard de deriva: la sombra de piso sigue siendo el primer elemento y el or
       `${name}: la sombra de piso debe ser el primer elemento (pintado)`);
   }
 });
+
+// =============================================================
+// PASO 5 — Preview de las 12 poses + capturas para la revision visual
+//
+// El preview (test/preview/pet-poses-preview.html) es la pagina donde el
+// revisor visual mira las 12 poses de produccion sobre fondo claro y
+// oscuro, y pet-poses-capture.py deja un PNG por pose en
+// docs/pet-screenshots/.
+//
+// Estos tests fijan el contrato de los 3 artefactos:
+//   1. la pagina declara una tarjeta por cada una de las 12 poses;
+//   2. cada tarjeta se ve sobre fondo claro Y fondo oscuro, con etiqueta;
+//   3. la pagina renderiza el SVG de PRODUCCION (no una copia del arte),
+//      asi que no puede quedar vieja respecto de src/assets/*.js;
+//   4. el script de captura lista las 12 poses y escribe en
+//      docs/pet-screenshots/;
+//   5. existe un PNG por pose y el README los indexa con el comando de
+//      regeneracion.
+// =============================================================
+
+const PREVIEW_DIR = path.join(__dirname, 'preview');
+const PREVIEW_HTML_PATH = path.join(PREVIEW_DIR, 'pet-poses-preview.html');
+const CAPTURE_PY_PATH = path.join(PREVIEW_DIR, 'pet-poses-capture.py');
+const SHOTS_DIR = path.join(__dirname, '..', 'docs', 'pet-screenshots');
+const SHOTS_README_PATH = path.join(SHOTS_DIR, 'README.md');
+
+/**
+ * Las 12 poses de produccion que el preview debe mostrar.
+ * `global` es el export real de src/assets/{cat,dog}.js que dibuja la pose:
+ * si ese export cambia de nombre, el preview deja de pintar la pose real.
+ */
+const PREVIEW_POSES = [
+  { id: 'cat-idle', species: 'cat', state: 'idle', label: 'Luna', stateLabel: 'Idle', global: 'catIdleSVG' },
+  { id: 'cat-walk', species: 'cat', state: 'walk', label: 'Luna', stateLabel: 'Walk', global: 'catWalkSVG' },
+  { id: 'cat-sleep', species: 'cat', state: 'sleep', label: 'Luna', stateLabel: 'Sleep', global: 'catSleepSVG' },
+  { id: 'cat-sit', species: 'cat', state: 'sit', label: 'Luna', stateLabel: 'Sit', global: 'catSitSVG' },
+  { id: 'cat-lay', species: 'cat', state: 'lay', label: 'Luna', stateLabel: 'Lay', global: 'catLaySVG' },
+  { id: 'cat-stretch', species: 'cat', state: 'stretch', label: 'Luna', stateLabel: 'Stretch', global: 'catStretchSVG' },
+  { id: 'dog-idle', species: 'dog', state: 'idle', label: 'Max', stateLabel: 'Idle', global: 'dogIdleSVG' },
+  { id: 'dog-walk', species: 'dog', state: 'walk', label: 'Max', stateLabel: 'Walk', global: 'dogWalkSVG' },
+  { id: 'dog-sleep', species: 'dog', state: 'sleep', label: 'Max', stateLabel: 'Sleep', global: 'dogSleepSVG' },
+  { id: 'dog-sit', species: 'dog', state: 'sit', label: 'Max', stateLabel: 'Sit', global: 'dogSitSVG' },
+  { id: 'dog-lay', species: 'dog', state: 'lay', label: 'Max', stateLabel: 'Lay', global: 'dogLaySVG' },
+  { id: 'dog-stretch', species: 'dog', state: 'stretch', label: 'Max', stateLabel: 'Stretch', global: 'dogStretchSVG' }
+];
+
+const ASSET_MODULES = {
+  cat: require('../src/assets/cat'),
+  dog: require('../src/assets/dog')
+};
+
+/** Tarjetas `<article data-pose="...">` del preview, con su bloque HTML. */
+function extractPoseCards(html) {
+  const out = [];
+  const re = /<article[^>]*data-pose="([^"]+)"[^>]*>([\s\S]*?)<\/article>/g;
+  let m;
+  while ((m = re.exec(html)) !== null) {
+    out.push({ id: m[1], block: m[2] });
+  }
+  return out;
+}
+
+/** Color de fondo (hex) de una regla CSS del preview. */
+function cssBackgroundOf(html, selector) {
+  const re = new RegExp(selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*\\{([^}]*)\\}');
+  const m = re.exec(html);
+  assert.ok(m, `el preview no define la regla CSS "${selector}"`);
+  const hex = /background(?:-color)?\s*:\s*(#[0-9a-fA-F]{3,8})/.exec(m[1]);
+  assert.ok(hex, `la regla "${selector}" no declara un fondo hexadecimal`);
+  return hex[1];
+}
+
+/** Luminancia relativa (WCAG) de un color hex. */
+function relativeLuminance(hex) {
+  let h = hex.replace('#', '');
+  if (h.length === 3) h = h.split('').map(c => c + c).join('');
+  const channels = [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16) / 255)
+    .map(c => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)));
+  return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+}
+
+test('preview de las 12 poses: la pagina declara una tarjeta por pose de produccion', () => {
+  assert.ok(fs.existsSync(PREVIEW_HTML_PATH),
+    'falta test/preview/pet-poses-preview.html (pagina de preview de las 12 poses)');
+  const html = fs.readFileSync(PREVIEW_HTML_PATH, 'utf8');
+
+  const cards = extractPoseCards(html);
+  assert.equal(cards.length, 12,
+    `el preview deberia tener 12 tarjetas, tiene ${cards.length}`);
+  assert.deepEqual(cards.map(c => c.id), PREVIEW_POSES.map(p => p.id),
+    'las tarjetas del preview no son las 12 poses de produccion en orden');
+
+  for (const pose of PREVIEW_POSES) {
+    const card = cards.find(c => c.id === pose.id);
+    assert.ok(card, `falta la tarjeta ${pose.id}`);
+    assert.match(html, new RegExp(`data-species="${pose.species}"`),
+      `${pose.id}: falta el atributo data-species`);
+    assert.match(html, new RegExp(`data-state="${pose.state}"`),
+      `${pose.id}: falta el atributo data-state`);
+    assert.match(card.block, new RegExp(`${pose.label}\\s*(?:·|&middot;)\\s*${pose.stateLabel}`),
+      `${pose.id}: falta la etiqueta visible "${pose.label} · ${pose.stateLabel}"`);
+  }
+});
+
+test('preview de las 12 poses: cada pose se muestra sobre fondo claro y fondo oscuro', () => {
+  const html = fs.readFileSync(PREVIEW_HTML_PATH, 'utf8');
+  const cards = extractPoseCards(html);
+  assert.equal(cards.length, 12, 'el preview deberia tener 12 tarjetas');
+
+  for (const card of cards) {
+    assert.match(card.block, /data-bg="light"/, `${card.id}: falta el tile de fondo claro`);
+    assert.match(card.block, /data-bg="dark"/, `${card.id}: falta el tile de fondo oscuro`);
+    assert.match(card.block, /Fondo claro/, `${card.id}: falta el texto "Fondo claro"`);
+    assert.match(card.block, /Fondo oscuro/, `${card.id}: falta el texto "Fondo oscuro"`);
+  }
+
+  const light = relativeLuminance(cssBackgroundOf(html, '.pose-tile-light'));
+  const dark = relativeLuminance(cssBackgroundOf(html, '.pose-tile-dark'));
+  assert.ok(light > 0.5, `el fondo claro es demasiado oscuro (luminancia ${light.toFixed(3)})`);
+  assert.ok(dark < 0.2, `el fondo oscuro es demasiado claro (luminancia ${dark.toFixed(3)})`);
+});
+
+test('preview de las 12 poses: la pagina dibuja el SVG de produccion (no copia el arte)', () => {
+  const html = fs.readFileSync(PREVIEW_HTML_PATH, 'utf8');
+
+  assert.match(html, /src="\.\.\/\.\.\/src\/assets\/cat\.js"/,
+    'el preview debe cargar src/assets/cat.js');
+  assert.match(html, /src="\.\.\/\.\.\/src\/assets\/dog\.js"/,
+    'el preview debe cargar src/assets/dog.js');
+  assert.doesNotMatch(html, /<svg/i,
+    'el preview no debe llevar SVG embebido: se dibuja desde los assets de produccion');
+
+  for (const pose of PREVIEW_POSES) {
+    assert.match(html, new RegExp(`['"]${pose.global}['"]`),
+      `el preview no referencia el export ${pose.global}`);
+    const mod = ASSET_MODULES[pose.species];
+    assert.equal(typeof mod[pose.global], 'string',
+      `src/assets/${pose.species}.js ya no exporta ${pose.global}`);
+  }
+});
+
+test('capture de las 12 poses: el script python lista las 12 poses y escribe en docs/pet-screenshots', () => {
+  assert.ok(fs.existsSync(CAPTURE_PY_PATH),
+    'falta test/preview/pet-poses-capture.py (capturas PNG por pose)');
+  const py = fs.readFileSync(CAPTURE_PY_PATH, 'utf8');
+
+  assert.match(py, /pet-screenshots/,
+    'el script debe guardar las capturas en docs/pet-screenshots/');
+  assert.match(py, /pet-poses-preview\.html/,
+    'el script debe capturar desde test/preview/pet-poses-preview.html');
+  for (const pose of PREVIEW_POSES) {
+    assert.match(py, new RegExp(`['"]${pose.id}['"]`),
+      `el script no menciona la pose ${pose.id}`);
+  }
+});
+
+test('capturas: existe un PNG por pose en docs/pet-screenshots', () => {
+  assert.ok(fs.existsSync(SHOTS_DIR),
+    'falta el directorio docs/pet-screenshots/');
+  for (const pose of PREVIEW_POSES) {
+    const file = path.join(SHOTS_DIR, `${pose.id}.png`);
+    assert.ok(fs.existsSync(file), `falta la captura docs/pet-screenshots/${pose.id}.png`);
+    const buf = fs.readFileSync(file);
+    assert.ok(buf.length > 1000, `${pose.id}.png esta vacia (${buf.length} bytes)`);
+    assert.equal(buf.subarray(1, 4).toString('ascii'), 'PNG',
+      `${pose.id}.png no es un PNG valido`);
+  }
+});
+
+test('README de capturas: indexa las 12 capturas y documenta el comando para regenerarlas', () => {
+  assert.ok(fs.existsSync(SHOTS_README_PATH),
+    'falta docs/pet-screenshots/README.md (indice de capturas)');
+  const md = fs.readFileSync(SHOTS_README_PATH, 'utf8');
+
+  for (const pose of PREVIEW_POSES) {
+    assert.ok(md.includes(`${pose.id}.png`),
+      `el README no indexa la captura ${pose.id}.png`);
+  }
+  assert.match(md, /python\s+test\/preview\/pet-poses-capture\.py/,
+    'el README debe documentar el comando para regenerar las capturas');
+});
