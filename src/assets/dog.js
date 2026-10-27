@@ -122,497 +122,565 @@ const dogIdleSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
 </svg>
 `;
 const dogWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="max-walk-fur" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#F59E0B" />
-      <stop offset="50%" stop-color="#D97706" />
-      <stop offset="100%" stop-color="#B45309" />
-    </linearGradient>
-    <linearGradient id="max-walk-white" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#FFFFFF" />
-      <stop offset="100%" stop-color="#FFFBEB" />
-    </linearGradient>
-    <linearGradient id="max-walk-ear-inner" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#FECDD3" />
-      <stop offset="100%" stop-color="#FDA4AF" />
-    </linearGradient>
-    <linearGradient id="max-walk-eye-iris" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#2D150B" />
-      <stop offset="40%" stop-color="#1A0C06" />
-      <stop offset="85%" stop-color="#78350F" />
-      <stop offset="100%" stop-color="#92400E" />
-    </linearGradient>
-  </defs>
-  <ellipse cx="100" cy="169" rx="78" ry="7.5" fill="#28140B" opacity="0.22" class="pet-shadow" />
+  <ellipse cx="100" cy="170" rx="76" ry="7" fill="#28140B" opacity="0.22" class="pet-shadow" />
 
-  <g class="anim-wag anim-wag-fast" style="transform-origin: 158px 112px;">
-    <path d="M 156,114 C 176,106 192,84 184,58 C 178,40 156,40 150,56 C 148,66 164,74 168,88 C 172,102 166,112 156,114 Z"
-          fill="url(#max-walk-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
-    <path d="M 172,64 C 178,74 178,88 170,100" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" fill="none" />
+  <g class="anim-wag anim-wag-fast" style="transform-origin: 146px 104px; transform: rotate(0deg);">
+    <path class="cel-outline"
+          d="M 146,104 C 142,80 130,62 110,57 C 92,53 79,66 91,80 C 96,86 104,86 110,81 C 120,90 134,101 146,110 C 150,112 149,106 146,104 Z"
+          fill="#F7B851" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow"
+          d="M 110,81 C 120,90 134,101 146,110 C 148,111 148,109 146,108 C 138,99 126,89 112,78 Z"
+          fill="#C97E22" />
+    <path d="M 91,79 C 86,73 88,64 96,59 C 93,64 92,70 95,75 C 96,77 94,80 91,79 Z" fill="#8A4A12" />
+    <path d="M 134,88 C 128,78 120,70 110,66" fill="none" stroke="#3B2416" stroke-width="1.8" stroke-linecap="round" />
+    <path d="M 104,62 C 97,66 93,72 94,78" fill="none" stroke="#3B2416" stroke-width="1.8" stroke-linecap="round" />
   </g>
 
-  <g class="back-foot-left" style="transform-origin: 154px 124px;">
-    <path d="M 152,122 C 168,132 178,150 170,166 C 166,172 152,172 146,164 C 140,150 140,132 152,122 Z"
-          fill="url(#max-walk-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
-    <ellipse cx="164" cy="168" rx="9.5" ry="5.2" fill="url(#max-walk-white)" stroke="#3B1E12" stroke-width="1.8" />
+  <g class="back-foot-left" style="transform-origin: 124px 104px;">
+    <path class="cel-outline"
+          d="M 122,102 C 133,112 140,127 141,141 C 142,151 139,159 132,160 C 125,161 121,154 121,143 C 121,129 116,113 113,105 C 116,102 119,101 122,102 Z"
+          fill="#F7B851" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow"
+          d="M 141,141 C 142,151 139,159 132,160 C 135,157 136,151 135,144 C 134,137 132,131 130,126 C 136,130 140,135 141,141 Z"
+          fill="#C97E22" />
+    <path d="M 130,152 C 130,155 131,157 131,158" fill="none" stroke="#3B2416" stroke-width="1.5" stroke-linecap="round" />
   </g>
-  <g class="back-foot-right" style="transform-origin: 116px 122px;">
-    <path d="M 114,120 C 102,132 94,148 102,158 C 108,164 124,162 128,152 C 130,138 126,124 114,120 Z"
-          fill="url(#max-walk-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
-    <ellipse cx="104" cy="154" rx="8.5" ry="5" fill="url(#max-walk-white)" stroke="#3B1E12" stroke-width="1.8" />
-  </g>
-
-  <g class="pet-body anim-breath" style="transform-origin: 112px 138px;">
-    <path d="M 48,112 C 38,124 44,144 72,152 C 100,160 140,156 166,142 C 178,134 176,116 160,106 C 136,96 78,98 48,112 Z"
-          fill="url(#max-walk-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
-    <path d="M 54,114 C 44,126 48,142 68,148 C 84,150 96,140 98,126 C 96,114 76,106 54,114 Z"
-          fill="url(#max-walk-white)" stroke="#3B1E12" stroke-width="1.8" stroke-linejoin="round" />
-      <!-- seam-hip -->
-    <path d="M 58,128 C 64,136 72,140 78,136 C 74,128 66,124 58,128 Z" fill="url(#max-walk-fur)"/>
-    <path d="M 142,128 C 136,136 128,140 122,136 C 126,128 134,124 142,128 Z" fill="url(#max-walk-fur)"/>
-</g>
-
-  <g class="left-paw" style="transform-origin: 78px 116px;">
-    <path d="M 76,116 L 88,146 C 90,152 86,158 78,158 C 70,158 66,152 68,146 L 74,116 Z"
-          fill="url(#max-walk-white)" stroke="#3B1E12" stroke-width="2" stroke-linejoin="round" />
-    <ellipse cx="78" cy="154" rx="9" ry="5.2" fill="url(#max-walk-white)" stroke="#3B1E12" stroke-width="2" />
-    <path d="M 74,152 L 74,158" stroke="#3B1E12" stroke-width="1.4" stroke-linecap="round" />
-    <path d="M 82,152 L 82,158" stroke="#3B1E12" stroke-width="1.4" stroke-linecap="round" />
-  </g>
-  <g class="right-paw" style="transform-origin: 58px 114px;">
-    <path d="M 58,114 L 30,148 C 24,156 24,164 34,168 C 44,172 56,166 60,156 L 70,116 Z"
-          fill="url(#max-walk-white)" stroke="#3B1E12" stroke-width="2" stroke-linejoin="round" />
-    <ellipse cx="32" cy="168" rx="10.5" ry="6" fill="url(#max-walk-white)" stroke="#3B1E12" stroke-width="2" />
-    <path d="M 28,166 L 28,172" stroke="#3B1E12" stroke-width="1.4" stroke-linecap="round" />
-    <path d="M 36,166 L 36,172" stroke="#3B1E12" stroke-width="1.4" stroke-linecap="round" />
+  <g class="back-foot-right" style="transform-origin: 138px 100px;">
+    <path class="cel-outline"
+          d="M 136,98 C 147,109 153,124 154,138 C 155,148 152,156 146,156 C 139,156 136,149 136,138 C 136,124 131,108 128,100 C 131,97 134,96 136,98 Z"
+          fill="#F7B851" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow"
+          d="M 154,138 C 155,148 152,156 146,156 C 149,153 150,147 149,140 C 148,133 146,127 144,122 C 150,126 153,131 154,138 Z"
+          fill="#C97E22" />
+    <path d="M 144,148 C 144,151 145,153 145,154" fill="none" stroke="#3B2416" stroke-width="1.5" stroke-linecap="round" />
   </g>
 
-  <g class="pet-head" style="transform-origin: 46px 96px;">
-    <g class="pet-ear pet-ear-left" style="transform-origin: 22px 54px;">
-      <path d="M 24,52 C 10,50 2,64 6,82 C 8,92 20,94 26,84 C 30,74 32,58 24,52 Z" fill="url(#max-walk-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
-      <path d="M 14,62 C 8,70 8,80 12,86" stroke="url(#max-walk-ear-inner)" stroke-width="3.5" stroke-linecap="round" fill="none" />
+  <g class="anim-breath pet-body" style="transform-origin: 106px 112px; transform: translateY(0px) rotate(0deg);">
+    <path class="cel-outline"
+          d="M 56,110 C 53,95 66,85 86,85 C 108,85 133,87 147,94 C 159,100 161,114 153,124 C 144,135 128,140 110,142 C 98,143 90,143 84,142 C 76,140 66,139 60,133 C 56,127 56,118 56,110 Z"
+          fill="#F7B851" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow"
+          d="M 152,119 C 143,129 128,134 110,136 C 98,137 90,137 84,136 C 76,134 67,133 61,127 C 65,133 75,137 84,139 C 90,140 98,140 110,139 C 128,137 143,132 152,123 Z"
+          fill="#C97E22" />
+    <path d="M 63,116 C 61,126 64,134 70,138 C 76,141 83,142 90,142 C 85,145 74,144 66,139 C 61,135 59,124 63,116 Z"
+          fill="#FFF8EC" stroke="#3B2416" stroke-width="1.8" stroke-linejoin="round" />
+    <path class="cel-shadow" d="M 64,132 C 68,138 79,141 90,142 C 85,144 75,143 68,139 C 65,137 63,135 64,132 Z" fill="#E9CFA8" />
+    <path d="M 96,86 C 99,95 99,104 97,112 C 93,104 92,95 94,86 Z" fill="#8A4A12" />
+    <path d="M 120,87 C 123,96 123,105 121,113 C 117,105 116,96 118,87 Z" fill="#8A4A12" />
+  </g>
+
+  <g class="left-paw" style="transform-origin: 74px 140px;">
+    <path class="cel-outline"
+          d="M 84,142 C 76,140 66,139 60,133 C 56,140 55,150 59,159 C 63,166 72,168 79,166 C 86,164 88,154 84,142 Z"
+          fill="#FFF8EC" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow"
+          d="M 59,159 C 63,166 72,168 79,166 C 85,164 87,156 86,148 C 87,156 84,162 78,164 C 72,166 64,164 59,159 Z"
+          fill="#E9CFA8" />
+    <path d="M 65,160 C 65,163 66,165 66,166" fill="none" stroke="#3B2416" stroke-width="1.5" stroke-linecap="round" />
+    <path d="M 73,159 C 73,162 74,164 74,165" fill="none" stroke="#3B2416" stroke-width="1.5" stroke-linecap="round" />
+  </g>
+  <g class="right-paw" style="transform-origin: 100px 140px;">
+    <path class="cel-outline"
+          d="M 84,142 C 90,143 98,143 110,142 C 112,150 112,158 109,164 C 106,169 99,170 94,167 C 89,164 87,156 86,148 C 85,145 84,143 84,142 Z"
+          fill="#FFF8EC" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow"
+          d="M 109,164 C 106,169 99,170 94,167 C 90,165 88,161 87,156 C 88,163 92,166 98,167 C 103,168 107,166 109,164 Z"
+          fill="#E9CFA8" />
+    <path d="M 91,163 C 91,166 92,168 92,169" fill="none" stroke="#3B2416" stroke-width="1.5" stroke-linecap="round" />
+    <path d="M 99,162 C 99,165 100,167 100,168" fill="none" stroke="#3B2416" stroke-width="1.5" stroke-linecap="round" />
+  </g>
+
+  <g class="pet-head" style="transform-origin: 60px 94px; transform: translateY(0px) rotate(0deg);">
+    <g class="pet-ear pet-ear-left" style="transform-origin: 44px 60px;">
+      <path class="cel-outline"
+            d="M 44,42 C 33,42 25,50 24,62 C 23,73 28,81 34,81 C 40,81 45,75 46,66 C 47,57 47,44 44,42 Z"
+            fill="#F7B851" stroke="#3B2416" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round" />
+      <path d="M 39,50 C 32,52 28,59 28,67 C 28,74 32,77 36,75 C 40,73 42,66 42,59 C 42,54 41,51 39,50 Z" fill="#F09A96" />
+      <path class="cel-shadow" d="M 44,44 C 46,54 46,66 45,74 C 47,66 48,52 45,43 Z" fill="#C97E22" />
     </g>
-    <g class="pet-ear pet-ear-right" style="transform-origin: 64px 46px;">
-      <path d="M 62,46 C 80,42 92,58 88,82 C 86,96 74,100 68,88 C 64,76 60,56 62,46 Z" fill="url(#max-walk-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
-      <path d="M 74,58 C 80,66 82,78 78,86" stroke="url(#max-walk-ear-inner)" stroke-width="4" stroke-linecap="round" fill="none" />
+    <g class="pet-ear pet-ear-right" style="transform-origin: 72px 52px;">
+      <path class="cel-outline"
+            d="M 66,40 C 77,38 85,46 86,58 C 87,70 82,78 75,78 C 68,78 63,72 62,62 C 61,52 62,41 66,40 Z"
+            fill="#F7B851" stroke="#3B2416" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round" />
+      <path d="M 71,46 C 78,48 81,55 81,63 C 81,70 77,73 73,72 C 69,71 67,65 67,57 C 67,51 69,47 71,46 Z" fill="#F09A96" />
+      <path class="cel-shadow" d="M 66,41 C 62,50 61,60 62,68 C 61,58 62,46 67,40 Z" fill="#C97E22" />
     </g>
 
-    <!-- seam-ruff -->
-    <path d="M 70,100 C 78,114 92,124 106,120 C 96,110 84,104 70,100 Z" fill="url(#max-walk-fur)"/>
-    <path d="M 36,46 C 50,36 74,40 80,62 C 84,74 80,90 66,100 C 50,110 26,108 12,96 C 0,86 0,70 10,62 C 4,54 14,44 30,44 C 32,44 34,45 36,46 Z"
-          fill="url(#max-walk-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
-    <path d="M 44,42 C 46,56 40,70 28,80 C 28,80 40,84 40,84 C 40,84 54,76 54,76 C 50,64 48,52 50,42 Z" fill="url(#max-walk-white)" />
-    <ellipse cx="18" cy="86" rx="14" ry="11" fill="url(#max-walk-white)" stroke="#3B1E12" stroke-width="1.8" />
-    <ellipse cx="10" cy="82" rx="5" ry="3.6" fill="#1C1917" />
-    <circle cx="8.5" cy="80.5" r="1.3" fill="#FFFFFF" />
-    <path d="M 14,88 Q 18,92 18,88 Q 18,92 24,88" stroke="#3B1E12" stroke-width="1.7" fill="none" stroke-linecap="round" />
-    <path d="M 16,89 C 16,97 22,97 22,89 Z" fill="#FB7185" stroke="#3B1E12" stroke-width="1.1" />
-    <ellipse cx="52" cy="86" rx="7" ry="4" fill="#FB7185" opacity="0.4" />
+    <path class="cel-outline"
+          d="M 60,44 C 42,42 27,52 24,68 C 23,73 21,78 18,81 C 13,85 14,93 20,95 C 26,97 31,94 34,91 C 40,97 50,102 60,101 C 72,100 82,91 84,78 C 86,62 76,46 60,44 Z"
+          fill="#F7B851" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow"
+          d="M 60,96 C 69,95 78,88 83,79 C 83,90 72,99 60,101 C 57,101 57,96 60,96 Z"
+          fill="#C97E22" />
+
+    <path d="M 25,78 C 19,80 16,86 18,91 C 21,95 28,95 32,91 C 36,87 37,81 34,78 C 32,76 28,76 25,78 Z"
+          fill="#FFF8EC" stroke="#3B2416" stroke-width="1.8" stroke-linejoin="round" />
+    <path class="cel-shadow" d="M 18,91 C 21,95 28,95 32,91 C 35,89 36,85 36,82 C 37,87 34,92 31,94 C 26,96 20,95 18,91 Z" fill="#E9CFA8" />
+    <path d="M 20,83 C 16,84 15,88 17,90 C 19,92 23,91 23,88 C 24,85 23,83 20,83 Z"
+          fill="#3A2A22" stroke="#3B2416" stroke-width="1.5" stroke-linejoin="round" />
+    <path d="M 20,91 C 22,94 27,94 29,91" fill="none" stroke="#3B2416" stroke-width="1.6" stroke-linecap="round" />
+
+    <path d="M 40,48 C 46,44 55,45 60,49 C 54,47 46,47 42,50 Z" fill="#FFF8EC" />
+    <ellipse cx="44" cy="88" rx="6.5" ry="3.5" fill="#F0927F" />
+
     <g class="anim-blink">
-      <ellipse cx="42" cy="70" rx="12.5" ry="14.5" fill="url(#max-walk-eye-iris)" stroke="#3B1E12" stroke-width="2.2" />
-      <ellipse cx="42" cy="70" rx="8.5" ry="10.5" fill="#0A0503" />
-      <circle class="pet-pupil" data-anchor-x="42" data-anchor-y="70" cx="42" cy="70" r="5" fill="#000000" />
-      <circle cx="38" cy="64" r="4.2" fill="#FFFFFF" />
-      <circle cx="47" cy="75" r="1.8" fill="#FFFFFF" />
+      <ellipse class="cel-outline" cx="48" cy="66" rx="11" ry="13" fill="#6B3A12" stroke="#3B2416" stroke-width="3.2" />
+      <path class="cel-shadow" d="M 37,72 C 38,78 42,80 48,80 C 54,80 59,76 59.5,68 Z" fill="#8A4A12" />
+      <circle class="pet-pupil" data-anchor-x="48" data-anchor-y="66" cx="48" cy="66" r="4.8" fill="#160C06" />
+      <circle cx="44" cy="60" r="3.8" fill="#FFFFFF" />
+      <circle cx="52" cy="72" r="1.8" fill="#FFFFFF" />
     </g>
   </g>
 </svg>
 `;
 const dogSleepSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="max-sleep-fur" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#F59E0B" />
-      <stop offset="50%" stop-color="#D97706" />
-      <stop offset="100%" stop-color="#B45309" />
-    </linearGradient>
-    <linearGradient id="max-sleep-white" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#FFFFFF" />
-      <stop offset="100%" stop-color="#FFFBEB" />
-    </linearGradient>
-    <linearGradient id="max-sleep-ear-inner" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#FECDD3" />
-      <stop offset="100%" stop-color="#FDA4AF" />
-    </linearGradient>
-    <linearGradient id="max-sleep-eye-iris" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#2D150B" />
-      <stop offset="40%" stop-color="#1A0C06" />
-      <stop offset="85%" stop-color="#78350F" />
-      <stop offset="100%" stop-color="#92400E" />
-    </linearGradient>
-  </defs>
-  <ellipse cx="100" cy="170" rx="62" ry="8" fill="#28140B" opacity="0.22" class="pet-shadow" />
+  <ellipse cx="100" cy="168" rx="62" ry="7" fill="#28140B" opacity="0.22" class="pet-shadow" />
 
-  <g class="anim-wag" style="transform-origin: 134px 146px;">
-    <path d="M 130,144 C 152,136 170,148 166,166 C 162,178 140,182 120,174 C 108,170 104,162 110,158 C 118,164 140,166 148,156 C 154,148 146,142 130,144 Z"
-          fill="url(#max-sleep-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
-    <path d="M 150,150 C 156,156 156,164 150,170" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" fill="none" />
+  <g class="anim-wag" style="transform-origin: 146px 120px; transform: rotate(0deg);">
+    <path class="cel-outline"
+          d="M 148,118 C 165,122 174,138 169,153 C 164,167 148,174 131,169 C 119,166 111,155 114,146 C 116,138 124,139 127,146 C 130,153 138,158 145,157 C 153,156 157,149 154,141 C 152,132 147,125 140,122 Z"
+          fill="#F7B851" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow"
+          d="M 127,146 C 130,153 138,158 145,157 C 153,156 157,149 154,141 C 156,150 151,158 142,159 C 133,160 126,154 124,147 Z"
+          fill="#C97E22" />
+    <path d="M 140,122 C 147,125 152,132 154,141 C 150,132 145,126 137,124 Z" fill="#8A4A12" />
+    <path d="M 160,132 C 163,138 164,146 162,153" fill="none" stroke="#3B2416" stroke-width="1.8" stroke-linecap="round" />
+    <path d="M 124,152 C 122,156 122,160 124,163" fill="none" stroke="#3B2416" stroke-width="1.8" stroke-linecap="round" />
   </g>
 
-  <g class="back-foot-left" style="transform-origin: 120px 158px;">
-    <path d="M 114,152 C 110,158 112,166 120,170 C 126,172 132,168 132,162 C 130,156 124,152 114,152 Z"
-          fill="url(#max-sleep-fur)" stroke="#3B1E12" stroke-width="2" stroke-linejoin="round" />
-    <ellipse cx="122" cy="170" rx="8" ry="4.2" fill="url(#max-sleep-white)" stroke="#3B1E12" stroke-width="1.6" />
+  <g class="back-foot-left" style="transform-origin: 134px 146px;">
+    <path class="cel-outline"
+          d="M 128,140 C 124,148 126,158 134,161 C 142,164 151,159 152,151 C 153,143 144,136 136,136 C 132,136 129,138 128,140 Z"
+          fill="#F7B851" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow"
+          d="M 134,161 C 142,164 151,159 152,151 C 153,147 152,143 150,140 C 152,147 149,154 143,156 C 139,157 136,159 134,161 Z"
+          fill="#C97E22" />
   </g>
-  <g class="back-foot-right" style="transform-origin: 140px 156px;">
-    <path d="M 134,148 C 132,156 136,164 144,166 C 150,166 154,160 152,154 C 148,148 142,146 134,148 Z"
-          fill="url(#max-sleep-fur)" stroke="#3B1E12" stroke-width="2" stroke-linejoin="round" />
-    <ellipse cx="144" cy="166" rx="7.5" ry="4" fill="url(#max-sleep-white)" stroke="#3B1E12" stroke-width="1.6" />
-  </g>
-
-  <g class="pet-body anim-breath" style="transform-origin: 108px 148px;">
-    <path d="M 68,126 C 56,144 64,166 94,172 C 122,178 148,166 152,146 C 154,130 140,116 116,112 C 92,108 78,112 68,126 Z"
-          fill="url(#max-sleep-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
-    <path d="M 86,142 C 82,152 88,162 100,164 C 110,162 114,152 110,142 C 104,138 92,138 86,142 Z"
-          fill="url(#max-sleep-white)" stroke="#3B1E12" stroke-width="1.6" stroke-linejoin="round" />
-      <!-- seam-hip -->
-    <path d="M 58,128 C 64,136 72,140 78,136 C 74,128 66,124 58,128 Z" fill="url(#max-sleep-fur)"/>
-    <path d="M 142,128 C 136,136 128,140 122,136 C 126,128 134,124 142,128 Z" fill="url(#max-sleep-fur)"/>
-</g>
-
-  <g class="left-paw" style="transform-origin: 86px 160px;">
-    <ellipse cx="86" cy="168" rx="9" ry="5" fill="url(#max-sleep-white)" stroke="#3B1E12" stroke-width="1.8" />
-    <path d="M 82,166 L 82,171" stroke="#3B1E12" stroke-width="1.3" stroke-linecap="round" />
-    <path d="M 90,166 L 90,171" stroke="#3B1E12" stroke-width="1.3" stroke-linecap="round" />
-  </g>
-  <g class="right-paw" style="transform-origin: 102px 160px;">
-    <ellipse cx="102" cy="169" rx="8.5" ry="4.6" fill="url(#max-sleep-white)" stroke="#3B1E12" stroke-width="1.8" />
-    <path d="M 98,167 L 98,172" stroke="#3B1E12" stroke-width="1.3" stroke-linecap="round" />
-    <path d="M 106,167 L 106,172" stroke="#3B1E12" stroke-width="1.3" stroke-linecap="round" />
+  <g class="back-foot-right" style="transform-origin: 152px 140px;">
+    <path class="cel-outline"
+          d="M 146,132 C 142,140 145,150 153,152 C 161,154 168,148 167,141 C 166,134 157,129 150,129 C 148,129 147,130 146,132 Z"
+          fill="#F7B851" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow"
+          d="M 153,152 C 161,154 168,148 167,141 C 167,138 165,135 163,133 C 165,140 162,146 156,147 C 155,149 154,151 153,152 Z"
+          fill="#C97E22" />
   </g>
 
-  <g class="pet-head" style="transform-origin: 74px 130px;">
-    <g class="pet-ear pet-ear-left" style="transform-origin: 56px 106px;">
-      <path d="M 58,108 C 42,102 34,114 36,130 C 38,138 48,140 54,130 C 58,122 62,112 58,108 Z" fill="url(#max-sleep-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
-      <path d="M 46,114 C 40,120 40,128 44,132" stroke="url(#max-sleep-ear-inner)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+  <g class="anim-breath pet-body" style="transform-origin: 108px 134px; transform: translateY(0px) rotate(0deg);">
+    <path class="cel-outline"
+          d="M 66,116 C 84,107 116,107 136,116 C 152,122 157,140 148,152 C 139,163 118,167 96,165 C 76,163 62,154 60,140 C 58,130 60,121 66,116 Z"
+          fill="#F7B851" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow"
+          d="M 148,152 C 139,163 118,167 96,165 C 76,163 62,154 60,140 C 64,152 78,159 96,161 C 118,163 138,158 147,148 Z"
+          fill="#C97E22" />
+    <path d="M 74,124 C 70,134 72,144 80,148 C 90,153 104,152 112,146 C 108,152 96,155 86,152 C 74,148 70,136 74,124 Z"
+          fill="#FFF8EC" stroke="#3B2416" stroke-width="1.8" stroke-linejoin="round" />
+    <path class="cel-shadow" d="M 72,140 C 74,147 80,151 88,152 C 82,153 76,149 73,144 Z" fill="#E9CFA8" />
+    <path d="M 96,110 C 99,120 99,130 97,138 C 93,130 92,120 94,110 Z" fill="#8A4A12" />
+    <path d="M 118,112 C 121,122 121,131 119,139 C 115,131 114,122 116,112 Z" fill="#8A4A12" />
+  </g>
+
+  <g class="left-paw" style="transform-origin: 44px 152px;">
+    <path class="cel-outline"
+          d="M 64,142 C 52,146 36,150 24,154 C 16,157 16,163 24,165 C 36,168 54,164 62,158 C 67,154 67,148 64,142 Z"
+          fill="#FFF8EC" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow"
+          d="M 24,165 C 36,168 54,164 62,158 C 65,156 66,152 66,149 C 66,154 63,158 58,160 C 48,164 32,167 24,165 Z"
+          fill="#E9CFA8" />
+    <path d="M 28,157 C 28,160 29,162 29,163" fill="none" stroke="#3B2416" stroke-width="1.5" stroke-linecap="round" />
+    <path d="M 36,155 C 36,158 37,160 37,161" fill="none" stroke="#3B2416" stroke-width="1.5" stroke-linecap="round" />
+  </g>
+  <g class="right-paw" style="transform-origin: 72px 152px;">
+    <path class="cel-outline"
+          d="M 80,146 C 68,150 54,154 44,158 C 38,161 40,166 48,167 C 60,168 74,164 82,158 C 86,154 85,149 80,146 Z"
+          fill="#FFF8EC" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow"
+          d="M 48,167 C 60,168 74,164 82,158 C 85,156 85,152 84,149 C 84,154 81,158 76,160 C 66,164 54,166 48,167 Z"
+          fill="#E9CFA8" />
+    <path d="M 46,160 C 46,163 47,165 47,166" fill="none" stroke="#3B2416" stroke-width="1.5" stroke-linecap="round" />
+    <path d="M 54,158 C 54,161 55,163 55,164" fill="none" stroke="#3B2416" stroke-width="1.5" stroke-linecap="round" />
+  </g>
+
+  <g class="pet-head" style="transform-origin: 70px 126px; transform: translateY(0px) rotate(-16deg);">
+    <g class="pet-ear pet-ear-left" style="transform-origin: 52px 100px;">
+      <path class="cel-outline"
+            d="M 58,88 C 44,92 36,106 38,120 C 39,131 49,136 55,129 C 61,122 64,106 62,94 C 61,89 60,87 58,88 Z"
+            fill="#F7B851" stroke="#3B2416" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round" />
+      <path d="M 52,97 C 44,100 40,110 41,118 C 42,125 47,127 50,122 C 54,116 55,105 54,98 Z" fill="#F09A96" />
+      <path class="cel-shadow" d="M 59,91 C 62,102 61,116 56,124 C 60,114 60,100 58,90 Z" fill="#C97E22" />
     </g>
-    <g class="pet-ear pet-ear-right" style="transform-origin: 92px 104px;">
-      <path d="M 90,106 C 104,98 114,110 110,126 C 108,134 98,136 94,126 C 90,118 88,110 90,106 Z" fill="url(#max-sleep-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
-      <path d="M 100,110 C 106,116 106,124 102,128" stroke="url(#max-sleep-ear-inner)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+    <g class="pet-ear pet-ear-right" style="transform-origin: 88px 94px;">
+      <path class="cel-outline"
+            d="M 88,86 C 100,90 104,102 100,114 C 97,124 87,127 83,119 C 79,111 80,97 84,90 C 85,87 86,86 88,86 Z"
+            fill="#F7B851" stroke="#3B2416" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round" />
+      <path d="M 90,95 C 97,98 99,106 97,113 C 95,119 90,120 88,114 C 86,107 87,99 88,95 Z" fill="#F09A96" />
+      <path class="cel-shadow" d="M 85,88 C 81,98 81,110 84,118 C 81,109 82,96 86,87 Z" fill="#C97E22" />
     </g>
 
-    <!-- seam-ruff -->
-    <path d="M 56,128 C 66,140 82,146 96,140 C 84,132 68,128 56,128 Z" fill="url(#max-sleep-fur)"/>
-    <circle cx="74" cy="130" r="26" fill="url(#max-sleep-fur)" stroke="#3B1E12" stroke-width="2.2" />
-    <path d="M 70,108 C 72,120 68,130 60,138 C 60,138 74,142 74,142 C 74,142 88,136 88,136 C 82,126 80,116 82,108 Z" fill="url(#max-sleep-white)" />
-    <ellipse cx="74" cy="138" rx="11" ry="8" fill="url(#max-sleep-white)" stroke="#3B1E12" stroke-width="1.5" />
-    <ellipse cx="74" cy="134" rx="4" ry="2.8" fill="#1C1917" />
-    <path d="M 70,140 Q 74,142 78,140" stroke="#3B1E12" stroke-width="1.5" fill="none" stroke-linecap="round" />
-    <ellipse cx="62" cy="136" rx="5" ry="3" fill="#FB7185" opacity="0.45" />
-    <ellipse cx="88" cy="136" rx="5" ry="3" fill="#FB7185" opacity="0.45" />
-    <g class="anim-blink">
-      <path d="M 51,127 Q 64,134 77,127" stroke="#3B1E12" stroke-width="2.6" fill="none" stroke-linecap="round" />
-      <path d="M 53,125 Q 64,130 75,125" stroke="#3B1E12" stroke-width="1.6" fill="none" stroke-linecap="round" opacity="0.55" />
-      <path d="M 71,127 Q 84,134 97,127" stroke="#3B1E12" stroke-width="2.6" fill="none" stroke-linecap="round" />
-      <path d="M 73,125 Q 84,130 95,125" stroke="#3B1E12" stroke-width="1.6" fill="none" stroke-linecap="round" opacity="0.55" />
-    </g>
+    <path class="cel-outline"
+          d="M 76,86 C 56,84 40,96 38,114 C 36,124 32,130 26,134 C 20,138 22,146 30,146 C 36,146 40,143 43,140 C 50,148 62,152 74,150 C 90,148 100,136 100,120 C 100,100 90,88 76,86 Z"
+          fill="#F7B851" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow"
+          d="M 38,114 C 36,124 32,130 26,134 C 20,138 22,146 30,146 C 36,146 40,143 43,140 C 50,148 62,152 74,150 C 90,148 100,136 100,120 C 96,132 84,142 70,144 C 58,146 48,142 42,136 C 40,130 40,122 38,114 Z"
+          fill="#C97E22" />
+
+    <path d="M 37,127 C 31,129 27,136 30,142 C 34,147 43,146 47,141 C 51,136 48,129 42,127 C 40,126 38,126 37,127 Z"
+          fill="#FFF8EC" stroke="#3B2416" stroke-width="1.8" stroke-linejoin="round" />
+    <path class="cel-shadow" d="M 30,142 C 34,147 43,146 47,141 C 49,138 49,134 48,131 C 49,137 45,143 38,144 C 34,145 31,144 30,142 Z" fill="#E9CFA8" />
+    <path d="M 29,134 C 25,135 24,140 28,142 C 32,144 35,142 35,139 C 35,136 32,133 29,134 Z"
+          fill="#3A2A22" stroke="#3B2416" stroke-width="1.5" stroke-linejoin="round" />
+    <path d="M 33,144 C 35,147 40,147 42,143" fill="none" stroke="#3B2416" stroke-width="1.6" stroke-linecap="round" />
+
+    <path d="M 62,106 C 66,113 76,113 80,106" fill="none" stroke="#3B2416" stroke-width="2" stroke-linecap="round" />
+    <path d="M 64,111 C 68,115 74,115 78,111" fill="none" stroke="#3B2416" stroke-width="1.6" stroke-linecap="round" />
+
+    <ellipse cx="52" cy="130" rx="6" ry="3.5" fill="#F0927F" />
+    <ellipse cx="88" cy="124" rx="5.5" ry="3.2" fill="#F0927F" />
   </g>
 </svg>
 `;
 const dogSitSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="max-sit-fur" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#F59E0B" />
-      <stop offset="50%" stop-color="#D97706" />
-      <stop offset="100%" stop-color="#B45309" />
-    </linearGradient>
-    <linearGradient id="max-sit-white" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#FFFFFF" />
-      <stop offset="100%" stop-color="#FFFBEB" />
-    </linearGradient>
-    <linearGradient id="max-sit-ear-inner" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#FECDD3" />
-      <stop offset="100%" stop-color="#FDA4AF" />
-    </linearGradient>
-    <linearGradient id="max-sit-eye-iris" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#2D150B" />
-      <stop offset="40%" stop-color="#1A0C06" />
-      <stop offset="85%" stop-color="#78350F" />
-      <stop offset="100%" stop-color="#92400E" />
-    </linearGradient>
-  </defs>
-  <ellipse cx="100" cy="172" rx="55" ry="7" fill="#28140B" opacity="0.22" class="pet-shadow" />
+  <ellipse cx="100" cy="172" rx="54" ry="6.5" fill="#28140B" opacity="0.22" class="pet-shadow" />
 
-  <g class="anim-wag" style="transform-origin: 70px 142px;">
-    <path d="M 72,142 C 54,144 34,130 30,105 C 28,85 42,70 54,76 C 60,78 58,90 50,96 C 44,102 48,120 64,132 Z"
-          fill="url(#max-sit-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
-    <path d="M 42,85 C 36,92 34,100 36,108" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" fill="none" />
+  <g class="anim-wag" style="transform-origin: 138px 144px; transform: rotate(0deg);">
+    <path class="cel-outline"
+          d="M 138,144 C 156,146 170,136 175,120 C 178,109 174,100 166,99 C 160,98 156,104 160,109 C 164,114 164,120 160,126 C 154,135 146,140 139,140 Z"
+          fill="#F7B851" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow"
+          d="M 139,140 C 146,140 154,135 160,126 C 163,121 163,116 161,111 C 164,117 164,123 161,129 C 155,138 147,143 140,142 Z"
+          fill="#C97E22" />
+    <path d="M 166,99 C 172,99 176,105 175,112 C 176,106 173,101 168,101 Z" fill="#8A4A12" />
+    <path d="M 158,132 C 165,126 169,118 170,110" fill="none" stroke="#3B2416" stroke-width="1.8" stroke-linecap="round" />
   </g>
 
-  <g class="back-foot-left" style="transform-origin: 64px 134px;">
-    <path d="M 56,134 C 47,143 47,158 54,166 C 59,171 68,171 74,168 C 77,164 76,148 71,138 Z"
-          fill="url(#max-sit-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
-    <ellipse cx="54" cy="168" rx="8" ry="4.5" fill="url(#max-sit-white)" stroke="#3B1E12" stroke-width="1.8" />
+  <g class="back-foot-left" style="transform-origin: 70px 148px;">
+    <path class="cel-outline"
+          d="M 64,132 C 56,139 54,153 60,161 C 65,167 76,168 82,162 C 86,157 86,141 80,133 C 75,128 68,129 64,132 Z"
+          fill="#F7B851" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow"
+          d="M 60,161 C 65,167 76,168 82,162 C 85,159 86,153 85,147 C 85,155 81,161 74,162 C 68,163 63,162 60,161 Z"
+          fill="#C97E22" />
+    <path d="M 66,155 C 66,158 67,160 67,161" fill="none" stroke="#3B2416" stroke-width="1.5" stroke-linecap="round" />
   </g>
-  <g class="back-foot-right" style="transform-origin: 136px 134px;">
-    <path d="M 144,134 C 153,143 153,158 146,166 C 141,171 132,171 126,168 C 123,164 124,148 129,138 Z"
-          fill="url(#max-sit-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
-    <ellipse cx="146" cy="168" rx="8" ry="4.5" fill="url(#max-sit-white)" stroke="#3B1E12" stroke-width="1.8" />
-  </g>
-
-  <g class="pet-body anim-breath" style="transform-origin: 100px 152px;">
-    <path d="M 68,106 C 63,124 65,144 78,152 C 88,150 112,150 122,152 C 135,144 137,124 132,106 Z"
-          fill="url(#max-sit-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
-    <path d="M 82,96 C 75,111 72,124 80,135 C 86,142 93,148 100,150 C 107,148 114,142 120,135 C 128,124 125,111 118,96 C 111,106 89,106 82,96 Z"
-          fill="url(#max-sit-white)" stroke="#3B1E12" stroke-width="1.8" stroke-linejoin="round" />
-      <!-- seam-hip -->
-    <path d="M 58,128 C 64,136 72,140 78,136 C 74,128 66,124 58,128 Z" fill="url(#max-sit-fur)"/>
-    <path d="M 142,128 C 136,136 128,140 122,136 C 126,128 134,124 142,128 Z" fill="url(#max-sit-fur)"/>
-</g>
-
-  <g class="left-paw" style="transform-origin: 83px 132px;">
-    <path d="M 76,134 L 75,158 C 75,164 78,168 83,168 C 88,168 91,164 91,158 L 90,134 Z"
-          fill="url(#max-sit-white)" stroke="#3B1E12" stroke-width="2" stroke-linejoin="round" />
-    <ellipse cx="83" cy="166" rx="10" ry="6" fill="url(#max-sit-white)" stroke="#3B1E12" stroke-width="2" />
-    <path d="M 79,164 L 79,170" stroke="#3B1E12" stroke-width="1.6" stroke-linecap="round" />
-    <path d="M 86,164 L 86,170" stroke="#3B1E12" stroke-width="1.6" stroke-linecap="round" />
-  </g>
-  <g class="right-paw" style="transform-origin: 117px 132px;">
-    <path d="M 110,134 L 109,158 C 109,164 112,168 117,168 C 122,168 125,164 125,158 L 124,134 Z"
-          fill="url(#max-sit-white)" stroke="#3B1E12" stroke-width="2" stroke-linejoin="round" />
-    <ellipse cx="117" cy="166" rx="10" ry="6" fill="url(#max-sit-white)" stroke="#3B1E12" stroke-width="2" />
-    <path d="M 113,164 L 113,170" stroke="#3B1E12" stroke-width="1.6" stroke-linecap="round" />
-    <path d="M 120,164 L 120,170" stroke="#3B1E12" stroke-width="1.6" stroke-linecap="round" />
+  <g class="back-foot-right" style="transform-origin: 130px 148px;">
+    <path class="cel-outline"
+          d="M 136,132 C 144,139 146,153 140,161 C 135,167 124,168 118,162 C 114,157 114,141 120,133 C 125,128 132,129 136,132 Z"
+          fill="#F7B851" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow"
+          d="M 140,161 C 135,167 124,168 118,162 C 115,159 114,153 115,147 C 115,155 119,161 126,162 C 132,163 137,162 140,161 Z"
+          fill="#C97E22" />
+    <path d="M 134,155 C 134,158 133,160 133,161" fill="none" stroke="#3B2416" stroke-width="1.5" stroke-linecap="round" />
   </g>
 
-  <g class="pet-head" style="transform-origin: 100px 105px;">
-    <g class="pet-ear pet-ear-left" style="transform-origin: 58px 52px;">
-      <path d="M 60,54 C 42,54 32,70 34,92 C 36,104 46,108 52,98 C 58,88 64,74 62,54 Z" fill="url(#max-sit-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
-      <path d="M 48,64 C 42,72 40,84 44,92" stroke="url(#max-sit-ear-inner)" stroke-width="4" stroke-linecap="round" fill="none" />
+  <g class="anim-breath pet-body" style="transform-origin: 100px 134px; transform: translateY(0px) rotate(0deg);">
+    <path class="cel-outline"
+          d="M 100,94 C 78,94 63,110 61,132 C 59,150 66,163 80,167 C 92,170 108,170 120,167 C 134,163 141,150 139,132 C 137,110 122,94 100,94 Z"
+          fill="#F7B851" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow"
+          d="M 139,132 C 141,150 134,163 120,167 C 108,170 92,170 80,167 C 66,163 59,150 61,132 C 63,148 71,158 82,161 C 93,164 107,164 118,161 C 129,158 137,148 139,132 Z"
+          fill="#C97E22" />
+    <path d="M 86,100 C 83,116 83,136 87,152 C 89,159 94,163 100,163 C 106,163 111,159 113,152 C 117,136 117,116 114,100 C 109,96 91,96 86,100 Z"
+          fill="#FFF8EC" stroke="#3B2416" stroke-width="1.8" stroke-linejoin="round" />
+    <path class="cel-shadow" d="M 87,148 C 89,157 94,162 100,162 C 106,162 111,157 113,148 C 112,157 107,163 100,163 C 93,163 88,157 87,148 Z" fill="#E9CFA8" />
+  </g>
+
+  <g class="left-paw" style="transform-origin: 90px 148px;">
+    <path class="cel-outline"
+          d="M 100,144 C 94,144 88,142 84,137 C 82,145 82,155 84,162 C 85,167 89,170 93,170 C 98,170 101,167 101,160 C 101,154 100,148 100,144 Z"
+          fill="#FFF8EC" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow"
+          d="M 84,162 C 85,167 89,170 93,170 C 97,170 100,168 101,164 C 99,167 96,168 93,168 C 89,168 86,166 84,162 Z"
+          fill="#E9CFA8" />
+    <path d="M 87,164 C 87,167 88,169 88,169" fill="none" stroke="#3B2416" stroke-width="1.5" stroke-linecap="round" />
+  </g>
+  <g class="right-paw" style="transform-origin: 110px 148px;">
+    <path class="cel-outline"
+          d="M 114,137 C 110,142 104,144 100,144 C 99,152 100,160 102,165 C 104,169 110,169 114,166 C 118,162 119,152 118,142 C 117,139 115,137 114,137 Z"
+          fill="#FFF8EC" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow"
+          d="M 102,165 C 104,169 110,169 114,166 C 117,164 118,160 118,156 C 118,162 115,166 111,166 C 107,167 104,166 102,165 Z"
+          fill="#E9CFA8" />
+    <path d="M 106,163 C 106,166 107,168 107,168" fill="none" stroke="#3B2416" stroke-width="1.5" stroke-linecap="round" />
+  </g>
+
+  <g class="pet-head" style="transform-origin: 100px 96px; transform: translateY(0px) rotate(0deg);">
+    <g class="pet-ear pet-ear-left" style="transform-origin: 56px 62px;">
+      <path class="cel-outline"
+            d="M 56,48 C 42,52 33,66 35,82 C 36,93 45,99 51,92 C 57,85 61,68 61,56 C 61,50 59,47 56,48 Z"
+            fill="#F7B851" stroke="#3B2416" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round" />
+      <path d="M 50,58 C 42,62 39,72 40,81 C 41,88 46,91 49,86 C 53,80 55,69 55,60 C 55,58 52,57 50,58 Z" fill="#F09A96" />
+      <path class="cel-shadow" d="M 57,50 C 60,60 60,78 55,88 C 59,78 59,58 56,49 Z" fill="#C97E22" />
     </g>
-    <g class="pet-ear pet-ear-right" style="transform-origin: 142px 52px;">
-      <path d="M 140,54 C 158,54 168,70 166,92 C 164,104 154,108 148,98 C 142,88 136,74 138,54 Z" fill="url(#max-sit-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
-      <path d="M 152,64 C 158,72 160,84 156,92" stroke="url(#max-sit-ear-inner)" stroke-width="4" stroke-linecap="round" fill="none" />
+    <g class="pet-ear pet-ear-right" style="transform-origin: 144px 62px;">
+      <path class="cel-outline"
+            d="M 144,48 C 158,52 167,66 165,82 C 164,93 155,99 149,92 C 143,85 139,68 139,56 C 139,50 141,47 144,48 Z"
+            fill="#F7B851" stroke="#3B2416" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round" />
+      <path d="M 150,58 C 158,62 161,72 160,81 C 159,88 154,91 151,86 C 147,80 145,69 145,60 C 145,58 148,57 150,58 Z" fill="#F09A96" />
+      <path class="cel-shadow" d="M 143,50 C 140,60 140,78 145,88 C 141,78 141,58 144,49 Z" fill="#C97E22" />
     </g>
 
-    <!-- seam-ruff -->
-    <path d="M 62,100 C 74,114 86,120 100,120 C 114,120 126,114 138,100 C 124,110 76,110 62,100 Z" fill="url(#max-sit-fur)"/>
-    <path d="M 54,62 C 48,50 68,36 100,36 C 132,36 152,50 146,62 C 158,70 162,84 154,95 C 148,105 136,112 100,112 C 64,112 52,105 46,95 C 38,84 42,70 54,62 Z"
-          fill="url(#max-sit-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
-    <path d="M 94,38 C 96,55 92,68 84,78 C 84,78 100,82 100,82 C 100,82 116,78 116,78 C 108,68 104,55 106,38 Z" fill="url(#max-sit-white)" />
-    <ellipse cx="100" cy="88" rx="18" ry="13" fill="url(#max-sit-white)" stroke="#3B1E12" stroke-width="1.8" />
-    <ellipse cx="100" cy="80" rx="6" ry="4.2" fill="#1C1917" />
-    <circle cx="98" cy="78.5" r="1.5" fill="#FFFFFF" />
-    <path d="M 94,85 Q 100,88 100,85 Q 100,88 106,85" stroke="#3B1E12" stroke-width="1.8" fill="none" stroke-linecap="round" />
-    <path d="M 96,86 C 96,95 104,95 104,86 Z" fill="#FB7185" stroke="#3B1E12" stroke-width="1.2" />
-    <ellipse cx="64" cy="90" rx="8" ry="4.5" fill="#FB7185" opacity="0.45" />
-    <ellipse cx="136" cy="90" rx="8" ry="4.5" fill="#FB7185" opacity="0.45" />
+    <path class="cel-outline"
+          d="M 100,40 C 70,40 48,56 46,82 C 45,96 52,110 66,116 C 78,121 122,121 134,116 C 148,110 155,96 154,82 C 152,56 130,40 100,40 Z"
+          fill="#F7B851" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow"
+          d="M 66,116 C 78,121 122,121 134,116 C 146,111 153,100 154,86 C 152,102 140,114 124,117 C 112,120 88,120 76,117 C 71,115 68,115 66,116 Z"
+          fill="#C97E22" />
+
+    <path d="M 64,56 C 70,52 82,52 88,56 C 82,54 70,54 66,58 Z" fill="#FFF8EC" />
+    <path d="M 112,56 C 118,52 130,52 136,56 C 130,54 118,54 114,58 Z" fill="#FFF8EC" />
+
+    <ellipse cx="62" cy="92" rx="7" ry="4" fill="#F0927F" />
+    <ellipse cx="138" cy="92" rx="7" ry="4" fill="#F0927F" />
+
+    <path d="M 78,90 C 78,82 87,78 100,78 C 113,78 122,82 122,90 C 122,102 113,110 100,110 C 87,110 78,102 78,90 Z"
+          fill="#FFF8EC" stroke="#3B2416" stroke-width="1.8" stroke-linejoin="round" />
+    <path class="cel-shadow" d="M 79,95 C 85,103 115,103 121,95 C 119,104 111,111 100,111 C 89,111 81,104 79,95 Z" fill="#E9CFA8" />
+    <path d="M 95,80 C 90,83 90,88 95,90 C 100,92 105,90 105,86 C 105,82 100,79 95,80 Z"
+          fill="#3A2A22" stroke="#3B2416" stroke-width="1.5" stroke-linejoin="round" />
+    <path d="M 93,92 C 96,96 104,96 107,92" fill="none" stroke="#3B2416" stroke-width="1.6" stroke-linecap="round" />
+
     <g class="anim-blink">
-      <ellipse cx="80" cy="74" rx="12.5" ry="14.5" fill="url(#max-sit-eye-iris)" stroke="#3B1E12" stroke-width="2.2" />
-      <ellipse cx="80" cy="74" rx="8.5" ry="10.5" fill="#0A0503" />
-      <circle class="pet-pupil" data-anchor-x="80" data-anchor-y="74" cx="80" cy="74" r="5" fill="#000000" />
-      <circle cx="76" cy="68" r="4.2" fill="#FFFFFF" />
-      <circle cx="85" cy="79" r="1.8" fill="#FFFFFF" />
-      <ellipse cx="120" cy="74" rx="12.5" ry="14.5" fill="url(#max-sit-eye-iris)" stroke="#3B1E12" stroke-width="2.2" />
-      <ellipse cx="120" cy="74" rx="8.5" ry="10.5" fill="#0A0503" />
-      <circle class="pet-pupil" data-anchor-x="120" data-anchor-y="74" cx="120" cy="74" r="5" fill="#000000" />
-      <circle cx="116" cy="68" r="4.2" fill="#FFFFFF" />
-      <circle cx="125" cy="79" r="1.8" fill="#FFFFFF" />
+      <ellipse class="cel-outline" cx="76" cy="74" rx="13" ry="15" fill="#6B3A12" stroke="#3B2416" stroke-width="3.2" />
+      <path class="cel-shadow" d="M 63,80 C 64,86 69,89 76,89 C 83,89 89,84 89.5,76 Z" fill="#8A4A12" />
+      <circle class="pet-pupil" data-anchor-x="76" data-anchor-y="74" cx="76" cy="74" r="4.8" fill="#160C06" />
+      <circle cx="71" cy="68" r="4" fill="#FFFFFF" />
+      <circle cx="81" cy="80" r="1.9" fill="#FFFFFF" />
+      <ellipse class="cel-outline" cx="124" cy="74" rx="13" ry="15" fill="#6B3A12" stroke="#3B2416" stroke-width="3.2" />
+      <path class="cel-shadow" d="M 111,80 C 112,86 117,89 124,89 C 131,89 137,84 137.5,76 Z" fill="#8A4A12" />
+      <circle class="pet-pupil" data-anchor-x="124" data-anchor-y="74" cx="124" cy="74" r="4.8" fill="#160C06" />
+      <circle cx="119" cy="68" r="4" fill="#FFFFFF" />
+      <circle cx="129" cy="80" r="1.9" fill="#FFFFFF" />
     </g>
   </g>
 </svg>
 `;
 const dogLaySVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="max-lay-fur" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#F59E0B" />
-      <stop offset="50%" stop-color="#D97706" />
-      <stop offset="100%" stop-color="#B45309" />
-    </linearGradient>
-    <linearGradient id="max-lay-white" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#FFFFFF" />
-      <stop offset="100%" stop-color="#FFFBEB" />
-    </linearGradient>
-    <linearGradient id="max-lay-ear-inner" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#FECDD3" />
-      <stop offset="100%" stop-color="#FDA4AF" />
-    </linearGradient>
-    <linearGradient id="max-lay-eye-iris" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#2D150B" />
-      <stop offset="40%" stop-color="#1A0C06" />
-      <stop offset="85%" stop-color="#78350F" />
-      <stop offset="100%" stop-color="#92400E" />
-    </linearGradient>
-  </defs>
-  <ellipse cx="104" cy="170" rx="74" ry="8" fill="#28140B" opacity="0.22" class="pet-shadow" />
+  <ellipse cx="104" cy="170" rx="72" ry="7" fill="#28140B" opacity="0.22" class="pet-shadow" />
 
-  <g class="anim-wag" style="transform-origin: 168px 140px;">
-    <path d="M 166,142 C 184,132 194,112 184,90 C 176,74 156,76 152,92 C 150,102 164,110 168,122 C 170,132 170,138 166,142 Z"
-          fill="url(#max-lay-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
-    <path d="M 176,98 C 180,108 180,118 174,128" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" fill="none" />
+  <g class="anim-wag" style="transform-origin: 162px 126px; transform: rotate(0deg);">
+    <path class="cel-outline"
+          d="M 162,130 C 182,120 193,98 182,76 C 173,58 150,60 145,78 C 142,90 157,99 162,112 C 165,122 165,127 162,130 Z"
+          fill="#F7B851" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow"
+          d="M 162,112 C 157,99 142,90 145,78 C 147,72 152,67 158,66 C 152,72 151,79 155,86 C 158,92 161,99 162,105 Z"
+          fill="#C97E22" />
+    <path d="M 182,76 C 186,88 183,102 175,112 C 181,101 183,88 179,79 Z" fill="#8A4A12" />
+    <path d="M 170,86 C 173,96 172,106 168,114" fill="none" stroke="#3B2416" stroke-width="1.8" stroke-linecap="round" />
+    <path d="M 152,80 C 150,86 152,92 156,96" fill="none" stroke="#3B2416" stroke-width="1.8" stroke-linecap="round" />
   </g>
 
-  <g class="back-foot-left" style="transform-origin: 150px 154px;">
-    <path d="M 142,148 C 150,152 160,158 164,166 C 166,170 160,172 152,170 C 144,166 138,156 142,148 Z"
-          fill="url(#max-lay-fur)" stroke="#3B1E12" stroke-width="2" stroke-linejoin="round" />
-    <ellipse cx="158" cy="170" rx="9" ry="4.5" fill="url(#max-lay-white)" stroke="#3B1E12" stroke-width="1.6" />
+  <g class="back-foot-left" style="transform-origin: 144px 144px;">
+    <path class="cel-outline"
+          d="M 138,140 C 144,146 152,154 156,162 C 158,167 151,170 143,168 C 135,165 130,155 133,147 C 134,143 136,140 138,140 Z"
+          fill="#F7B851" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow"
+          d="M 156,162 C 158,167 151,170 143,168 C 139,167 135,164 133,160 C 137,164 141,165 145,165 C 150,165 154,164 156,162 Z"
+          fill="#C97E22" />
   </g>
-  <g class="back-foot-right" style="transform-origin: 132px 154px;">
-    <path d="M 124,148 C 132,154 140,162 142,168 C 144,172 136,172 128,168 C 120,162 118,152 124,148 Z"
-          fill="url(#max-lay-fur)" stroke="#3B1E12" stroke-width="2" stroke-linejoin="round" />
-    <ellipse cx="136" cy="170" rx="8.5" ry="4.5" fill="url(#max-lay-white)" stroke="#3B1E12" stroke-width="1.6" />
-  </g>
-
-  <g class="pet-body anim-breath" style="transform-origin: 110px 150px;">
-    <path d="M 44,134 C 40,150 54,166 88,170 C 120,174 156,170 174,158 C 184,150 182,136 168,128 C 144,120 72,120 44,134 Z"
-          fill="url(#max-lay-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
-    <path d="M 70,134 C 62,144 64,156 80,160 C 96,162 110,156 114,144 C 110,134 88,130 70,134 Z"
-          fill="url(#max-lay-white)" stroke="#3B1E12" stroke-width="1.6" stroke-linejoin="round" />
-      <!-- seam-hip -->
-    <path d="M 58,128 C 64,136 72,140 78,136 C 74,128 66,124 58,128 Z" fill="url(#max-lay-fur)"/>
-    <path d="M 142,128 C 136,136 128,140 122,136 C 126,128 134,124 142,128 Z" fill="url(#max-lay-fur)"/>
-</g>
-
-  <g class="left-paw" style="transform-origin: 44px 156px;">
-    <path d="M 50,152 L 26,162 C 20,164 18,170 24,172 C 30,174 42,168 50,162 Z"
-          fill="url(#max-lay-white)" stroke="#3B1E12" stroke-width="2" stroke-linejoin="round" />
-    <ellipse cx="24" cy="170" rx="9.5" ry="5" fill="url(#max-lay-white)" stroke="#3B1E12" stroke-width="1.8" />
-    <path d="M 20,168 L 20,173" stroke="#3B1E12" stroke-width="1.3" stroke-linecap="round" />
-    <path d="M 28,168 L 28,173" stroke="#3B1E12" stroke-width="1.3" stroke-linecap="round" />
-  </g>
-  <g class="right-paw" style="transform-origin: 62px 156px;">
-    <path d="M 64,152 L 42,164 C 36,166 36,172 42,174 C 50,174 60,168 66,162 Z"
-          fill="url(#max-lay-white)" stroke="#3B1E12" stroke-width="2" stroke-linejoin="round" />
-    <ellipse cx="42" cy="172" rx="8.5" ry="4.6" fill="url(#max-lay-white)" stroke="#3B1E12" stroke-width="1.8" />
-    <path d="M 38,170 L 38,175" stroke="#3B1E12" stroke-width="1.3" stroke-linecap="round" />
-    <path d="M 46,170 L 46,175" stroke="#3B1E12" stroke-width="1.3" stroke-linecap="round" />
+  <g class="back-foot-right" style="transform-origin: 160px 148px;">
+    <path class="cel-outline"
+          d="M 154,144 C 160,150 166,157 168,163 C 170,168 163,170 156,168 C 148,165 144,155 148,148 C 150,145 152,143 154,144 Z"
+          fill="#F7B851" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow"
+          d="M 168,163 C 170,168 163,170 156,168 C 152,167 149,165 147,161 C 150,165 154,166 158,166 C 163,166 166,165 168,163 Z"
+          fill="#C97E22" />
   </g>
 
-  <g class="pet-head" style="transform-origin: 76px 114px;">
-    <g class="pet-ear pet-ear-left" style="transform-origin: 50px 74px;">
-      <path d="M 52,76 C 36,72 26,86 28,106 C 30,116 42,118 48,106 C 54,94 58,84 52,76 Z" fill="url(#max-lay-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
-      <path d="M 40,84 C 34,92 34,102 38,108" stroke="url(#max-lay-ear-inner)" stroke-width="3.5" stroke-linecap="round" fill="none" />
+  <g class="anim-breath pet-body" style="transform-origin: 110px 132px; transform: translateY(0px) rotate(0deg);">
+    <path class="cel-outline"
+          d="M 56,132 C 52,144 62,156 86,160 C 112,164 146,160 164,150 C 174,144 172,130 158,124 C 134,114 72,116 56,132 Z"
+          fill="#F7B851" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow"
+          d="M 164,150 C 146,160 112,164 86,160 C 62,156 52,144 56,132 C 58,142 68,150 88,154 C 112,158 144,154 161,145 Z"
+          fill="#C97E22" />
+    <path d="M 72,134 C 66,142 68,152 80,156 C 92,159 106,156 112,148 C 108,155 96,158 86,156 C 76,154 71,144 72,134 Z"
+          fill="#FFF8EC" stroke="#3B2416" stroke-width="1.8" stroke-linejoin="round" />
+    <path class="cel-shadow" d="M 70,148 C 73,153 79,156 86,156 C 80,157 73,155 70,151 Z" fill="#E9CFA8" />
+    <path d="M 96,120 C 99,130 99,140 97,148 C 93,140 92,130 94,120 Z" fill="#8A4A12" />
+    <path d="M 120,124 C 123,133 123,142 121,149 C 117,142 116,133 118,124 Z" fill="#8A4A12" />
+  </g>
+
+  <g class="left-paw" style="transform-origin: 52px 156px;">
+    <path class="cel-outline"
+          d="M 76,138 C 62,142 44,150 30,158 C 22,162 24,168 32,169 C 46,171 66,166 76,160 C 82,156 82,144 76,138 Z"
+          fill="#FFF8EC" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow"
+          d="M 32,169 C 46,171 66,166 76,160 C 79,158 80,154 79,151 C 79,157 76,161 70,163 C 60,167 42,170 32,169 Z"
+          fill="#E9CFA8" />
+    <path d="M 34,161 C 34,164 35,166 35,167" fill="none" stroke="#3B2416" stroke-width="1.5" stroke-linecap="round" />
+    <path d="M 42,158 C 42,161 43,163 43,164" fill="none" stroke="#3B2416" stroke-width="1.5" stroke-linecap="round" />
+  </g>
+  <g class="right-paw" style="transform-origin: 78px 156px;">
+    <path class="cel-outline"
+          d="M 92,142 C 78,146 60,153 48,160 C 42,164 44,169 51,170 C 64,171 82,166 92,160 C 97,156 97,148 92,142 Z"
+          fill="#FFF8EC" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow"
+          d="M 51,170 C 64,171 82,166 92,160 C 95,158 96,154 95,151 C 95,157 92,161 86,163 C 76,167 60,170 51,170 Z"
+          fill="#E9CFA8" />
+    <path d="M 48,162 C 48,165 49,167 49,168" fill="none" stroke="#3B2416" stroke-width="1.5" stroke-linecap="round" />
+    <path d="M 56,159 C 56,162 57,164 57,165" fill="none" stroke="#3B2416" stroke-width="1.5" stroke-linecap="round" />
+  </g>
+
+  <g class="pet-head" style="transform-origin: 78px 126px; transform: translateY(0px) rotate(-8deg);">
+    <g class="pet-ear pet-ear-left" style="transform-origin: 38px 104px;">
+      <path class="cel-outline"
+            d="M 40,92 C 28,94 21,106 23,120 C 24,131 34,136 40,130 C 46,123 49,111 48,100 C 47,94 44,91 40,92 Z"
+            fill="#F7B851" stroke="#3B2416" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round" />
+      <path d="M 36,100 C 28,102 25,110 26,119 C 27,126 32,128 35,123 C 39,118 40,108 39,101 Z" fill="#F09A96" />
+      <path class="cel-shadow" d="M 42,95 C 46,105 47,116 45,125 C 48,115 47,102 42,94 Z" fill="#C97E22" />
     </g>
-    <g class="pet-ear pet-ear-right" style="transform-origin: 106px 72px;">
-      <path d="M 104,74 C 120,68 132,82 128,102 C 126,112 114,114 110,102 C 106,90 102,80 104,74 Z" fill="url(#max-lay-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
-      <path d="M 116,80 C 122,88 122,98 118,104" stroke="url(#max-lay-ear-inner)" stroke-width="3.5" stroke-linecap="round" fill="none" />
+    <g class="pet-ear pet-ear-right" style="transform-origin: 78px 94px;">
+      <path class="cel-outline"
+            d="M 80,88 C 92,90 99,102 97,116 C 95,127 85,132 79,125 C 73,118 71,105 73,95 C 74,90 77,87 80,88 Z"
+            fill="#F7B851" stroke="#3B2416" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round" />
+      <path d="M 83,96 C 91,98 93,106 91,114 C 90,121 85,123 82,118 C 78,113 77,103 79,97 Z" fill="#F09A96" />
+      <path class="cel-shadow" d="M 76,90 C 72,100 72,112 74,121 C 71,111 72,98 77,89 Z" fill="#C97E22" />
     </g>
 
-    <!-- seam-ruff -->
-    <path d="M 58,118 C 70,132 88,138 104,132 C 90,122 72,118 58,118 Z" fill="url(#max-lay-fur)"/>
-    <path d="M 48,82 C 44,70 60,58 78,58 C 100,58 116,70 112,82 C 122,88 124,100 116,108 C 110,116 98,122 78,122 C 56,122 46,116 42,108 C 36,100 40,88 48,82 Z"
-          fill="url(#max-lay-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
-    <path d="M 74,60 C 76,74 72,86 64,94 C 64,94 78,98 78,98 C 78,98 92,94 92,94 C 86,84 82,74 84,60 Z" fill="url(#max-lay-white)" />
-    <ellipse cx="78" cy="102" rx="14" ry="10" fill="url(#max-lay-white)" stroke="#3B1E12" stroke-width="1.6" />
-    <ellipse cx="78" cy="96" rx="5" ry="3.4" fill="#1C1917" />
-    <circle cx="76.5" cy="94.5" r="1.2" fill="#FFFFFF" />
-    <path d="M 74,100 Q 78,103 78,100 Q 78,103 82,100" stroke="#3B1E12" stroke-width="1.6" fill="none" stroke-linecap="round" />
-    <path d="M 75,101 C 75,108 81,108 81,101 Z" fill="#FB7185" stroke="#3B1E12" stroke-width="1.1" />
-    <ellipse cx="54" cy="102" rx="6" ry="3.5" fill="#FB7185" opacity="0.45" />
-    <ellipse cx="102" cy="102" rx="6" ry="3.5" fill="#FB7185" opacity="0.45" />
+    <path class="cel-outline"
+          d="M 64,86 C 42,86 26,100 26,120 C 26,140 42,156 64,156 C 86,156 102,140 102,120 C 102,100 86,86 64,86 Z"
+          fill="#F7B851" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow"
+          d="M 26,120 C 26,140 42,156 64,156 C 86,156 102,140 102,120 C 98,136 83,150 64,150 C 45,150 30,136 26,120 Z"
+          fill="#C97E22" />
+
+    <path d="M 50,130 C 50,122 56,118 64,118 C 72,118 78,122 78,130 C 78,140 72,146 64,146 C 56,146 50,140 50,130 Z"
+          fill="#FFF8EC" stroke="#3B2416" stroke-width="1.8" stroke-linejoin="round" />
+    <path class="cel-shadow" d="M 50,133 C 53,141 58,144 64,144 C 70,144 75,141 78,133 C 77,141 72,147 64,147 C 56,147 51,141 50,133 Z" fill="#E9CFA8" />
+    <path d="M 60,120 C 56,122 56,127 60,129 C 64,131 68,129 68,125 C 68,121 64,119 60,120 Z"
+          fill="#3A2A22" stroke="#3B2416" stroke-width="1.5" stroke-linejoin="round" />
+    <path d="M 58,131 C 60,135 68,135 70,131" fill="none" stroke="#3B2416" stroke-width="1.6" stroke-linecap="round" />
+
+    <ellipse cx="36" cy="128" rx="6" ry="3.5" fill="#F0927F" />
+    <ellipse cx="92" cy="128" rx="6" ry="3.5" fill="#F0927F" />
+
     <g class="anim-blink">
-      <ellipse cx="64" cy="88" rx="12.5" ry="14.5" fill="url(#max-lay-eye-iris)" stroke="#3B1E12" stroke-width="2.2" />
-      <ellipse cx="64" cy="88" rx="8.5" ry="10.5" fill="#0A0503" />
-      <circle class="pet-pupil" data-anchor-x="64" data-anchor-y="88" cx="64" cy="88" r="5" fill="#000000" />
-      <circle cx="60" cy="82" r="4.2" fill="#FFFFFF" />
-      <circle cx="69" cy="93" r="1.8" fill="#FFFFFF" />
-      <ellipse cx="92" cy="88" rx="12.5" ry="14.5" fill="url(#max-lay-eye-iris)" stroke="#3B1E12" stroke-width="2.2" />
-      <ellipse cx="92" cy="88" rx="8.5" ry="10.5" fill="#0A0503" />
-      <circle class="pet-pupil" data-anchor-x="92" data-anchor-y="88" cx="92" cy="88" r="5" fill="#000000" />
-      <circle cx="88" cy="82" r="4.2" fill="#FFFFFF" />
-      <circle cx="97" cy="93" r="1.8" fill="#FFFFFF" />
+      <ellipse class="cel-outline" cx="50" cy="116" rx="12" ry="14" fill="#6B3A12" stroke="#3B2416" stroke-width="3.2" />
+      <path class="cel-shadow" d="M 38,122 C 39,128 44,131 50,131 C 56,131 62,126 62.5,118 Z" fill="#8A4A12" />
+      <circle class="pet-pupil" data-anchor-x="50" data-anchor-y="116" cx="50" cy="116" r="4.6" fill="#160C06" />
+      <circle cx="46" cy="110" r="3.7" fill="#FFFFFF" />
+      <circle cx="54" cy="122" r="1.8" fill="#FFFFFF" />
+      <ellipse class="cel-outline" cx="78" cy="116" rx="12" ry="14" fill="#6B3A12" stroke="#3B2416" stroke-width="3.2" />
+      <path class="cel-shadow" d="M 66,122 C 67,128 72,131 78,131 C 84,131 90,126 90.5,118 Z" fill="#8A4A12" />
+      <circle class="pet-pupil" data-anchor-x="78" data-anchor-y="116" cx="78" cy="116" r="4.6" fill="#160C06" />
+      <circle cx="74" cy="110" r="3.7" fill="#FFFFFF" />
+      <circle cx="82" cy="122" r="1.8" fill="#FFFFFF" />
     </g>
   </g>
 </svg>
 `;
 const dogStretchSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="max-stretch-fur" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#F59E0B" />
-      <stop offset="50%" stop-color="#D97706" />
-      <stop offset="100%" stop-color="#B45309" />
-    </linearGradient>
-    <linearGradient id="max-stretch-white" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#FFFFFF" />
-      <stop offset="100%" stop-color="#FFFBEB" />
-    </linearGradient>
-    <linearGradient id="max-stretch-ear-inner" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#FECDD3" />
-      <stop offset="100%" stop-color="#FDA4AF" />
-    </linearGradient>
-    <linearGradient id="max-stretch-eye-iris" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#2D150B" />
-      <stop offset="40%" stop-color="#1A0C06" />
-      <stop offset="85%" stop-color="#78350F" />
-      <stop offset="100%" stop-color="#92400E" />
-    </linearGradient>
-  </defs>
-  <ellipse cx="108" cy="170" rx="78" ry="7.5" fill="#28140B" opacity="0.22" class="pet-shadow" />
+  <ellipse cx="100" cy="170" rx="66" ry="6.5" fill="#28140B" opacity="0.22" class="pet-shadow" />
 
-  <g class="anim-wag" style="transform-origin: 156px 82px;">
-    <path d="M 156,84 C 166,58 154,34 134,28 C 118,24 110,40 120,50 C 128,58 146,62 154,76 C 156,80 156,82 156,84 Z"
-          fill="url(#max-stretch-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
-    <path d="M 140,42 C 148,48 152,60 150,70" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" fill="none" />
+  <g class="anim-wag" style="transform-origin: 138px 98px; transform: rotate(0deg);">
+    <path class="cel-outline"
+          d="M 138,100 C 142,78 138,54 122,44 C 110,37 100,48 108,60 C 114,69 128,72 140,84 C 144,88 143,96 138,100 Z"
+          fill="#F7B851" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow"
+          d="M 108,60 C 114,69 128,72 140,84 C 143,87 143,93 141,97 C 141,91 138,87 132,82 C 122,74 110,70 105,62 Z"
+          fill="#C97E22" />
+    <path d="M 108,60 C 103,50 110,40 122,44 C 114,46 110,53 113,58 C 114,61 111,62 108,60 Z" fill="#8A4A12" />
+    <path d="M 132,80 C 136,70 136,58 131,49" fill="none" stroke="#3B2416" stroke-width="1.8" stroke-linecap="round" />
+    <path d="M 118,45 C 124,42 131,43 136,46" fill="none" stroke="#3B2416" stroke-width="1.8" stroke-linecap="round" />
   </g>
 
-  <g class="back-foot-left" style="transform-origin: 148px 104px;">
-    <path d="M 144,100 C 160,114 168,142 158,162 C 154,170 138,172 132,162 C 128,146 130,112 144,100 Z"
-          fill="url(#max-stretch-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
-    <ellipse cx="150" cy="168" rx="10" ry="5.5" fill="url(#max-stretch-white)" stroke="#3B1E12" stroke-width="1.8" />
+  <g class="back-foot-left" style="transform-origin: 124px 94px;">
+    <path class="cel-outline"
+          d="M 120,84 C 132,88 142,96 147,106 C 150,112 148,118 143,120 C 148,122 152,127 151,132 C 150,137 141,138 136,133 C 131,128 131,120 130,112 C 128,102 122,92 117,87 Z"
+          fill="#F7B851" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow"
+          d="M 136,133 C 141,138 150,137 151,132 C 152,135 149,138 146,138 C 140,139 136,136 134,132 Z"
+          fill="#C97E22" />
+    <path d="M 145,129 C 145,132 146,134 146,135" fill="none" stroke="#3B2416" stroke-width="1.5" stroke-linecap="round" />
   </g>
-  <g class="back-foot-right" style="transform-origin: 128px 106px;">
-    <path d="M 124,104 C 112,122 108,148 120,164 C 126,170 142,170 146,158 C 148,142 142,116 130,104 Z"
-          fill="url(#max-stretch-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
-    <ellipse cx="128" cy="168" rx="9.5" ry="5" fill="url(#max-stretch-white)" stroke="#3B1E12" stroke-width="1.8" />
-  </g>
-
-  <g class="pet-body anim-breath" style="transform-origin: 112px 120px;">
-    <path d="M 52,144 C 70,96 118,80 158,94 C 170,100 170,118 156,126 C 128,140 86,154 58,156 C 46,156 44,148 52,144 Z"
-          fill="url(#max-stretch-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
-    <path d="M 66,140 C 80,130 112,124 134,130 C 142,134 138,144 122,148 C 98,154 78,154 66,148 C 60,146 62,142 66,140 Z"
-          fill="url(#max-stretch-white)" stroke="#3B1E12" stroke-width="1.6" stroke-linejoin="round" />
-      <!-- seam-hip -->
-    <path d="M 58,128 C 64,136 72,140 78,136 C 74,128 66,124 58,128 Z" fill="url(#max-stretch-fur)"/>
-    <path d="M 142,128 C 136,136 128,140 122,136 C 126,128 134,124 142,128 Z" fill="url(#max-stretch-fur)"/>
-</g>
-
-  <g class="left-paw" style="transform-origin: 46px 148px;">
-    <path d="M 50,146 L 22,160 C 14,164 14,170 24,172 C 34,174 48,166 54,156 Z"
-          fill="url(#max-stretch-white)" stroke="#3B1E12" stroke-width="2" stroke-linejoin="round" />
-    <ellipse cx="22" cy="170" rx="10.5" ry="5.5" fill="url(#max-stretch-white)" stroke="#3B1E12" stroke-width="2" />
-    <path d="M 18,168 L 18,174" stroke="#3B1E12" stroke-width="1.4" stroke-linecap="round" />
-    <path d="M 26,168 L 26,174" stroke="#3B1E12" stroke-width="1.4" stroke-linecap="round" />
-  </g>
-  <g class="right-paw" style="transform-origin: 64px 148px;">
-    <path d="M 66,146 L 44,162 C 36,166 38,172 48,174 C 58,174 70,166 74,156 Z"
-          fill="url(#max-stretch-white)" stroke="#3B1E12" stroke-width="2" stroke-linejoin="round" />
-    <ellipse cx="44" cy="172" rx="9.5" ry="5" fill="url(#max-stretch-white)" stroke="#3B1E12" stroke-width="2" />
-    <path d="M 40,170 L 40,176" stroke="#3B1E12" stroke-width="1.4" stroke-linecap="round" />
-    <path d="M 48,170 L 48,176" stroke="#3B1E12" stroke-width="1.4" stroke-linecap="round" />
+  <g class="back-foot-right" style="transform-origin: 142px 100px;">
+    <path class="cel-outline"
+          d="M 134,92 C 146,96 156,104 161,114 C 164,120 162,126 158,128 C 164,130 168,135 167,140 C 166,145 156,146 151,141 C 146,136 146,129 145,121 C 143,110 137,99 131,95 Z"
+          fill="#F7B851" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow"
+          d="M 151,141 C 156,146 166,145 167,140 C 167,143 165,145 162,146 C 157,147 152,144 150,140 Z"
+          fill="#C97E22" />
+    <path d="M 160,137 C 160,140 161,142 161,143" fill="none" stroke="#3B2416" stroke-width="1.5" stroke-linecap="round" />
   </g>
 
-  <g class="pet-head" style="transform-origin: 52px 118px;">
-    <g class="pet-ear pet-ear-left" style="transform-origin: 28px 84px;">
-      <path d="M 30,86 C 14,84 6,98 10,116 C 12,126 24,126 30,116 C 34,106 36,90 30,86 Z" fill="url(#max-stretch-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
-      <path d="M 20,96 C 14,104 14,114 18,118" stroke="url(#max-stretch-ear-inner)" stroke-width="3.4" stroke-linecap="round" fill="none" />
+  <g class="anim-breath pet-body" style="transform-origin: 110px 116px; transform: translateY(0px) rotate(0deg);">
+    <path class="cel-outline"
+          d="M 58,146 C 72,112 104,90 138,92 C 152,93 158,104 150,116 C 140,130 112,140 88,150 C 70,157 54,158 58,146 Z"
+          fill="#F7B851" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow"
+          d="M 150,116 C 140,130 112,140 88,150 C 84,152 81,153 78,153 C 86,148 100,140 116,133 C 132,126 143,118 146,110 C 148,112 149,114 150,116 Z"
+          fill="#C97E22" />
+    <path d="M 62,146 C 76,141 96,133 114,126 C 126,121 136,116 142,111 C 145,115 143,119 137,123 C 121,132 99,141 82,146 C 72,149 64,150 62,146 Z"
+          fill="#FFF8EC" stroke="#3B2416" stroke-width="1.8" stroke-linejoin="round" />
+    <path class="cel-shadow" d="M 62,146 C 64,150 72,149 82,146 C 99,141 121,132 137,123 C 140,121 142,119 143,117 C 139,122 124,131 106,139 C 88,146 70,151 62,146 Z" fill="#E9CFA8" />
+    <path d="M 88,108 C 93,117 95,127 93,136 C 88,128 85,117 86,108 Z" fill="#8A4A12" />
+    <path d="M 108,95 C 113,104 115,114 113,123 C 108,115 105,104 106,95 Z" fill="#8A4A12" />
+  </g>
+
+  <g class="left-paw" style="transform-origin: 34px 158px;">
+    <path class="cel-outline"
+          d="M 42,142 C 32,146 14,152 4,157 C -2,160 -1,166 5,167 C 15,169 30,165 37,161 C 42,157 44,148 42,142 Z"
+          fill="#FFF8EC" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow"
+          d="M 5,167 C 15,169 30,165 37,161 C 40,159 41,156 41,153 C 40,158 36,162 29,164 C 20,167 10,168 5,167 Z"
+          fill="#E9CFA8" />
+    <path d="M 7,161 C 7,164 8,166 8,167" fill="none" stroke="#3B2416" stroke-width="1.5" stroke-linecap="round" />
+    <path d="M 14,159 C 14,162 15,164 15,165" fill="none" stroke="#3B2416" stroke-width="1.5" stroke-linecap="round" />
+  </g>
+  <g class="right-paw" style="transform-origin: 58px 158px;">
+    <path class="cel-outline"
+          d="M 60,146 C 50,150 34,155 25,160 C 20,163 21,168 27,169 C 38,171 50,167 56,163 C 61,159 62,151 60,146 Z"
+          fill="#FFF8EC" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow"
+          d="M 27,169 C 38,171 50,167 56,163 C 59,161 60,158 60,155 C 59,160 55,164 48,166 C 39,169 30,170 27,169 Z"
+          fill="#E9CFA8" />
+    <path d="M 28,163 C 28,166 29,168 29,169" fill="none" stroke="#3B2416" stroke-width="1.5" stroke-linecap="round" />
+    <path d="M 35,161 C 35,164 36,166 36,167" fill="none" stroke="#3B2416" stroke-width="1.5" stroke-linecap="round" />
+  </g>
+
+  <g class="pet-head" style="transform-origin: 56px 140px; transform: translateY(0px) rotate(-16deg);">
+    <g class="pet-ear pet-ear-left" style="transform-origin: 34px 118px;">
+      <path class="cel-outline"
+            d="M 36,106 C 24,108 17,120 19,134 C 20,145 30,150 36,144 C 42,137 45,125 44,114 C 43,108 40,105 36,106 Z"
+            fill="#F7B851" stroke="#3B2416" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round" />
+      <path d="M 32,114 C 24,116 21,124 22,133 C 23,140 28,142 31,137 C 35,132 36,122 35,115 Z" fill="#F09A96" />
+      <path class="cel-shadow" d="M 38,109 C 42,119 43,130 41,139 C 44,129 43,116 38,108 Z" fill="#C97E22" />
     </g>
-    <g class="pet-ear pet-ear-right" style="transform-origin: 74px 78px;">
-      <path d="M 72,80 C 88,74 100,88 96,108 C 94,118 82,120 76,108 C 72,96 68,86 72,80 Z" fill="url(#max-stretch-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
-      <path d="M 84,88 C 90,96 90,106 86,112" stroke="url(#max-stretch-ear-inner)" stroke-width="3.5" stroke-linecap="round" fill="none" />
+    <g class="pet-ear pet-ear-right" style="transform-origin: 74px 108px;">
+      <path class="cel-outline"
+            d="M 76,102 C 88,104 95,116 93,130 C 91,141 81,146 75,139 C 69,132 67,119 69,109 C 70,104 73,101 76,102 Z"
+            fill="#F7B851" stroke="#3B2416" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round" />
+      <path d="M 79,110 C 87,112 89,120 87,128 C 86,135 81,137 78,132 C 74,127 73,117 75,111 Z" fill="#F09A96" />
+      <path class="cel-shadow" d="M 72,104 C 68,114 68,126 70,135 C 67,125 68,112 73,103 Z" fill="#C97E22" />
     </g>
 
-    <!-- seam-ruff -->
-    <path d="M 44,116 C 54,126 68,130 82,124 C 70,116 54,114 44,116 Z" fill="url(#max-stretch-fur)"/>
-    <path d="M 32,88 C 28,76 44,64 62,64 C 84,64 98,76 94,88 C 104,94 106,106 98,114 C 92,122 80,128 60,128 C 40,128 30,122 26,114 C 20,106 24,94 32,88 Z"
-          fill="url(#max-stretch-fur)" stroke="#3B1E12" stroke-width="2.2" stroke-linejoin="round" />
-    <path d="M 58,66 C 60,80 56,92 48,100 C 48,100 62,104 62,104 C 62,104 76,100 76,100 C 70,90 66,80 68,66 Z" fill="url(#max-stretch-white)" />
-    <ellipse cx="54" cy="108" rx="14" ry="10" fill="url(#max-stretch-white)" stroke="#3B1E12" stroke-width="1.6" />
-    <ellipse cx="50" cy="102" rx="5" ry="3.4" fill="#1C1917" />
-    <circle cx="48.5" cy="100.5" r="1.2" fill="#FFFFFF" />
-    <path d="M 46,106 Q 52,110 52,106 Q 52,110 60,106" stroke="#3B1E12" stroke-width="1.6" fill="none" stroke-linecap="round" />
-    <path d="M 50,107 C 50,115 58,115 58,107 Z" fill="#FB7185" stroke="#3B1E12" stroke-width="1.1" />
-    <ellipse cx="38" cy="108" rx="6" ry="3.4" fill="#FB7185" opacity="0.45" />
-    <ellipse cx="82" cy="106" rx="6" ry="3.4" fill="#FB7185" opacity="0.45" />
+    <path class="cel-outline"
+          d="M 56,100 C 34,100 20,112 20,128 C 20,144 34,154 56,154 C 78,154 92,144 92,128 C 92,112 78,100 56,100 Z"
+          fill="#F7B851" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow"
+          d="M 20,128 C 20,144 34,154 56,154 C 78,154 92,144 92,128 C 88,140 74,148 56,148 C 38,148 24,140 20,128 Z"
+          fill="#C97E22" />
+
+    <path d="M 44,138 C 44,130 50,126 56,126 C 62,126 68,130 68,138 C 68,146 62,152 56,152 C 50,152 44,146 44,138 Z"
+          fill="#FFF8EC" stroke="#3B2416" stroke-width="1.8" stroke-linejoin="round" />
+    <path class="cel-shadow" d="M 44,141 C 47,148 51,150 56,150 C 61,150 65,148 68,141 C 67,148 62,153 56,153 C 50,153 45,148 44,141 Z" fill="#E9CFA8" />
+    <path d="M 52,128 C 48,130 48,135 52,137 C 56,139 60,137 60,133 C 60,129 56,127 52,128 Z"
+          fill="#3A2A22" stroke="#3B2416" stroke-width="1.5" stroke-linejoin="round" />
+    <path d="M 50,139 C 52,143 60,143 62,139" fill="none" stroke="#3B2416" stroke-width="1.6" stroke-linecap="round" />
+
+    <ellipse cx="30" cy="136" rx="6" ry="3.5" fill="#F0927F" />
+    <ellipse cx="82" cy="136" rx="6" ry="3.5" fill="#F0927F" />
+
     <g class="anim-blink">
-      <ellipse cx="46" cy="92" rx="12.5" ry="14.5" fill="url(#max-stretch-eye-iris)" stroke="#3B1E12" stroke-width="2.2" />
-      <ellipse cx="46" cy="92" rx="8.5" ry="10.5" fill="#0A0503" />
-      <circle class="pet-pupil" data-anchor-x="46" data-anchor-y="92" cx="46" cy="92" r="5" fill="#000000" />
-      <circle cx="42" cy="86" r="4.2" fill="#FFFFFF" />
-      <circle cx="51" cy="97" r="1.8" fill="#FFFFFF" />
-      <ellipse cx="72" cy="90" rx="12.5" ry="14.5" fill="url(#max-stretch-eye-iris)" stroke="#3B1E12" stroke-width="2.2" />
-      <ellipse cx="72" cy="90" rx="8.5" ry="10.5" fill="#0A0503" />
-      <circle class="pet-pupil" data-anchor-x="72" data-anchor-y="90" cx="72" cy="90" r="5" fill="#000000" />
-      <circle cx="68" cy="84" r="4.2" fill="#FFFFFF" />
-      <circle cx="77" cy="95" r="1.8" fill="#FFFFFF" />
+      <ellipse class="cel-outline" cx="42" cy="124" rx="12" ry="14" fill="#6B3A12" stroke="#3B2416" stroke-width="3.2" />
+      <path class="cel-shadow" d="M 30,130 C 31,136 36,139 42,139 C 48,139 54,134 54.5,126 Z" fill="#8A4A12" />
+      <circle class="pet-pupil" data-anchor-x="42" data-anchor-y="124" cx="42" cy="124" r="4.6" fill="#160C06" />
+      <circle cx="38" cy="118" r="3.7" fill="#FFFFFF" />
+      <circle cx="46" cy="130" r="1.8" fill="#FFFFFF" />
+      <ellipse class="cel-outline" cx="68" cy="124" rx="12" ry="14" fill="#6B3A12" stroke="#3B2416" stroke-width="3.2" />
+      <path class="cel-shadow" d="M 56,130 C 57,136 62,139 68,139 C 74,139 80,134 80.5,126 Z" fill="#8A4A12" />
+      <circle class="pet-pupil" data-anchor-x="68" data-anchor-y="124" cx="68" cy="124" r="4.6" fill="#160C06" />
+      <circle cx="64" cy="118" r="3.7" fill="#FFFFFF" />
+      <circle cx="72" cy="130" r="1.8" fill="#FFFFFF" />
     </g>
   </g>
 </svg>

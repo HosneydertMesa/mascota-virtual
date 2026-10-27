@@ -95,10 +95,10 @@ test('dog walk SVG: 1 pupila (perfil)', () => {
   assert.equal(countPetPupils(dogWalkSVG), 1);
 });
 
-test('dog walk SVG: anchor en (42, 70)', () => {
+test('dog walk SVG: anchor en (48, 66) (ojo de perfil de Max)', () => {
   const anchors = extractPupilAnchors(dogWalkSVG);
   assert.equal(anchors.length, 1);
-  assert.deepEqual(anchors[0], { x: 42, y: 70 });
+  assert.deepEqual(anchors[0], { x: 48, y: 66 });
 });
 
 // --- Dog sleep (sin pupilas) ---
@@ -148,11 +148,11 @@ test('cat sit/lay/stretch: pupilas y anchors de produccion', () => {
 
 test('dog sit/lay/stretch: pupilas y anchors de produccion', () => {
   assert.equal(countPetPupils(dogSitSVG), 2);
-  assert.deepEqual(extractPupilAnchors(dogSitSVG), [{ x: 80, y: 74 }, { x: 120, y: 74 }]);
+  assert.deepEqual(extractPupilAnchors(dogSitSVG), [{ x: 76, y: 74 }, { x: 124, y: 74 }]);
   assert.equal(countPetPupils(dogLaySVG), 2);
-  assert.deepEqual(extractPupilAnchors(dogLaySVG), [{ x: 64, y: 88 }, { x: 92, y: 88 }]);
+  assert.deepEqual(extractPupilAnchors(dogLaySVG), [{ x: 50, y: 116 }, { x: 78, y: 116 }]);
   assert.equal(countPetPupils(dogStretchSVG), 2);
-  assert.deepEqual(extractPupilAnchors(dogStretchSVG), [{ x: 46, y: 92 }, { x: 72, y: 90 }]);
+  assert.deepEqual(extractPupilAnchors(dogStretchSVG), [{ x: 42, y: 124 }, { x: 68, y: 124 }]);
 });
 
 // --- Walk cycle: patas individuales con clase para CSS swing ---
@@ -555,15 +555,19 @@ test('animations.css: walk origins son perfil (no frontal 58,132); sit conserva 
   const dogLp = extractRule(css, '.dog-walk .left-paw');
   const dogRp = extractRule(css, '.dog-walk .right-paw');
   assert.ok(dogBfl, 'missing .dog-walk .back-foot-left rule');
-  assert.match(dogBfl, /transform-origin:\s*154px\s+124px/);
+  assert.match(dogBfl, /transform-origin:\s*124px\s+104px/);
   assert.doesNotMatch(dogBfl, /56px\s+134px/);
-  assert.match(dogBfr, /transform-origin:\s*116px\s+122px/);
-  assert.match(dogLp, /transform-origin:\s*78px\s+116px/);
-  assert.match(dogRp, /transform-origin:\s*58px\s+114px/);
+  assert.match(dogBfr, /transform-origin:\s*138px\s+100px/);
+  assert.match(dogLp, /transform-origin:\s*74px\s+140px/);
+  assert.match(dogRp, /transform-origin:\s*100px\s+140px/);
 
   const catSitBfl = extractRule(css, 'body[data-pet="cat"] #pet-container.sitting .back-foot-left');
   assert.ok(catSitBfl, 'missing Luna sit back-foot-left origin');
   assert.match(catSitBfl, /transform-origin:\s*56px\s+148px/);
+
+  const dogSitBfl = extractRule(css, 'body[data-pet="dog"] #pet-container.sitting .back-foot-left');
+  assert.ok(dogSitBfl, 'missing Max sit back-foot-left origin');
+  assert.match(dogSitBfl, /transform-origin:\s*70px\s+148px/);
 
   const catWalkTail = extractRule(css, '.walking-bob.cat-walk .anim-wag');
   assert.ok(catWalkTail, 'missing Luna walk tail origin rule');
@@ -572,7 +576,8 @@ test('animations.css: walk origins son perfil (no frontal 58,132); sit conserva 
 
   const dogWalkTail = extractRule(css, '.walking-bob.dog-walk .anim-wag-fast');
   assert.ok(dogWalkTail, 'missing Max walk tail origin rule');
-  assert.match(dogWalkTail, /transform-origin:\s*158px\s+112px/);
+  assert.match(dogWalkTail, /transform-origin:\s*146px\s+104px/);
+  assert.doesNotMatch(dogWalkTail, /158px\s+112px/);
 });
 
 test('animations.css: tail sway amplitude es >= 30deg', () => {
@@ -854,7 +859,8 @@ const MASS_CLASSES = [
 /**
  * Poses con contrato cel activo.
  * Paso 1 activo las 2 idle de referencia; el paso 2 extiende el contrato a
- * las 6 poses de Luna. El ultimo campo es el conteo de pupilas esperado
+ * las 6 poses de Luna; el paso 3 lo extiende a las 6 poses de Max.
+ * El ultimo campo es el conteo de pupilas esperado
  * (2 de frente, 1 de perfil, 0 dormida).
  */
 const CEL_POSES = [
@@ -864,7 +870,12 @@ const CEL_POSES = [
   ['cat sit', catSitSVG, CAT_PALETTE, 2],
   ['cat lay', catLaySVG, CAT_PALETTE, 2],
   ['cat stretch', catStretchSVG, CAT_PALETTE, 2],
-  ['dog idle', dogIdleSVG, DOG_PALETTE, 2]
+  ['dog idle', dogIdleSVG, DOG_PALETTE, 2],
+  ['dog walk', dogWalkSVG, DOG_PALETTE, 1],
+  ['dog sleep', dogSleepSVG, DOG_PALETTE, 0],
+  ['dog sit', dogSitSVG, DOG_PALETTE, 2],
+  ['dog lay', dogLaySVG, DOG_PALETTE, 2],
+  ['dog stretch', dogStretchSVG, DOG_PALETTE, 2]
 ];
 
 /** Tags de dibujo de un SVG (sin el <svg> raiz, sus cierres ni los <g> contenedor). */
@@ -1114,6 +1125,57 @@ test('animations.css: los pivotes por estado de Luna coinciden con el transform-
     ['cat sleep', catSleepSVG, 'body[data-pet="cat"] #pet-container.sleeping'],
     ['cat lay', catLaySVG, 'body[data-pet="cat"] #pet-container.laying'],
     ['cat stretch', catStretchSVG, 'body[data-pet="cat"] #pet-container.stretching']
+  ];
+  const groups = [
+    ['.anim-wag', 'anim-wag'],
+    ['.pet-body', 'pet-body'],
+    ['.pet-head', 'pet-head']
+  ];
+  for (const [name, svg, prefix] of cases) {
+    for (const [selector, cls] of groups) {
+      const rule = extractRule(css, `${prefix} ${selector}`);
+      assert.ok(rule, `animations.css: falta la regla ${name} "${prefix} ${selector}"`);
+      const cssOrigin = /transform-origin:\s*([-\d.]+)px\s+([-\d.]+)px/.exec(rule);
+      assert.ok(cssOrigin, `animations.css: "${prefix} ${selector}" sin transform-origin`);
+      const inline = inlineTransformOrigin(svg, cls);
+      assert.ok(inline, `${name}: el grupo .${cls} no tiene transform-origin inline`);
+      assert.equal(parseFloat(cssOrigin[1]), inline.x,
+        `${name}: ${selector} CSS != SVG (x)`);
+      assert.equal(parseFloat(cssOrigin[2]), inline.y,
+        `${name}: ${selector} CSS != SVG (y)`);
+    }
+  }
+});
+
+// =============================================================
+// PIVOTES POR ESTADO (Max) — cola, cuerpo y cabeza en sleep/lay/stretch.
+// Mismo contrato que Luna: la regla idle tiene especificidad mayor, asi que
+// las reglas por estado necesitan !important.
+// =============================================================
+
+test('animations.css: Max tiene regla de pivote por estado (sleeping/laying/stretching)', () => {
+  const css = readCss(ANIM_CSS_PATH);
+  const states = ['sleeping', 'laying', 'stretching'];
+  const groups = ['.anim-wag', '.pet-body', '.pet-head'];
+  for (const state of states) {
+    for (const selector of groups) {
+      const full = `body[data-pet="dog"] #pet-container.${state} ${selector}`;
+      const rule = extractRule(css, full);
+      assert.ok(rule, `animations.css: falta la regla de estado "${full}"`);
+      assert.match(rule, /transform-origin:\s*([-\d.]+)px\s+([-\d.]+)px/,
+        `animations.css: "${full}" sin transform-origin`);
+      assert.match(rule, /!important/,
+        `animations.css: "${full}" necesita !important (la regla idle gana en especificidad)`);
+    }
+  }
+});
+
+test('animations.css: los pivotes por estado de Max coinciden con el transform-origin inline del SVG', () => {
+  const css = readCss(ANIM_CSS_PATH);
+  const cases = [
+    ['dog sleep', dogSleepSVG, 'body[data-pet="dog"] #pet-container.sleeping'],
+    ['dog lay', dogLaySVG, 'body[data-pet="dog"] #pet-container.laying'],
+    ['dog stretch', dogStretchSVG, 'body[data-pet="dog"] #pet-container.stretching']
   ];
   const groups = [
     ['.anim-wag', 'anim-wag'],
