@@ -539,44 +539,25 @@ test('animations.css: walk origins son perfil (no frontal 58,132); sit conserva 
     assert.ok(!css.includes(bad), `animations.css still has OLD transform-origin: ${bad}`);
   }
 
+  // El VALOR EXACTO de cada pivote no se comprueba aca con literales: lo
+  // hace el guard derivado (CSS <-> SVG) del final de este archivo, que
+  // compara la regla que gana la cascada contra el transform-origin
+  // inline del <g> de la pose. Aca solo queda el guard negativo: el walk
+  // es perfil, no puede volver a los pivotes frontales viejos.
   const catBfl = extractRule(css, '.cat-walk .back-foot-left');
-  const catBfr = extractRule(css, '.cat-walk .back-foot-right');
-  const catLp = extractRule(css, '.cat-walk .left-paw');
-  const catRp = extractRule(css, '.cat-walk .right-paw');
   assert.ok(catBfl, 'missing .cat-walk .back-foot-left rule');
-  assert.match(catBfl, /transform-origin:\s*126px\s+118px/);
   assert.doesNotMatch(catBfl, /58px\s+132px/);
-  assert.match(catBfr, /transform-origin:\s*140px\s+114px/);
-  assert.match(catLp, /transform-origin:\s*74px\s+138px/);
-  assert.match(catRp, /transform-origin:\s*98px\s+138px/);
 
   const dogBfl = extractRule(css, '.dog-walk .back-foot-left');
-  const dogBfr = extractRule(css, '.dog-walk .back-foot-right');
-  const dogLp = extractRule(css, '.dog-walk .left-paw');
-  const dogRp = extractRule(css, '.dog-walk .right-paw');
   assert.ok(dogBfl, 'missing .dog-walk .back-foot-left rule');
-  assert.match(dogBfl, /transform-origin:\s*124px\s+104px/);
   assert.doesNotMatch(dogBfl, /56px\s+134px/);
-  assert.match(dogBfr, /transform-origin:\s*138px\s+100px/);
-  assert.match(dogLp, /transform-origin:\s*74px\s+140px/);
-  assert.match(dogRp, /transform-origin:\s*100px\s+140px/);
-
-  const catSitBfl = extractRule(css, 'body[data-pet="cat"] #pet-container.sitting .back-foot-left');
-  assert.ok(catSitBfl, 'missing Luna sit back-foot-left origin');
-  assert.match(catSitBfl, /transform-origin:\s*56px\s+148px/);
-
-  const dogSitBfl = extractRule(css, 'body[data-pet="dog"] #pet-container.sitting .back-foot-left');
-  assert.ok(dogSitBfl, 'missing Max sit back-foot-left origin');
-  assert.match(dogSitBfl, /transform-origin:\s*70px\s+148px/);
 
   const catWalkTail = extractRule(css, '.walking-bob.cat-walk .anim-wag');
   assert.ok(catWalkTail, 'missing Luna walk tail origin rule');
-  assert.match(catWalkTail, /transform-origin:\s*138px\s+122px/);
   assert.doesNotMatch(catWalkTail, /130px\s+145px/);
 
   const dogWalkTail = extractRule(css, '.walking-bob.dog-walk .anim-wag-fast');
   assert.ok(dogWalkTail, 'missing Max walk tail origin rule');
-  assert.match(dogWalkTail, /transform-origin:\s*146px\s+104px/);
   assert.doesNotMatch(dogWalkTail, /158px\s+112px/);
 });
 
@@ -1051,52 +1032,6 @@ test('cel: cada pupila conserva su ancla y cae dentro de su iris', () => {
 });
 
 // =============================================================
-// PIVOTES idle — el transform-origin del CSS debe coincidir con el
-// transform-origin inline del grupo SVG equivalente (plan §5).
-// El guard derivado de las 12 poses llega en el paso 4.
-// =============================================================
-
-/** transform-origin inline del primer <g class="...cls...">. */
-function inlineTransformOrigin(svg, cls) {
-  const re = new RegExp(
-    `<g[^>]*class="[^"]*\\b${cls}\\b[^"]*"[^>]*style="[^"]*transform-origin:\\s*([-\\d.]+)px\\s+([-\\d.]+)px`
-  );
-  const m = re.exec(svg);
-  return m ? { x: parseFloat(m[1]), y: parseFloat(m[2]) } : null;
-}
-
-test('animations.css: los pivotes idle (Luna y Max) coinciden con el transform-origin inline del SVG', () => {
-  const css = readCss(ANIM_CSS_PATH);
-  const cases = [
-    ['cat', catIdleSVG, 'body[data-pet="cat"] #pet-container:not(.cat-walk):not(.sitting)'],
-    ['dog', dogIdleSVG, 'body[data-pet="dog"] #pet-container:not(.dog-walk):not(.sitting)']
-  ];
-  const groups = [
-    ['.anim-wag', 'anim-wag'],
-    ['.back-foot-left', 'back-foot-left'],
-    ['.back-foot-right', 'back-foot-right'],
-    ['.left-paw', 'left-paw'],
-    ['.right-paw', 'right-paw'],
-    ['.pet-body', 'pet-body'],
-    ['.pet-head', 'pet-head']
-  ];
-  for (const [species, svg, prefix] of cases) {
-    for (const [selector, cls] of groups) {
-      const rule = extractRule(css, `${prefix} ${selector}`);
-      assert.ok(rule, `animations.css: falta la regla idle de ${species} "${prefix} ${selector}"`);
-      const cssOrigin = /transform-origin:\s*([-\d.]+)px\s+([-\d.]+)px/.exec(rule);
-      assert.ok(cssOrigin, `animations.css: "${prefix} ${selector}" sin transform-origin`);
-      const inline = inlineTransformOrigin(svg, cls);
-      assert.ok(inline, `${species} idle: el grupo .${cls} no tiene transform-origin inline`);
-      assert.equal(parseFloat(cssOrigin[1]), inline.x,
-        `${species} idle: ${selector} CSS != SVG (x)`);
-      assert.equal(parseFloat(cssOrigin[2]), inline.y,
-        `${species} idle: ${selector} CSS != SVG (y)`);
-    }
-  }
-});
-
-// =============================================================
 // PIVOTES POR ESTADO (Luna) — cola, cuerpo y cabeza en sleep/lay/stretch.
 // Las reglas nuevas usan !important (la regla idle tiene especificidad
 // mayor), asi que el pivote idle no debe pisar la geometria de la pose.
@@ -1115,34 +1050,6 @@ test('animations.css: Luna tiene regla de pivote por estado (sleeping/laying/str
         `animations.css: "${full}" sin transform-origin`);
       assert.match(rule, /!important/,
         `animations.css: "${full}" necesita !important (la regla idle gana en especificidad)`);
-    }
-  }
-});
-
-test('animations.css: los pivotes por estado de Luna coinciden con el transform-origin inline del SVG', () => {
-  const css = readCss(ANIM_CSS_PATH);
-  const cases = [
-    ['cat sleep', catSleepSVG, 'body[data-pet="cat"] #pet-container.sleeping'],
-    ['cat lay', catLaySVG, 'body[data-pet="cat"] #pet-container.laying'],
-    ['cat stretch', catStretchSVG, 'body[data-pet="cat"] #pet-container.stretching']
-  ];
-  const groups = [
-    ['.anim-wag', 'anim-wag'],
-    ['.pet-body', 'pet-body'],
-    ['.pet-head', 'pet-head']
-  ];
-  for (const [name, svg, prefix] of cases) {
-    for (const [selector, cls] of groups) {
-      const rule = extractRule(css, `${prefix} ${selector}`);
-      assert.ok(rule, `animations.css: falta la regla ${name} "${prefix} ${selector}"`);
-      const cssOrigin = /transform-origin:\s*([-\d.]+)px\s+([-\d.]+)px/.exec(rule);
-      assert.ok(cssOrigin, `animations.css: "${prefix} ${selector}" sin transform-origin`);
-      const inline = inlineTransformOrigin(svg, cls);
-      assert.ok(inline, `${name}: el grupo .${cls} no tiene transform-origin inline`);
-      assert.equal(parseFloat(cssOrigin[1]), inline.x,
-        `${name}: ${selector} CSS != SVG (x)`);
-      assert.equal(parseFloat(cssOrigin[2]), inline.y,
-        `${name}: ${selector} CSS != SVG (y)`);
     }
   }
 });
@@ -1170,30 +1077,378 @@ test('animations.css: Max tiene regla de pivote por estado (sleeping/laying/stre
   }
 });
 
-test('animations.css: los pivotes por estado de Max coinciden con el transform-origin inline del SVG', () => {
-  const css = readCss(ANIM_CSS_PATH);
-  const cases = [
-    ['dog sleep', dogSleepSVG, 'body[data-pet="dog"] #pet-container.sleeping'],
-    ['dog lay', dogLaySVG, 'body[data-pet="dog"] #pet-container.laying'],
-    ['dog stretch', dogStretchSVG, 'body[data-pet="dog"] #pet-container.stretching']
-  ];
-  const groups = [
-    ['.anim-wag', 'anim-wag'],
-    ['.pet-body', 'pet-body'],
-    ['.pet-head', 'pet-head']
-  ];
-  for (const [name, svg, prefix] of cases) {
-    for (const [selector, cls] of groups) {
-      const rule = extractRule(css, `${prefix} ${selector}`);
-      assert.ok(rule, `animations.css: falta la regla ${name} "${prefix} ${selector}"`);
-      const cssOrigin = /transform-origin:\s*([-\d.]+)px\s+([-\d.]+)px/.exec(rule);
-      assert.ok(cssOrigin, `animations.css: "${prefix} ${selector}" sin transform-origin`);
-      const inline = inlineTransformOrigin(svg, cls);
-      assert.ok(inline, `${name}: el grupo .${cls} no tiene transform-origin inline`);
-      assert.equal(parseFloat(cssOrigin[1]), inline.x,
-        `${name}: ${selector} CSS != SVG (x)`);
-      assert.equal(parseFloat(cssOrigin[2]), inline.y,
-        `${name}: ${selector} CSS != SVG (y)`);
+// =============================================================
+// GUARD DE DERIVA CSS <-> SVG (12 poses) — plan §5, paso 4
+//
+// El transform-origin del CSS y el transform-origin inline del <g> del
+// SVG describen el MISMO pivote. Si el arte se redibuja y el CSS no se
+// actualiza, la animacion rota en pantalla y ningun test falla.
+//
+// Este guard es DERIVADO: no repite literales. Para cada (especie,
+// estado, grupo) calcula que regla CSS gana la cascada y la compara con
+// el transform-origin inline del <g> equivalente de esa pose.
+// =============================================================
+
+/** Las 12 poses de produccion con su estado de animacion. */
+const PIVOT_POSES = [
+  ['cat', 'idle', catIdleSVG],
+  ['cat', 'walk', catWalkSVG],
+  ['cat', 'sleep', catSleepSVG],
+  ['cat', 'sit', catSitSVG],
+  ['cat', 'lay', catLaySVG],
+  ['cat', 'stretch', catStretchSVG],
+  ['dog', 'idle', dogIdleSVG],
+  ['dog', 'walk', dogWalkSVG],
+  ['dog', 'sleep', dogSleepSVG],
+  ['dog', 'sit', dogSitSVG],
+  ['dog', 'lay', dogLaySVG],
+  ['dog', 'stretch', dogStretchSVG]
+];
+
+/**
+ * Groups con pivote verificado por estado (plan §5).
+ * Cola, cuerpo y cabeza rotan en los 6 estados; las patas solo rotan
+ * en walk y sit (en sleep/lay/stretch su pivote es inerte).
+ */
+const PIVOT_GROUPS_BY_STATE = {
+  idle: ['anim-wag', 'pet-body', 'pet-head'],
+  walk: ['anim-wag', 'pet-body', 'pet-head',
+    'back-foot-left', 'back-foot-right', 'left-paw', 'right-paw'],
+  sleep: ['anim-wag', 'pet-body', 'pet-head'],
+  sit: ['anim-wag', 'pet-body', 'pet-head',
+    'back-foot-left', 'back-foot-right', 'left-paw', 'right-paw'],
+  lay: ['anim-wag', 'pet-body', 'pet-head'],
+  stretch: ['anim-wag', 'pet-body', 'pet-head']
+};
+
+/* ---------- Lado CSS: reglas, especificidad y cascada ---------- */
+
+/** Indice de la llave que cierra el bloque abierto en `openIndex`. */
+function matchBraceIndex(css, openIndex) {
+  let depth = 0;
+  for (let i = openIndex; i < css.length; i++) {
+    if (css[i] === '{') depth++;
+    else if (css[i] === '}') {
+      depth--;
+      if (depth === 0) return i;
     }
+  }
+  return css.length;
+}
+
+/** Divide una lista de selectores por comas (respetando parentesis). */
+function splitSelectorList(prelude) {
+  const out = [];
+  let depth = 0;
+  let current = '';
+  for (const ch of prelude) {
+    if (ch === '(') depth++;
+    else if (ch === ')') depth--;
+    if (ch === ',' && depth === 0) {
+      out.push(current.trim());
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  if (current.trim()) out.push(current.trim());
+  return out;
+}
+
+/**
+ * transform-origin declarado en un bloque de declaraciones.
+ * Devuelve null si la regla no declara la propiedad.
+ */
+function extractTransformOrigin(body) {
+  const m = /(?:^|[;{]|\s)transform-origin\s*:\s*([^;]+)/i.exec(body);
+  if (!m) return null;
+  let raw = m[1].trim();
+  const important = /!\s*important$/i.test(raw);
+  raw = raw.replace(/!\s*important$/i, '').trim();
+  const px = /^([-\d.]+)px\s+([-\d.]+)px$/.exec(raw);
+  return {
+    raw,
+    important,
+    x: px ? parseFloat(px[1]) : null,
+    y: px ? parseFloat(px[2]) : null
+  };
+}
+
+/** Todas las reglas de estilo del CSS, en orden de documento. */
+function parseStyleRules(css) {
+  const source = stripCssComments(css);
+  const rules = [];
+  let i = 0;
+  let preludeStart = 0;
+  while (i < source.length) {
+    if (source[i] === '}') {
+      i++;
+      preludeStart = i;
+      continue;
+    }
+    if (source[i] !== '{') {
+      i++;
+      continue;
+    }
+    const prelude = source.slice(preludeStart, i).trim();
+    const end = matchBraceIndex(source, i);
+    const body = source.slice(i + 1, end);
+    // Los at-rules (@keyframes, @media...) no fijan pivotes: se saltan.
+    if (prelude && !prelude.startsWith('@')) {
+      for (const selector of splitSelectorList(prelude)) {
+        rules.push({
+          selector,
+          transformOrigin: extractTransformOrigin(body),
+          specificity: cssSpecificity(selector),
+          order: rules.length
+        });
+      }
+    }
+    i = end + 1;
+    preludeStart = i;
+  }
+  return rules;
+}
+
+/** Suma la especificidad de un selector simple (sin combinadores). */
+function addCompoundSpecificity(compound, counts) {
+  let rest = compound;
+  const notRe = /:not\(([^()]*)\)/g;
+  let m;
+  // :not(X) tiene la especificidad de X.
+  while ((m = notRe.exec(rest)) !== null) {
+    addCompoundSpecificity(m[1], counts);
+  }
+  rest = rest.replace(notRe, ' ');
+  counts.ids += (rest.match(/#[A-Za-z0-9_-]+/g) || []).length;
+  counts.classes += (rest.match(/\.[A-Za-z0-9_-]+/g) || []).length;
+  counts.classes += (rest.match(/\[[^\]]*\]/g) || []).length;
+  counts.classes += (rest.match(/:[A-Za-z-]+/g) || []).length;
+  if (/^[a-zA-Z][A-Za-z0-9-]*/.test(rest)) counts.types += 1;
+}
+
+/** Especificidad CSS de un selector: { ids, classes, types }. */
+function cssSpecificity(selector) {
+  const counts = { ids: 0, classes: 0, types: 0 };
+  for (const compound of selector.split(/\s+/).filter(Boolean)) {
+    addCompoundSpecificity(compound, counts);
+  }
+  return counts;
+}
+
+/** Compara dos especificidades (positivo = la primera gana). */
+function compareSpecificity(a, b) {
+  if (a.ids !== b.ids) return a.ids - b.ids;
+  if (a.classes !== b.classes) return a.classes - b.classes;
+  return a.types - b.types;
+}
+
+/* ---------- Lado DOM: matcher de selectores ---------- */
+
+/** Un selector simple coincide con un elemento? (soporta #id, .clase, [attr], :not()) */
+function compoundMatches(compound, el) {
+  let rest = compound;
+  const notRe = /:not\(([^()]*)\)/g;
+  const nots = [];
+  let m;
+  while ((m = notRe.exec(rest)) !== null) nots.push(m[1]);
+  rest = rest.replace(notRe, ' ');
+
+  const idRe = /#([A-Za-z0-9_-]+)/g;
+  while ((m = idRe.exec(rest)) !== null) {
+    if (el.id !== m[1]) return false;
+  }
+  const clsRe = /\.([A-Za-z0-9_-]+)/g;
+  while ((m = clsRe.exec(rest)) !== null) {
+    if (!el.classes.includes(m[1])) return false;
+  }
+  const attrRe = /\[([A-Za-z0-9_-]+)(?:=(?:"([^"]*)"|'([^']*)'|([^\]]*)))?\]/g;
+  while ((m = attrRe.exec(rest)) !== null) {
+    const name = m[1];
+    if (!(name in el.attrs)) return false;
+    const value = m[2] !== undefined ? m[2] : (m[3] !== undefined ? m[3] : m[4]);
+    if (value !== undefined && el.attrs[name] !== value) return false;
+  }
+  for (const not of nots) {
+    const inner = /^\.([A-Za-z0-9_-]+)$/.exec(not);
+    if (!inner) return false;
+    if (el.classes.includes(inner[1])) return false;
+  }
+  const typeMatch = /^([a-zA-Z][A-Za-z0-9-]*)/.exec(rest);
+  if (typeMatch && el.tag !== typeMatch[1]) return false;
+  return true;
+}
+
+/** El ultimo selector simple debe caer sobre el elemento destino. */
+function matchCompounds(compounds, ci, chain, ei) {
+  if (!compoundMatches(compounds[ci], chain[ei])) return false;
+  if (ci === 0) return true;
+  for (let k = ei - 1; k >= 0; k--) {
+    if (matchCompounds(compounds, ci - 1, chain, k)) return true;
+  }
+  return false;
+}
+
+/** Un selector (solo combinador descendente) coincide con la cadena? */
+function selectorMatches(selector, chain) {
+  const compounds = selector.split(/\s+/).filter(Boolean);
+  if (compounds.length === 0) return false;
+  return matchCompounds(compounds, compounds.length - 1, chain, chain.length - 1);
+}
+
+/** Clases que #pet-container lleva en cada estado (ver src/renderer/pet-viewport.js). */
+function containerClassesFor(species, state) {
+  switch (state) {
+    case 'walk': return ['walking-bob', `${species}-walk`];
+    case 'sleep': return ['sleeping'];
+    case 'sit': return ['sitting'];
+    case 'lay': return ['laying'];
+    case 'stretch': return ['stretching'];
+    case 'idle': return [];
+    default: throw new Error(`estado desconocido: ${state}`);
+  }
+}
+
+/** Cadena de elementos que envuelve al <g> de la mascota en el DOM. */
+function petElementChain(species, state, groupClasses) {
+  return [
+    { tag: 'body', id: null, classes: [], attrs: { 'data-pet': species } },
+    { tag: null, id: 'pet-container', classes: containerClassesFor(species, state), attrs: {} },
+    { tag: null, id: 'pet-svg-wrapper', classes: [], attrs: {} },
+    { tag: 'svg', id: 'pet-svg', classes: [], attrs: {} },
+    { tag: 'g', id: null, classes: groupClasses, attrs: {} }
+  ];
+}
+
+/**
+ * Regla que gana la cascada para un <g> en un estado dado:
+ * primero !important, luego especificidad, luego orden del documento.
+ */
+function winningPivotRule(rules, chain) {
+  const candidates = rules.filter((rule) =>
+    rule.transformOrigin && selectorMatches(rule.selector, chain));
+  if (candidates.length === 0) return null;
+  let winner = candidates[0];
+  for (const rule of candidates.slice(1)) {
+    if (rule.transformOrigin.important !== winner.transformOrigin.important) {
+      if (rule.transformOrigin.important) winner = rule;
+      continue;
+    }
+    const diff = compareSpecificity(rule.specificity, winner.specificity);
+    if (diff > 0) winner = rule;
+    else if (diff === 0 && rule.order > winner.order) winner = rule;
+  }
+  return winner;
+}
+
+/* ---------- Lado SVG ---------- */
+
+/** Tag de apertura del <g> que lleva la clase `cls`. */
+function groupOpenTag(svg, cls) {
+  const re = new RegExp(`<g[^>]*class="[^"]*\\b${cls}\\b[^"]*"[^>]*>`);
+  const m = re.exec(svg);
+  return m ? m[0] : null;
+}
+
+/** Tokens de clase de un tag. */
+function classTokens(tag) {
+  const m = /class="([^"]*)"/.exec(tag);
+  return m ? m[1].split(/\s+/).filter(Boolean) : [];
+}
+
+/** transform-origin inline (en px) del <g> de la clase `cls`. */
+function inlineTransformOrigin(svg, cls) {
+  const tag = groupOpenTag(svg, cls);
+  if (!tag) return null;
+  const m = /transform-origin:\s*([-\d.]+)px\s+([-\d.]+)px/.exec(tag);
+  return m ? { x: parseFloat(m[1]), y: parseFloat(m[2]) } : null;
+}
+
+/** Tags de los hijos directos del <svg> raiz (los elementos de pintado). */
+function rootChildTags(svg) {
+  const open = /<svg\b[^>]*>/.exec(svg);
+  assert.ok(open, 'la pose no tiene <svg> raiz');
+  const inner = svg.slice(open.index + open[0].length);
+  const close = inner.lastIndexOf('</svg>');
+  const body = close === -1 ? inner : inner.slice(0, close);
+  const out = [];
+  const tagRe = /<(\/)?([a-zA-Z][\w-]*)((?:"[^"]*"|'[^']*'|[^>"'])*?)(\/)?>/g;
+  let depth = 0;
+  let m;
+  while ((m = tagRe.exec(body)) !== null) {
+    const closing = Boolean(m[1]);
+    const name = m[2];
+    const selfClosing = Boolean(m[4]);
+    if (closing) {
+      depth--;
+      continue;
+    }
+    if (depth === 0) out.push(m[0]);
+    if (!selfClosing && (name === 'g' || name === 'svg')) depth++;
+  }
+  return out;
+}
+
+/** Orden de pintado de las 12 poses (criterio de aceptacion del plan). */
+const PAINT_ORDER = [
+  'pet-shadow',
+  'anim-wag',
+  'back-foot-left',
+  'back-foot-right',
+  'pet-body',
+  'left-paw',
+  'right-paw',
+  'pet-head'
+];
+
+test('guard de deriva: el pivote que gana el CSS coincide con el transform-origin inline del SVG (12 poses)', () => {
+  // Se parsea el bundle completo (styles.css) y no solo animations.css:
+  // la cascada real es la que ve el navegador, y un stylesheet posterior
+  // podria robar el pivote en silencio.
+  const rules = parseStyleRules(flattenCss(STYLES_ENTRY_PATH));
+  assert.ok(rules.length > 0, 'no se parsearon reglas de estilo del bundle');
+
+  let checked = 0;
+  for (const [species, state, svg] of PIVOT_POSES) {
+    for (const cls of PIVOT_GROUPS_BY_STATE[state]) {
+      const tag = groupOpenTag(svg, cls);
+      assert.ok(tag, `${species} ${state}: falta el grupo .${cls} en el SVG`);
+      const inline = inlineTransformOrigin(svg, cls);
+      assert.ok(inline,
+        `${species} ${state}: el grupo .${cls} no declara transform-origin inline`);
+
+      const chain = petElementChain(species, state, classTokens(tag));
+      const winner = winningPivotRule(rules, chain);
+      assert.ok(winner,
+        `${species} ${state} .${cls}: ninguna regla del CSS fija el transform-origin`);
+      const cssOrigin = winner.transformOrigin;
+      assert.notEqual(cssOrigin.x, null,
+        `${species} ${state} .${cls}: la regla "${winner.selector}" no fija un pivote en px ("${cssOrigin.raw}")`);
+      assert.equal(cssOrigin.x, inline.x,
+        `${species} ${state} .${cls}: CSS "${winner.selector}" (${cssOrigin.x}px) != inline del SVG (${inline.x}px)`);
+      assert.equal(cssOrigin.y, inline.y,
+        `${species} ${state} .${cls}: CSS "${winner.selector}" (${cssOrigin.y}px) != inline del SVG (${inline.y}px)`);
+      checked++;
+    }
+  }
+  assert.equal(checked, 52, 'cobertura del guard de pivotes incompleta');
+});
+
+test('guard de deriva: la sombra de piso sigue siendo el primer elemento y el orden de pintado no se movio', () => {
+  assert.equal(PRODUCTION_POSES.length, 12, 'expected idle/walk/sleep/sit/lay/stretch × cat+dog');
+  for (const [name, svg] of PRODUCTION_POSES) {
+    const children = rootChildTags(svg);
+    assert.equal(children.length, PAINT_ORDER.length,
+      `${name}: el <svg> deberia tener ${PAINT_ORDER.length} elementos de pintado, tiene ${children.length}`);
+    for (let i = 0; i < PAINT_ORDER.length; i++) {
+      const tokens = classTokens(children[i]);
+      assert.ok(tokens.includes(PAINT_ORDER[i]),
+        `${name}: el elemento ${i} deberia ser .${PAINT_ORDER[i]} (es "${tokens.join(' ')}")`);
+      if (i === 0) continue;
+      assert.ok(children[i].startsWith('<g'),
+        `${name}: el elemento ${i} (.${PAINT_ORDER[i]}) deberia ser un <g> hermano`);
+    }
+    assert.ok(classTokens(children[0]).includes('pet-shadow'),
+      `${name}: la sombra de piso debe ser el primer elemento (pintado)`);
   }
 });
