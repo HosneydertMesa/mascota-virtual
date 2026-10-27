@@ -47,11 +47,11 @@ test('cat idle SVG: 2 pupilas (una por ojo)', () => {
   assert.equal(countPetPupils(catIdleSVG), 2);
 });
 
-test('cat idle SVG: anchors de pupila en el centro de cada ojo (74,74) y (110,74)', () => {
+test('cat idle SVG: anchors de pupila en el centro de cada ojo (66,76) y (118,76)', () => {
   const anchors = extractPupilAnchors(catIdleSVG);
   assert.equal(anchors.length, 2);
-  assert.deepEqual(anchors[0], { x: 74, y: 74 });
-  assert.deepEqual(anchors[1], { x: 110, y: 74 });
+  assert.deepEqual(anchors[0], { x: 66, y: 76 });
+  assert.deepEqual(anchors[1], { x: 118, y: 76 });
 });
 
 test('cat idle SVG: viewBox 0 0 200 200', () => {
@@ -82,11 +82,11 @@ test('dog idle SVG: 2 pupilas (una por ojo)', () => {
   assert.equal(countPetPupils(dogIdleSVG), 2);
 });
 
-test('dog idle SVG: anchors en (80, 70) y (120, 70)', () => {
+test('dog idle SVG: anchors en (64, 76) y (120, 76)', () => {
   const anchors = extractPupilAnchors(dogIdleSVG);
   assert.equal(anchors.length, 2);
-  assert.deepEqual(anchors[0], { x: 80, y: 70 });
-  assert.deepEqual(anchors[1], { x: 120, y: 70 });
+  assert.deepEqual(anchors[0], { x: 64, y: 76 });
+  assert.deepEqual(anchors[1], { x: 120, y: 76 });
 });
 
 // --- Dog walk ---
@@ -673,4 +673,403 @@ test('renderer.js dispara sitting, laying, stretching y sleeping (no desde chat)
   assert.ok(sitAt >= 0, 'setState sitting not found');
   assert.ok(chatIdx < 0 || sitAt < chatIdx || sitAt > src.indexOf('function initSettingsButton'),
     'sitting should not be fired from initQuickChat');
+});
+
+// =============================================================
+// SUPERFICIE DE EXPORTS — src/assets/cat.js y src/assets/dog.js
+// Plan: docs/plans/2026-10-27-cel-shading-mascot-redesign.md (paso 1)
+// El dashboard y el renderer Pixi consumen estos nombres: si cambian,
+// la app se rompe en silencio.
+// =============================================================
+
+const catAssets = require('../src/assets/cat');
+const dogAssets = require('../src/assets/dog');
+
+const CAT_EXPORT_SURFACE = {
+  catIdleSVG: 'string',
+  catWalkSVG: 'string',
+  catWalk1SVG: 'string',
+  catWalk2SVG: 'string',
+  catWalk3SVG: 'string',
+  catWalk4SVG: 'string',
+  catWalkFrames: 'array',
+  catSleepSVG: 'string',
+  catSitSVG: 'string',
+  catSitBlinkSVG: 'string',
+  catLaySVG: 'string',
+  catLayBreatheSVG: 'string',
+  catStretchSVG: 'string',
+  catSVG: 'string',
+  getCatPartsForState: 'function'
+};
+
+const DOG_EXPORT_SURFACE = {
+  dogIdleSVG: 'string',
+  dogWalkSVG: 'string',
+  dogWalk1SVG: 'string',
+  dogWalk2SVG: 'string',
+  dogWalk3SVG: 'string',
+  dogWalk4SVG: 'string',
+  dogWalkFrames: 'array',
+  dogSleepSVG: 'string',
+  dogSitSVG: 'string',
+  dogSitBlinkSVG: 'string',
+  dogLaySVG: 'string',
+  dogLayBreatheSVG: 'string',
+  dogStretchSVG: 'string',
+  dogSVG: 'string',
+  getDogPartsForState: 'function'
+};
+
+test('assets: la superficie de exports de cat.js y dog.js no cambia (mismos nombres y tipos)', () => {
+  const modules = [
+    ['cat', catAssets, CAT_EXPORT_SURFACE],
+    ['dog', dogAssets, DOG_EXPORT_SURFACE]
+  ];
+  for (const [species, mod, surface] of modules) {
+    assert.deepEqual(
+      Object.keys(mod).sort(),
+      Object.keys(surface).sort(),
+      `${species}: la superficie de exports cambio`
+    );
+    for (const [name, type] of Object.entries(surface)) {
+      const value = mod[name];
+      if (type === 'array') {
+        assert.ok(Array.isArray(value), `${species}.${name} deberia ser array`);
+      } else {
+        assert.equal(typeof value, type, `${species}.${name} deberia ser ${type}`);
+      }
+    }
+  }
+});
+
+test('assets: alias de produccion (walk1-4 = walk, sitBlink = sit, layBreathe = lay, walkFrames = [walk])', () => {
+  assert.equal(catAssets.catWalk1SVG, catAssets.catWalkSVG);
+  assert.equal(catAssets.catWalk2SVG, catAssets.catWalkSVG);
+  assert.equal(catAssets.catWalk3SVG, catAssets.catWalkSVG);
+  assert.equal(catAssets.catWalk4SVG, catAssets.catWalkSVG);
+  assert.equal(catAssets.catSitBlinkSVG, catAssets.catSitSVG);
+  assert.equal(catAssets.catLayBreatheSVG, catAssets.catLaySVG);
+  assert.equal(catAssets.catSVG, catAssets.catIdleSVG);
+  assert.deepEqual(catAssets.catWalkFrames, [catAssets.catWalkSVG]);
+
+  assert.equal(dogAssets.dogWalk1SVG, dogAssets.dogWalkSVG);
+  assert.equal(dogAssets.dogWalk2SVG, dogAssets.dogWalkSVG);
+  assert.equal(dogAssets.dogWalk3SVG, dogAssets.dogWalkSVG);
+  assert.equal(dogAssets.dogWalk4SVG, dogAssets.dogWalkSVG);
+  assert.equal(dogAssets.dogSitBlinkSVG, dogAssets.dogSitSVG);
+  assert.equal(dogAssets.dogLayBreatheSVG, dogAssets.dogLaySVG);
+  assert.equal(dogAssets.dogSVG, dogAssets.dogIdleSVG);
+  assert.deepEqual(dogAssets.dogWalkFrames, [dogAssets.dogWalkSVG]);
+});
+
+// =============================================================
+// CONTRATO DE PARTES (PixiJS) — getXPartsForState
+// Las 7 ranuras son el contrato que consume src/pet-renderer-pixi.js.
+// =============================================================
+
+const PART_SLOTS = ['head', 'body', 'tail', 'backLegLeft', 'backLegRight', 'frontLegLeft', 'frontLegRight'];
+const PET_STATES = ['idle', 'walking', 'sleeping', 'sitting', 'laying', 'stretching'];
+
+test('assets: getXPartsForState devuelve las 7 ranuras de partes en los 6 estados', () => {
+  const getters = [
+    ['cat', catAssets.getCatPartsForState],
+    ['dog', dogAssets.getDogPartsForState]
+  ];
+  for (const [species, getParts] of getters) {
+    for (const state of PET_STATES) {
+      const parts = getParts(state);
+      assert.ok(Array.isArray(parts) && parts.length > 0,
+        `${species}.${state}: getPartsForState devolvio ${JSON.stringify(parts)}`);
+      for (const part of parts) {
+        assert.deepEqual(
+          Object.keys(part).sort(),
+          PART_SLOTS.slice().sort(),
+          `${species}.${state}: las ranuras de partes cambiaron`
+        );
+        for (const slot of PART_SLOTS) {
+          const value = part[slot];
+          if (value === null || value === undefined) continue;
+          assert.equal(typeof value, 'string',
+            `${species}.${state}.${slot} deberia ser string o null`);
+          assert.match(value, /viewBox="0 0 200 200"/,
+            `${species}.${state}.${slot} sin viewBox="0 0 200 200"`);
+        }
+      }
+    }
+  }
+});
+
+// =============================================================
+// CONTRATO CEL — vocabulario cel-shading (plan §4)
+// Se activa pose por pose: en el paso 1 solo las 2 poses idle de
+// referencia (Luna y Max). Los pasos 2 y 3 extienden la lista.
+// =============================================================
+
+/** Paleta fija de Luna (gato tabby naranja) — plan §4.1. */
+const CAT_PALETTE = {
+  'fur-light': '#F2A85E',
+  'fur-shadow': '#C4783A',
+  'fur-deep': '#8A4A1E',
+  'cream-light': '#FFF4E4',
+  'cream-shadow': '#E4C4A0',
+  'ear-inner': '#F09A96',
+  nose: '#E2707A',
+  blush: '#F08C8C',
+  'eye-iris': '#8C5A2B',
+  'eye-pupil': '#1E0F08',
+  highlight: '#FFFFFF',
+  ink: '#3A1E12',
+  ground: '#28140B'
+};
+
+/** Paleta fija de Max (perro shiba) — plan §4.1. */
+const DOG_PALETTE = {
+  'fur-light': '#F7B851',
+  'fur-shadow': '#C97E22',
+  'fur-deep': '#8A4A12',
+  'cream-light': '#FFF8EC',
+  'cream-shadow': '#E9CFA8',
+  'ear-inner': '#F09A96',
+  nose: '#3A2A22',
+  blush: '#F0927F',
+  'eye-iris': '#6B3A12',
+  'eye-pupil': '#160C06',
+  highlight: '#FFFFFF',
+  ink: '#3B2416',
+  ground: '#28140B'
+};
+
+/** Las 7 masas de cada pose (cola, patas traseras, cuerpo, patas delanteras, cabeza). */
+const MASS_CLASSES = [
+  'anim-wag',
+  'back-foot-left',
+  'back-foot-right',
+  'pet-body',
+  'left-paw',
+  'right-paw',
+  'pet-head'
+];
+
+/** Poses con contrato cel activo en este paso. */
+const CEL_POSES = [
+  ['cat idle', catIdleSVG, CAT_PALETTE],
+  ['dog idle', dogIdleSVG, DOG_PALETTE]
+];
+
+/** Tags de dibujo de un SVG (sin el <svg> raiz, sus cierres ni los <g> contenedor). */
+function svgTags(svg) {
+  return (svg.match(/<[^>]+>/g) || [])
+    .filter((tag) => !/^<\/?(svg|g)\b/.test(tag));
+}
+
+/** Valor de un atributo de un tag (null si no existe). */
+function tagAttr(tag, name) {
+  const m = new RegExp('\\b' + name + '\\s*=\\s*"([^"]*)"').exec(tag);
+  return m ? m[1] : null;
+}
+
+/** Inner HTML del primer <g class="...cls..."> (depth-matched). */
+function groupInner(svg, cls) {
+  const openRe = new RegExp(`<g([^>]*class="[^"]*\\b${cls}\\b[^"]*"[^>]*)>`);
+  const m = openRe.exec(svg);
+  if (!m) return null;
+  let pos = m.index + m[0].length;
+  let depth = 1;
+  while (pos < svg.length && depth > 0) {
+    const nxtOpen = svg.indexOf('<g', pos);
+    const nxtClose = svg.indexOf('</g>', pos);
+    if (nxtClose === -1) return svg.slice(m.index + m[0].length);
+    if (nxtOpen !== -1 && nxtOpen < nxtClose) {
+      depth += 1;
+      pos = nxtOpen + 2;
+    } else {
+      depth -= 1;
+      if (depth === 0) return svg.slice(m.index + m[0].length, nxtClose);
+      pos = nxtClose + 4;
+    }
+  }
+  return svg.slice(m.index + m[0].length);
+}
+
+/** Tags con una clase concreta dentro de un fragmento. */
+function tagsWithClass(fragment, cls) {
+  return fragment.match(new RegExp(`<[^>]*class="[^"]*\\b${cls}\\b[^"]*"[^>]*>`, 'g')) || [];
+}
+
+test('cel (idle): sin degradados ni url(#...) — el sombreado es plano', () => {
+  for (const [name, svg] of CEL_POSES) {
+    assert.doesNotMatch(svg, /linearGradient/i, `${name}: usa linearGradient`);
+    assert.doesNotMatch(svg, /radialGradient/i, `${name}: usa radialGradient`);
+    assert.doesNotMatch(svg, /<stop\b/i, `${name}: usa <stop>`);
+    assert.doesNotMatch(svg, /url\(#/i, `${name}: usa url(#...)`);
+  }
+});
+
+test('cel (idle): todo fill pertenece a la paleta fija de la especie', () => {
+  for (const [name, svg, palette] of CEL_POSES) {
+    const allowed = new Set(Object.values(palette).map((c) => c.toUpperCase()));
+    for (const tag of svgTags(svg)) {
+      const fill = tagAttr(tag, 'fill');
+      assert.ok(fill !== null, `${name}: elemento sin fill: ${tag}`);
+      if (fill === 'none') {
+        // Solo se admite en lineas de detalle (con trazo y sin cel-outline/cel-shadow).
+        assert.ok(tagAttr(tag, 'stroke'), `${name}: fill="none" sin trazo: ${tag}`);
+        assert.doesNotMatch(tag, /class="cel-(outline|shadow)"/,
+          `${name}: cel-outline/cel-shadow con fill="none"`);
+        continue;
+      }
+      assert.match(fill, /^#[0-9A-Fa-f]{6}$/, `${name}: fill no hex "${fill}"`);
+      assert.ok(allowed.has(fill.toUpperCase()),
+        `${name}: fill ${fill} fuera de la paleta de la especie`);
+    }
+  }
+});
+
+test('cel (idle): un solo color de tinta (ink de la especie) en todos los trazos', () => {
+  for (const [name, svg, palette] of CEL_POSES) {
+    const inks = new Set();
+    for (const tag of svgTags(svg)) {
+      const stroke = tagAttr(tag, 'stroke');
+      if (!stroke) continue;
+      assert.match(stroke, /^#[0-9A-Fa-f]{6}$/, `${name}: stroke no hex "${stroke}"`);
+      inks.add(stroke.toUpperCase());
+    }
+    assert.deepEqual([...inks], [palette.ink],
+      `${name}: mas de una tinta de contorno (${[...inks].join(', ')})`);
+  }
+});
+
+test('cel (idle): cada masa tiene su cel-outline (1 por masa, >= 3 en la cabeza) y >= 1 cel-shadow plano', () => {
+  for (const [name, svg] of CEL_POSES) {
+    for (const cls of MASS_CLASSES) {
+      const inner = groupInner(svg, cls);
+      assert.ok(inner !== null, `${name}: falta el grupo .${cls}`);
+      const outlines = tagsWithClass(inner, 'cel-outline');
+      const shadows = tagsWithClass(inner, 'cel-shadow');
+      if (cls === 'pet-head') {
+        assert.ok(outlines.length >= 3,
+          `${name}: .pet-head necesita >= 3 cel-outline (cabeza + 2 orejas), tiene ${outlines.length}`);
+      } else {
+        assert.equal(outlines.length, 1,
+          `${name}: .${cls} debe tener exactamente 1 cel-outline (tiene ${outlines.length})`);
+      }
+      assert.ok(shadows.length >= 1, `${name}: .${cls} sin cel-shadow`);
+      for (const tag of shadows) {
+        assert.equal(tagAttr(tag, 'stroke'), null, `${name}: cel-shadow con trazo: ${tag}`);
+        assert.equal(tagAttr(tag, 'opacity'), null, `${name}: cel-shadow con opacity: ${tag}`);
+      }
+    }
+  }
+});
+
+test('cel (idle): pesos de linea — contorno 3.2-3.6, detalle interior 1.5-2.1', () => {
+  for (const [name, svg] of CEL_POSES) {
+    for (const tag of svgTags(svg)) {
+      const raw = tagAttr(tag, 'stroke-width');
+      if (!raw) continue;
+      const width = parseFloat(raw);
+      assert.ok(Number.isFinite(width), `${name}: stroke-width invalido "${raw}"`);
+      if (/class="[^"]*\bcel-outline\b/.test(tag)) {
+        assert.ok(width >= 3.2 && width <= 3.6,
+          `${name}: cel-outline con stroke-width ${width} (fuera de 3.2-3.6)`);
+      } else {
+        assert.ok(width >= 1.5 && width <= 2.1,
+          `${name}: detalle con stroke-width ${width} (fuera de 1.5-2.1)`);
+      }
+    }
+  }
+});
+
+test('cel (idle): la sombra de piso es el primer elemento y usa el color ground', () => {
+  for (const [name, svg, palette] of CEL_POSES) {
+    const tags = svgTags(svg);
+    const shadow = tags.find((tag) => /class="[^"]*\bpet-shadow\b/.test(tag));
+    assert.ok(shadow, `${name}: falta la sombra de piso (.pet-shadow)`);
+    assert.equal(tags.indexOf(shadow), 0,
+      `${name}: la sombra de piso debe ser el primer elemento (pintado)`);
+    assert.equal(tagAttr(shadow, 'fill').toUpperCase(), palette.ground);
+  }
+});
+
+test('cel (idle): el color ground solo aparece en la sombra de piso', () => {
+  for (const [name, svg, palette] of CEL_POSES) {
+    for (const tag of svgTags(svg)) {
+      const fill = (tagAttr(tag, 'fill') || '').toUpperCase();
+      if (fill !== palette.ground) continue;
+      assert.match(tag, /class="[^"]*\bpet-shadow\b/,
+        `${name}: el color ground aparece fuera de .pet-shadow`);
+    }
+  }
+});
+
+test('cel (idle): cada pupila conserva su ancla y cae dentro de su iris', () => {
+  for (const [name, svg] of CEL_POSES) {
+    const pupils = svg.match(/<circle[^>]*class="[^"]*\bpet-pupil\b[^"]*"[^>]*>/g) || [];
+    assert.ok(pupils.length > 0, `${name}: sin pupilas`);
+    const irises = svg.match(/<ellipse[^>]*>/g) || [];
+    for (const pupil of pupils) {
+      const cx = parseFloat(tagAttr(pupil, 'cx'));
+      const cy = parseFloat(tagAttr(pupil, 'cy'));
+      const r = parseFloat(tagAttr(pupil, 'r'));
+      assert.equal(parseFloat(tagAttr(pupil, 'data-anchor-x')), cx,
+        `${name}: data-anchor-x no coincide con cx`);
+      assert.equal(parseFloat(tagAttr(pupil, 'data-anchor-y')), cy,
+        `${name}: data-anchor-y no coincide con cy`);
+      const inside = irises.some((iris) => {
+        const irx = parseFloat(tagAttr(iris, 'rx'));
+        const iry = parseFloat(tagAttr(iris, 'ry'));
+        return parseFloat(tagAttr(iris, 'cx')) === cx
+          && parseFloat(tagAttr(iris, 'cy')) === cy
+          && irx >= r && iry >= r;
+      });
+      assert.ok(inside, `${name}: la pupila (${cx},${cy}) no cae dentro de un iris`);
+    }
+  }
+});
+
+// =============================================================
+// PIVOTES idle — el transform-origin del CSS debe coincidir con el
+// transform-origin inline del grupo SVG equivalente (plan §5).
+// El guard derivado de las 12 poses llega en el paso 4.
+// =============================================================
+
+/** transform-origin inline del primer <g class="...cls...">. */
+function inlineTransformOrigin(svg, cls) {
+  const re = new RegExp(
+    `<g[^>]*class="[^"]*\\b${cls}\\b[^"]*"[^>]*style="[^"]*transform-origin:\\s*([-\\d.]+)px\\s+([-\\d.]+)px`
+  );
+  const m = re.exec(svg);
+  return m ? { x: parseFloat(m[1]), y: parseFloat(m[2]) } : null;
+}
+
+test('animations.css: los pivotes idle (Luna y Max) coinciden con el transform-origin inline del SVG', () => {
+  const css = readCss(ANIM_CSS_PATH);
+  const cases = [
+    ['cat', catIdleSVG, 'body[data-pet="cat"] #pet-container:not(.cat-walk):not(.sitting)'],
+    ['dog', dogIdleSVG, 'body[data-pet="dog"] #pet-container:not(.dog-walk):not(.sitting)']
+  ];
+  const groups = [
+    ['.anim-wag', 'anim-wag'],
+    ['.back-foot-left', 'back-foot-left'],
+    ['.back-foot-right', 'back-foot-right'],
+    ['.left-paw', 'left-paw'],
+    ['.right-paw', 'right-paw'],
+    ['.pet-body', 'pet-body'],
+    ['.pet-head', 'pet-head']
+  ];
+  for (const [species, svg, prefix] of cases) {
+    for (const [selector, cls] of groups) {
+      const rule = extractRule(css, `${prefix} ${selector}`);
+      assert.ok(rule, `animations.css: falta la regla idle de ${species} "${prefix} ${selector}"`);
+      const cssOrigin = /transform-origin:\s*([-\d.]+)px\s+([-\d.]+)px/.exec(rule);
+      assert.ok(cssOrigin, `animations.css: "${prefix} ${selector}" sin transform-origin`);
+      const inline = inlineTransformOrigin(svg, cls);
+      assert.ok(inline, `${species} idle: el grupo .${cls} no tiene transform-origin inline`);
+      assert.equal(parseFloat(cssOrigin[1]), inline.x,
+        `${species} idle: ${selector} CSS != SVG (x)`);
+      assert.equal(parseFloat(cssOrigin[2]), inline.y,
+        `${species} idle: ${selector} CSS != SVG (y)`);
+    }
+  }
 });
