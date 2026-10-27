@@ -1454,6 +1454,101 @@ test('guard de deriva: la sombra de piso sigue siendo el primer elemento y el or
 });
 
 // =============================================================
+// PASO 4 (bis) — Guards de arte: sombra contenida, silueta unica
+// y cola encajada (plan §4.4.4, §4.4.5 y §4.4.6)
+//
+// La QA del 2026-10-27 encontró que el criterio "la sombra no cruza el
+// contorno de la masa" y el criterio "la base de la cola se esconde bajo
+// el cuerpo" no tenian ningun test que los fijara, y el arte no los
+// cumplia. Estos guards los derivan de la geometria real del SVG, asi que
+// un redibujo que rompa el encaje falla en verde.
+// =============================================================
+
+const celGeo = require('./helpers/cel-geometry');
+
+/** Las 12 poses de produccion con su SVG (mismo origen que CEL_POSES). */
+const ART_POSES = CEL_POSES.map(([name, svg]) => ({ name, svg }));
+
+/** Poligonos de la silueta de una masa (cola, cuerpo, ...). */
+function massOutlinePolys(svg, cls) {
+  const out = [];
+  for (const mass of celGeo.collectMasses(svg)) {
+    if (!mass.classes.includes(cls)) continue;
+    for (const outline of mass.outlines) {
+      out.push(...celGeo.transformPolys(celGeo.shapePolygons(outline), mass.matrix));
+    }
+  }
+  return out;
+}
+
+test('cel: ningun plano de sombra cruza el contorno de la masa que sombrea', () => {
+  // tolerancia: la mitad del trazo de tinta (1.6-1.7 px) tapa el desborde,
+  // asi que lo que no se ve sobre el fondo sigue siendo aceptable.
+  const TOLERANCE = 0.7;
+  for (const { name, svg } of ART_POSES) {
+    const measures = celGeo.measureShadows(svg);
+    assert.ok(measures.length > 0, `${name}: no se encontro ningun plano de sombra`);
+    for (const m of measures) {
+      assert.ok(m.maxOutside <= TOLERANCE,
+        `${name}: el plano de sombra de .${m.mass} se sale ${m.maxOutside.toFixed(2)} px ` +
+        `del contorno de su masa (tolerancia ${TOLERANCE} px)`);
+      // luz desde arriba-izquierda: la sombra no puede caer arriba-izquierda
+      assert.ok(!(m.dx < 0 && m.dy < 0 && Math.abs(m.dx) + Math.abs(m.dy) > 6),
+        `${name}: el plano de sombra de .${m.mass} cae arriba-izquierda ` +
+        `(dx ${m.dx.toFixed(2)}, dy ${m.dy.toFixed(2)}): la luz viene de arriba-izquierda`);
+    }
+  }
+});
+
+test('cel: cada pose se lee como una sola silueta (no hay masas flotando)', () => {
+  // Invariante de forma: la silueta union de la pose (rellenos + media tinta)
+  // tiene que ser una sola pieza. La "cola que se une por un solo punto" no se
+  // ve aqui (dos masas que se tocan siguen siendo un componente): esa la
+  // caza el guard de la raiz de la cola, que mide la envergadura del enlace.
+  for (const { name, svg } of ART_POSES) {
+    const res = celGeo.silhouetteComponents(svg, { scale: 4, dilate: 1.7 });
+    assert.equal(res.components, 1,
+      `${name}: la silueta union de la pose tiene ${res.components} componentes ` +
+      `(deberia ser 1): hay una masa que flota`);
+  }
+});
+
+test('cel: la base de la cola se esconde bajo la grupa (>= 6 px y con envergadura)', () => {
+  // La raiz de la cola no puede ser una punta: tiene que meterse en el
+  // cuerpo con profundidad (>= 6 px, plan §4.4.4) y con envergadura (un
+  // trozo de cola de verdad bajo la grupa, no una astilla de 2 px).
+  //
+  // Sin la envergadura el criterio no muerde: una hoja flotante puede
+  // tener 8 px de profundidad y solo rozar la grupa con una punta.
+  const MIN_DEPTH = 6; // px de cola escondida bajo el cuerpo
+  const MIN_WIDTH = 5; // px de ancho de la raiz escondida
+  for (const { name, svg } of ART_POSES) {
+    const tail = massOutlinePolys(svg, 'anim-wag');
+    const body = massOutlinePolys(svg, 'pet-body');
+    assert.ok(tail.length > 0, `${name}: no se encontro la masa de la cola`);
+    assert.ok(body.length > 0, `${name}: no se encontro la masa del cuerpo`);
+
+    let depth = 0;
+    for (const poly of tail) {
+      for (const p of poly) {
+        if (!body.some((b) => celGeo.pointInPolygon(b, p[0], p[1]))) continue;
+        let d = Infinity;
+        for (const b of body) d = Math.min(d, celGeo.distanceToPolygonEdge(b, p[0], p[1]));
+        depth = Math.max(depth, d);
+      }
+    }
+    assert.ok(depth >= MIN_DEPTH,
+      `${name}: la base de la cola solo se esconde ${depth.toFixed(1)} px bajo el cuerpo ` +
+      `(minimo ${MIN_DEPTH} px): la cola se lee como un accesorio pegado`);
+
+    const width = celGeo.overlapWidth(tail, body, 0.1);
+    assert.ok(width >= MIN_WIDTH,
+      `${name}: la raiz de la cola metida en la grupa es de ${width.toFixed(1)} px de ancho ` +
+      `(minimo ${MIN_WIDTH} px): la cola se lee como una hoja flotante`);
+  }
+});
+
+// =============================================================
 // PASO 5 — Preview de las 12 poses + capturas para la revision visual
 //
 // El preview (test/preview/pet-poses-preview.html) es la pagina donde el

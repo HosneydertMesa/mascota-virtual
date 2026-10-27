@@ -27,7 +27,7 @@ const catIdleSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
           d="M 136,118 C 146,125 152,137 151,147 C 150,155 142,159 134,156 C 128,153 127,141 130,130 C 133,124 135,120 136,118 Z"
           fill="#F2A85E" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
     <path class="cel-shadow"
-          d="M 136,155 C 143,157 149,153 150,147 C 151,140 149,132 145,126 C 148,133 149,140 147,146 C 145,151 141,153 136,152 Z"
+          d="M 136,155 C 143,157 149,153 150,147 C 150,140 147,133 144,127 C 148,133 149,140 147,146 C 145,151 141,153 136,152 Z"
           fill="#C4783A" />
     <path d="M 140,148 C 140,152 141,155 141,157" fill="none" stroke="#3A1E12" stroke-width="1.5" stroke-linecap="round" />
   </g>
@@ -49,7 +49,7 @@ const catIdleSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
           d="M 92,143 C 78,144 64,139 60,129 C 56,138 55,150 59,159 C 63,166 74,169 81,167 C 88,165 92,155 92,143 Z"
           fill="#FFF4E4" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
     <path class="cel-shadow"
-          d="M 68,164 C 73,168 78,169 81,167 C 88,165 92,155 92,143 C 90,154 86,161 79,163 C 74,164 70,164 68,162 Z"
+          d="M 68,164 C 73,167.8 78,168.5 81,166.6 C 88,165 92,155 92,143 C 90,154 86,161 79,163 C 74,164 70,164 68,162 Z"
           fill="#E4C4A0" />
     <path d="M 67,159 C 67,162 67,165 68,167" fill="none" stroke="#3A1E12" stroke-width="1.5" stroke-linecap="round" />
     <path d="M 75,160 C 75,163 75,166 75,168" fill="none" stroke="#3A1E12" stroke-width="1.5" stroke-linecap="round" />
@@ -81,7 +81,7 @@ const catIdleSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
             fill="#F2A85E" stroke="#3A1E12" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round" />
       <path d="M 137,42 C 139,32 141,25 141,20 C 133,24 124,30 118,39 C 124,43 131,44 137,42 Z" fill="#F09A96" />
       <path class="cel-shadow"
-            d="M 138,45 C 130,46 122,44 116,39 C 118,44 126,48 134,47 C 136,47 137,46 138,45 Z"
+            d="M 138,45 C 130,46 122,44 116,39 C 118,44 126,47 134,46 C 136,47 137,46 138,45 Z"
             fill="#C4783A" />
     </g>
 
@@ -89,7 +89,7 @@ const catIdleSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
           d="M 92,32 C 66,32 46,44 40,60 C 34,74 38,88 52,95 C 64,101 80,102 92,102 C 104,102 120,101 132,95 C 146,88 150,74 144,60 C 138,44 118,32 92,32 Z"
           fill="#F2A85E" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
     <path class="cel-shadow"
-          d="M 92,102 C 104,102 120,101 132,95 C 140,91 145,85 147,78 C 141,83 133,88 123,91 C 113,94 102,95 92,95 Z"
+          d="M 92,102 C 104,102 120,101 132,95 C 139.9,90.9 144.8,84.9 145.9,77.7 C 141,83 133,88 123,91 C 113,94 102,95 92,95 Z"
           fill="#C4783A" />
     <path d="M 76,33 C 78,40 78,47 77,53 C 74,48 72,40 73,33 Z" fill="#8A4A1E" />
     <path d="M 88,32 C 90,40 90,48 89,55 C 86,49 85,40 85,32 Z" fill="#8A4A1E" />
@@ -119,12 +119,12 @@ const catIdleSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
 
     <g class="anim-blink">
       <ellipse class="cel-outline" cx="66" cy="76" rx="13" ry="15" fill="#8C5A2B" stroke="#3A1E12" stroke-width="3.2" />
-      <path class="cel-shadow" d="M 54,82 C 55,87 60,91 66,91 C 72,91 78,86 78.5,78 Z" fill="#8A4A1E" />
+      <path class="cel-shadow" d="M 55,81 C 55,80 59,87 58,86 C 58,86 64,90 63,89 C 62,89 70,89 69,89 C 68,90 74,86 74,86 C 73,87 77,80 77,81 Z" fill="#8A4A1E" />
       <circle class="pet-pupil" data-anchor-x="66" data-anchor-y="76" cx="66" cy="76" r="5" fill="#1E0F08" />
       <circle cx="61" cy="70" r="4.5" fill="#FFFFFF" />
       <circle cx="71" cy="82" r="2" fill="#FFFFFF" />
       <ellipse class="cel-outline" cx="118" cy="76" rx="13" ry="15" fill="#8C5A2B" stroke="#3A1E12" stroke-width="3.2" />
-      <path class="cel-shadow" d="M 106,82 C 107,87 112,91 118,91 C 124,91 130,86 130.5,78 Z" fill="#8A4A1E" />
+      <path class="cel-shadow" d="M 107,81 C 107,80 111,87 110,86 C 110,86 116,90 115,89 C 114,89 122,89 121,89 C 120,90 126,86 126,86 C 125,87 129,80 129,81 Z" fill="#8A4A1E" />
       <circle class="pet-pupil" data-anchor-x="118" data-anchor-y="76" cx="118" cy="76" r="5" fill="#1E0F08" />
       <circle cx="113" cy="70" r="4.5" fill="#FFFFFF" />
       <circle cx="123" cy="82" r="2" fill="#FFFFFF" />
@@ -140,7 +140,7 @@ const catWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
           d="M 128,130 C 154,133 173,115 178,93 C 181,76 175,64 167,63 C 161,62 157,68 160,74 C 163,80 164,86 161,94 C 156,108 143,117 130,119 Z"
           fill="#F2A85E" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
     <path class="cel-shadow"
-          d="M 130,119 C 143,117 156,108 161,94 C 163,87 163,80 160,74 C 166,81 167,90 162,99 C 156,111 145,119 132,123 Z"
+          d="M 130,119 C 143,117 156,108 161,94 C 164,87 163,80 161,74 C 166,81 167,90 162,99 C 156,111 145,119 132,123 Z"
           fill="#C4783A" />
     <path d="M 149,116 C 158,109 164,99 166,88" fill="none" stroke="#3A1E12" stroke-width="1.8" stroke-linecap="round" />
     <path d="M 162,73 C 165,68 169,66 173,67" fill="none" stroke="#3A1E12" stroke-width="1.8" stroke-linecap="round" />
@@ -151,7 +151,7 @@ const catWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
           d="M 122,106 C 133,116 139,131 140,145 C 141,155 138,163 131,164 C 124,165 120,158 120,147 C 120,133 115,117 112,109 C 115,106 119,105 122,106 Z"
           fill="#F2A85E" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
     <path class="cel-shadow"
-          d="M 120,147 C 120,156 123,163 129,164 C 132,165 135,164 137,162 C 136,166 131,167 126,165 C 121,163 119,156 120,147 Z"
+          d="M 120,147 C 120,156 123,163 129,164 C 132,163 134,162 136,161 C 132,160 130,161 127,162 C 126,159 123,155 120,147 Z"
           fill="#C4783A" />
     <path d="M 128,157 C 128,160 128,162 128,163" fill="none" stroke="#3A1E12" stroke-width="1.5" stroke-linecap="round" />
     <path d="M 134,156 C 134,159 134,161 134,162" fill="none" stroke="#3A1E12" stroke-width="1.5" stroke-linecap="round" />
@@ -161,7 +161,7 @@ const catWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
           d="M 136,102 C 146,112 152,127 153,141 C 154,151 151,159 145,159 C 138,159 135,152 135,141 C 135,127 130,112 127,104 C 130,101 133,100 136,102 Z"
           fill="#F2A85E" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
     <path class="cel-shadow"
-          d="M 135,141 C 135,152 138,159 145,159 C 148,159 150,158 151,157 C 150,161 146,162 141,160 C 137,158 135,151 135,141 Z"
+          d="M 135,141 C 135,152 138,159 145,159 C 148,158 149,157 149,156 C 147,155 145,156 143,157 C 141,155 137,150 135,141 Z"
           fill="#C4783A" />
     <path d="M 142,152 C 142,155 142,157 142,158" fill="none" stroke="#3A1E12" stroke-width="1.5" stroke-linecap="round" />
   </g>
@@ -171,7 +171,7 @@ const catWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
           d="M 58,112 C 55,97 66,88 84,88 C 106,87 130,89 143,94 C 155,98 158,110 151,119 C 143,128 128,135 112,137 C 100,139 92,139 86,138 C 78,137 70,137 64,135 C 60,133 58,124 58,112 Z"
           fill="#F2A85E" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
     <path class="cel-shadow"
-          d="M 151,119 C 143,128 128,135 112,137 C 100,139 92,139 86,138 C 78,137 70,137 64,135 C 66,141 76,143 86,144 C 92,145 100,145 112,143 C 128,141 143,134 151,125 Z"
+          d="M 151,119 C 143,128 128,135 112,137 C 100,139 92,139 86,138 C 78,137 70,137 64,135 C 68,131 77,131 88,132 C 93,132 99,132 110,131 C 123,127 136,122 145,119 Z"
           fill="#C4783A" />
     <path d="M 94,89 C 97,97 97,105 95,112 C 92,105 91,97 92,89 Z" fill="#8A4A1E" />
     <path d="M 112,89 C 115,97 115,105 113,113 C 110,106 109,97 110,89 Z" fill="#8A4A1E" />
@@ -183,7 +183,7 @@ const catWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
           d="M 64,135 C 70,137 78,137 86,138 C 88,148 90,157 92,163 C 93,168 89,171 84,170 C 79,169 76,165 74,159 C 70,151 66,142 64,135 Z"
           fill="#FFF4E4" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
     <path class="cel-shadow"
-          d="M 74,159 C 76,165 79,169 84,170 C 87,171 90,170 92,168 C 91,171 87,172 83,171 C 78,170 75,165 74,159 Z"
+          d="M 74,159 C 76,165 79,169 84,170 C 87,169 89,169 91,167 C 89,167 87,168 84,169 C 81,166 78,163 75,159 Z"
           fill="#E4C4A0" />
     <path d="M 79,164 C 79,167 79,169 79,170" fill="none" stroke="#3A1E12" stroke-width="1.5" stroke-linecap="round" />
     <path d="M 86,163 C 86,166 86,168 86,170" fill="none" stroke="#3A1E12" stroke-width="1.5" stroke-linecap="round" />
@@ -193,7 +193,7 @@ const catWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
           d="M 86,138 C 92,139 100,139 112,137 C 113,148 112,157 110,163 C 108,168 103,170 98,168 C 93,166 90,161 89,154 C 88,148 87,142 86,138 Z"
           fill="#FFF4E4" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
     <path class="cel-shadow"
-          d="M 89,154 C 90,161 93,166 98,168 C 101,169 105,169 107,167 C 106,170 102,171 97,169 C 92,167 89,161 89,154 Z"
+          d="M 89,154 C 90,161 93,166 98,168 C 101,169 105,169 107,167 C 104,166 102,167 98,167 C 96,163 92,160 90,154 Z"
           fill="#E4C4A0" />
     <path d="M 96,163 C 96,166 96,168 96,169" fill="none" stroke="#3A1E12" stroke-width="1.5" stroke-linecap="round" />
     <path d="M 103,162 C 103,165 103,167 103,168" fill="none" stroke="#3A1E12" stroke-width="1.5" stroke-linecap="round" />
@@ -206,7 +206,7 @@ const catWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
             fill="#F2A85E" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
       <path d="M 47,55 C 43,45 43,34 48,27 C 55,32 61,40 63,48 C 57,53 52,56 47,55 Z" fill="#F09A96" />
       <path class="cel-shadow"
-            d="M 42,60 C 50,61 58,58 68,50 C 64,57 54,62 45,62 Z"
+            d="M 42,60 C 50,61 58,58 68,50 C 60,52 52,56 45,58 Z"
             fill="#C4783A" />
     </g>
     <g class="pet-ear pet-ear-right" style="transform-origin: 78px 42px;">
@@ -215,7 +215,7 @@ const catWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
             fill="#F2A85E" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
       <path d="M 73,52 C 73,44 77,37 82,34 C 85,39 88,45 88,51 C 83,54 77,54 73,52 Z" fill="#F09A96" />
       <path class="cel-shadow"
-            d="M 68,54 C 74,59 84,60 92,56 C 88,61 76,62 70,58 Z"
+            d="M 68,54 C 74,59 84,60 92,56 C 86,55 78,54 72,54 Z"
             fill="#C4783A" />
     </g>
 
@@ -223,7 +223,7 @@ const catWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
           d="M 30,84 C 24,68 32,52 50,46 C 70,39 90,47 98,62 C 104,75 99,93 86,102 C 73,111 50,109 38,99 C 32,94 30,89 30,84 Z"
           fill="#F2A85E" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
     <path class="cel-shadow"
-          d="M 38,99 C 50,109 73,111 86,102 C 92,97 96,88 97,78 C 99,90 94,99 86,105 C 73,114 50,112 38,102 Z"
+          d="M 38,99 C 50,109 73,111 86,102 C 92,97 96,88 97,78 C 95,88 90,95 83,101 C 71,100 53,100 41,98 Z"
           fill="#C4783A" />
     <path d="M 46,48 C 49,56 49,63 47,69 C 44,63 43,55 44,48 Z" fill="#8A4A1E" />
     <path d="M 62,44 C 65,52 65,59 63,65 C 60,59 59,51 60,44 Z" fill="#8A4A1E" />
@@ -232,7 +232,7 @@ const catWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
 
     <path d="M 25,79 C 30,70 41,68 49,74 C 57,80 58,91 50,98 C 42,104 30,103 25,95 C 21,90 22,84 25,79 Z"
           fill="#FFF4E4" stroke="#3A1E12" stroke-width="1.8" stroke-linejoin="round" />
-    <path class="cel-shadow" d="M 24,90 C 28,97 40,101 50,96 C 53,94 55,91 56,88 C 55,95 48,101 40,101 C 30,101 24,96 24,90 Z" fill="#E4C4A0" />
+    <path class="cel-shadow" d="M 24,90 C 28,97 40,101 50,96 C 53,94 55,91 55,88 C 52,93 47,98 40,101 C 30,101 24,96 24,90 Z" fill="#E4C4A0" />
     <path d="M 22,78 C 18,77 15,80 16,84 C 17,88 22,89 25,86 C 27,83 26,79 22,78 Z"
           fill="#E2707A" stroke="#3A1E12" stroke-width="1.5" stroke-linejoin="round" />
     <path d="M 24,91 C 26,95 30,96 33,94" fill="none" stroke="#3A1E12" stroke-width="1.6" stroke-linecap="round" />
@@ -243,7 +243,7 @@ const catWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
 
     <g class="anim-blink">
       <ellipse class="cel-outline" cx="52" cy="70" rx="11" ry="13" fill="#8C5A2B" stroke="#3A1E12" stroke-width="3.2" />
-      <path class="cel-shadow" d="M 41,75 C 42,81 46,83 52,83 C 58,83 62,79 63,73 C 62,80 57,84 52,84 C 46,84 41,80 41,75 Z" fill="#8A4A1E" />
+      <path class="cel-shadow" d="M 43,74 C 43,74 46,79 46,79 C 45,78 50,82 50,81 C 49,81 55,81 54,81 C 54,82 59,78 58,79 C 58,79 61,74 61,74 Z" fill="#8A4A1E" />
       <circle class="pet-pupil" data-anchor-x="52" data-anchor-y="70" cx="52" cy="70" r="4.5" fill="#1E0F08" />
       <circle cx="48" cy="64" r="3.6" fill="#FFFFFF" />
       <circle cx="57" cy="76" r="1.7" fill="#FFFFFF" />
@@ -259,7 +259,7 @@ const catSleepSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w
           d="M 144,116 C 160,120 170,134 166,148 C 162,161 148,168 132,164 C 120,161 112,152 114,144 C 116,137 123,138 126,144 C 129,150 136,155 143,155 C 150,155 154,149 152,142 C 150,134 145,127 138,124 Z"
           fill="#F2A85E" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
     <path class="cel-shadow"
-          d="M 138,124 C 145,127 150,134 152,142 C 154,149 150,155 143,155 C 138,155 133,152 129,147 C 133,153 139,157 145,156 C 152,155 156,148 154,140 C 152,132 147,125 140,122 Z"
+          d="M 138,124 C 145,127 150,134 152,142 C 154,149 150,155 143,155 C 138,155 133,153 128,148 C 133,153 139,157 145,156 C 152,155 156,148 154,140 C 152,132 147,125 138,124 Z"
           fill="#C4783A" />
     <path d="M 160,140 C 161,146 159,152 155,156" fill="none" stroke="#3A1E12" stroke-width="1.8" stroke-linecap="round" />
     <path d="M 128,158 C 124,155 121,151 120,147" fill="none" stroke="#3A1E12" stroke-width="1.8" stroke-linecap="round" />
@@ -278,7 +278,7 @@ const catSleepSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w
           d="M 142,118 C 140,126 144,134 152,136 C 158,138 162,133 161,127 C 160,121 152,116 146,116 Z"
           fill="#F2A85E" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
     <path class="cel-shadow"
-          d="M 152,136 C 158,138 162,133 161,127 C 161,125 160,123 159,122 C 161,129 158,134 153,134 C 152,134 152,135 152,136 Z"
+          d="M 152,136 C 158,138 162,133 161,127 C 160.8,125.1 159.6,123.3 158.7,122.2 C 160.2,129 158,134 153,134 C 152,134 152,135 152,136 Z"
           fill="#C4783A" />
   </g>
 
@@ -321,14 +321,14 @@ const catSleepSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w
             d="M 36,88 C 30,74 32,58 40,50 C 50,56 60,68 62,80 C 54,88 44,91 36,88 Z"
             fill="#F2A85E" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
       <path d="M 41,84 C 37,74 38,62 43,56 C 50,60 56,68 58,76 C 52,81 46,84 41,84 Z" fill="#F09A96" />
-      <path class="cel-shadow" d="M 36,88 C 44,91 54,88 62,80 C 58,87 46,93 38,91 Z" fill="#C4783A" />
+      <path class="cel-shadow" d="M 36,88 C 44,91 54,88 62,80 C 56,84 46,87 36,88 Z" fill="#C4783A" />
     </g>
     <g class="pet-ear pet-ear-right" style="transform-origin: 78px 70px;">
       <path class="cel-outline"
             d="M 62,80 C 64,68 74,56 84,50 C 92,58 94,74 90,88 C 82,91 70,88 62,80 Z"
             fill="#F2A85E" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
       <path d="M 68,79 C 70,71 76,62 82,56 C 87,62 89,74 86,83 C 79,85 73,83 68,79 Z" fill="#F09A96" />
-      <path class="cel-shadow" d="M 62,80 C 70,88 82,91 90,88 C 84,93 70,93 63,86 Z" fill="#C4783A" />
+      <path class="cel-shadow" d="M 62,80 C 70,88 82,91 90,88 C 84,87 73,85 62,80 Z" fill="#C4783A" />
     </g>
 
     <path class="cel-outline"
@@ -408,7 +408,7 @@ const catSitSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.
           d="M 100,144 C 92,144 84,141 78,134 C 76,142 76,152 78,160 C 79,165 83,168 88,168 C 94,168 98,165 98,158 C 98,152 99,148 100,144 Z"
           fill="#FFF4E4" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
     <path class="cel-shadow"
-          d="M 78,160 C 79,165 83,168 88,168 C 92,168 95,167 97,164 C 96,167 93,169 88,169 C 83,169 79,166 78,160 Z"
+          d="M 78,160 C 79,165 83,168 88,168 C 92,168 95,167 97,164 C 94,165 91,165 87,165 C 83,165 80,163 78,160 Z"
           fill="#E4C4A0" />
     <path d="M 82,162 C 82,165 83,167 83,168" fill="none" stroke="#3A1E12" stroke-width="1.5" stroke-linecap="round" />
     <path d="M 90,161 C 90,164 91,166 91,167" fill="none" stroke="#3A1E12" stroke-width="1.5" stroke-linecap="round" />
@@ -418,7 +418,7 @@ const catSitSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.
           d="M 122,134 C 116,141 108,144 100,144 C 101,152 102,160 104,164 C 106,168 112,169 117,167 C 123,165 125,159 124,151 C 124,145 123,139 122,134 Z"
           fill="#FFF4E4" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
     <path class="cel-shadow"
-          d="M 104,164 C 106,168 112,169 117,167 C 121,166 123,163 124,159 C 124,164 121,167 116,168 C 111,170 106,168 104,164 Z"
+          d="M 104,164 C 106,168 112,169 117,167 C 121,166 123,163 124,159 C 123,163 120,166 116,167 C 111,169 106,168 105,164 Z"
           fill="#E4C4A0" />
     <path d="M 108,162 C 108,165 109,167 109,168" fill="none" stroke="#3A1E12" stroke-width="1.5" stroke-linecap="round" />
     <path d="M 116,160 C 116,163 117,165 117,166" fill="none" stroke="#3A1E12" stroke-width="1.5" stroke-linecap="round" />
@@ -430,14 +430,14 @@ const catSitSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.
             d="M 54,58 C 50,42 52,26 60,18 C 72,24 84,38 86,52 C 76,60 62,63 54,58 Z"
             fill="#F2A85E" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
       <path d="M 60,53 C 58,41 59,30 63,25 C 71,30 78,40 80,49 C 73,54 66,55 60,53 Z" fill="#F09A96" />
-      <path class="cel-shadow" d="M 54,58 C 62,63 76,60 86,52 C 81,60 66,65 57,61 Z" fill="#C4783A" />
+      <path class="cel-shadow" d="M 54,58 C 62,63 76,60 86,52 C 77,53 65,56 58,58 Z" fill="#C4783A" />
     </g>
     <g class="pet-ear pet-ear-right" style="transform-origin: 134px 50px;">
       <path class="cel-outline"
             d="M 146,58 C 150,42 148,26 140,18 C 128,24 116,38 114,52 C 124,60 138,63 146,58 Z"
             fill="#F2A85E" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
       <path d="M 140,53 C 142,41 141,30 137,25 C 129,30 122,40 120,49 C 127,54 134,55 140,53 Z" fill="#F09A96" />
-      <path class="cel-shadow" d="M 146,58 C 138,63 124,60 114,52 C 119,60 134,65 143,61 Z" fill="#C4783A" />
+      <path class="cel-shadow" d="M 146,58 C 138,63 124,60 114,52 C 120,56 132,59 146,58 Z" fill="#C4783A" />
     </g>
 
     <path class="cel-outline"
@@ -470,12 +470,12 @@ const catSitSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.
 
     <g class="anim-blink">
       <ellipse class="cel-outline" cx="76" cy="76" rx="13" ry="15" fill="#8C5A2B" stroke="#3A1E12" stroke-width="3.2" />
-      <path class="cel-shadow" d="M 64,82 C 65,88 70,91 76,91 C 82,91 88,86 89,78 Z" fill="#8A4A1E" />
+      <path class="cel-shadow" d="M 65,81 C 65,80 69,87 68,86 C 68,86 74,90 73,89 C 72,89 80,89 79,89 C 78,90 84,86 84,86 C 83,87 87,80 87,81 Z" fill="#8A4A1E" />
       <circle class="pet-pupil" data-anchor-x="76" data-anchor-y="76" cx="76" cy="76" r="5" fill="#1E0F08" />
       <circle cx="71" cy="70" r="4.5" fill="#FFFFFF" />
       <circle cx="81" cy="82" r="2" fill="#FFFFFF" />
       <ellipse class="cel-outline" cx="124" cy="76" rx="13" ry="15" fill="#8C5A2B" stroke="#3A1E12" stroke-width="3.2" />
-      <path class="cel-shadow" d="M 112,82 C 113,88 118,91 124,91 C 130,91 136,86 137,78 Z" fill="#8A4A1E" />
+      <path class="cel-shadow" d="M 113,81 C 113,80 117,87 116,86 C 116,86 122,90 121,89 C 120,89 128,89 127,89 C 126,90 132,86 132,86 C 131,87 135,80 135,81 Z" fill="#8A4A1E" />
       <circle class="pet-pupil" data-anchor-x="124" data-anchor-y="76" cx="124" cy="76" r="5" fill="#1E0F08" />
       <circle cx="119" cy="70" r="4.5" fill="#FFFFFF" />
       <circle cx="129" cy="82" r="2" fill="#FFFFFF" />
@@ -491,7 +491,7 @@ const catLaySVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.
           d="M 146,116 C 164,114 179,102 183,86 C 185,76 180,68 172,69 C 166,70 163,76 167,80 C 171,84 171,90 167,95 C 161,103 154,109 146,110 Z"
           fill="#F2A85E" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
     <path class="cel-shadow"
-          d="M 146,110 C 154,109 161,103 167,95 C 170,90 170,85 168,81 C 172,85 172,91 168,97 C 162,105 155,111 147,112 Z"
+          d="M 146,110 C 154,109 161,103 167,95 C 171,90 171,85 169,81 C 172,85 172,91 168,97 C 162,105 155,111 147,112 Z"
           fill="#C4783A" />
     <path d="M 168,93 C 174,86 177,78 177,71" fill="none" stroke="#3A1E12" stroke-width="1.8" stroke-linecap="round" />
   </g>
@@ -511,7 +511,7 @@ const catLaySVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.
           d="M 148,134 C 143,144 147,154 155,156 C 163,158 171,153 171,145 C 171,137 162,131 155,131 C 152,130 149,131 148,134 Z"
           fill="#F2A85E" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
     <path class="cel-shadow"
-          d="M 155,156 C 163,158 171,153 171,145 C 171,142 170,139 169,137 C 169,144 164,150 157,151 C 156,153 155,155 155,156 Z"
+          d="M 155,156 C 163,158 171,153 171,145 C 170.9,142.1 169.8,139.1 168,137.8 C 169,144 164,150 157,151 C 156,153 155,155 155,156 Z"
           fill="#C4783A" />
     <path d="M 157,150 C 157,153 158,155 158,156" fill="none" stroke="#3A1E12" stroke-width="1.5" stroke-linecap="round" />
     <path d="M 163,148 C 163,151 164,153 164,154" fill="none" stroke="#3A1E12" stroke-width="1.5" stroke-linecap="round" />
@@ -534,7 +534,7 @@ const catLaySVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.
           d="M 68,136 C 52,140 34,146 22,153 C 16,156 16,162 22,164 C 32,167 48,164 56,159 C 62,155 65,147 68,136 Z"
           fill="#FFF4E4" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
     <path class="cel-shadow"
-          d="M 22,164 C 32,167 48,164 56,159 C 60,157 63,153 65,149 C 63,155 58,160 50,162 C 40,165 28,166 22,164 Z"
+          d="M 22,164 C 32,167 48,164 56,159 C 59.5,156.7 62.3,152.6 63.6,148.3 C 62,154.3 57.4,159.6 49.9,161.9 C 40,165 28,166 22,164 Z"
           fill="#E4C4A0" />
     <path d="M 26,158 C 26,161 27,163 27,164" fill="none" stroke="#3A1E12" stroke-width="1.5" stroke-linecap="round" />
     <path d="M 33,157 C 33,160 34,162 34,163" fill="none" stroke="#3A1E12" stroke-width="1.5" stroke-linecap="round" />
@@ -544,7 +544,7 @@ const catLaySVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.
           d="M 84,138 C 70,142 54,148 44,154 C 38,157 39,163 45,165 C 54,168 68,164 76,159 C 82,155 84,147 84,138 Z"
           fill="#FFF4E4" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
     <path class="cel-shadow"
-          d="M 45,165 C 54,168 68,164 76,159 C 80,157 82,153 83,149 C 81,155 76,160 68,162 C 58,165 48,166 45,165 Z"
+          d="M 45,165 C 54,168 68,164 76,159 C 79.6,156.7 81.7,152.8 82.5,148.8 C 81,155 76,160 68,162.1 C 58,165 48,166 45,165 Z"
           fill="#E4C4A0" />
     <path d="M 48,159 C 48,162 49,164 49,165" fill="none" stroke="#3A1E12" stroke-width="1.5" stroke-linecap="round" />
     <path d="M 55,158 C 55,161 56,163 56,164" fill="none" stroke="#3A1E12" stroke-width="1.5" stroke-linecap="round" />
@@ -556,14 +556,14 @@ const catLaySVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.
             d="M 30,100 C 26,86 28,70 36,62 C 47,68 58,80 60,94 C 50,102 38,104 30,100 Z"
             fill="#F2A85E" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
       <path d="M 36,95 C 34,84 35,73 39,68 C 46,73 53,82 55,90 C 48,95 42,97 36,95 Z" fill="#F09A96" />
-      <path class="cel-shadow" d="M 30,100 C 38,104 50,102 60,94 C 55,101 40,106 32,103 Z" fill="#C4783A" />
+      <path class="cel-shadow" d="M 30,100 C 38,104 50,102 60,94 C 52,98 40,100 30,100 Z" fill="#C4783A" />
     </g>
     <g class="pet-ear pet-ear-right" style="transform-origin: 84px 90px;">
       <path class="cel-outline"
             d="M 64,94 C 66,82 77,70 88,62 C 96,70 98,86 94,100 C 84,104 70,102 64,94 Z"
             fill="#F2A85E" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
       <path d="M 70,92 C 72,84 78,74 84,69 C 89,75 91,85 89,93 C 83,97 75,96 70,92 Z" fill="#F09A96" />
-      <path class="cel-shadow" d="M 64,94 C 70,102 84,104 94,100 C 88,106 72,106 65,98 Z" fill="#C4783A" />
+      <path class="cel-shadow" d="M 64,94 C 70,102 84,104 94,100 C 86,101 75,99 64,94 Z" fill="#C4783A" />
     </g>
 
     <path class="cel-outline"
@@ -593,12 +593,12 @@ const catLaySVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.
 
     <g class="anim-blink">
       <ellipse class="cel-outline" cx="48" cy="116" rx="12" ry="14" fill="#8C5A2B" stroke="#3A1E12" stroke-width="3.2" />
-      <path class="cel-shadow" d="M 37,122 C 38,128 42,130 48,130 C 54,130 59,126 60,118 Z" fill="#8A4A1E" />
+      <path class="cel-shadow" d="M 38,121 C 38,120 42,126 41,126 C 41,125 46,129 46,128 C 45,128 51,128 51,128 C 50,129 56,125 55,126 C 54,126 58,120 58,121 Z" fill="#8A4A1E" />
       <circle class="pet-pupil" data-anchor-x="48" data-anchor-y="116" cx="48" cy="116" r="4.8" fill="#1E0F08" />
       <circle cx="43" cy="110" r="4.2" fill="#FFFFFF" />
       <circle cx="53" cy="122" r="1.9" fill="#FFFFFF" />
       <ellipse class="cel-outline" cx="76" cy="116" rx="12" ry="14" fill="#8C5A2B" stroke="#3A1E12" stroke-width="3.2" />
-      <path class="cel-shadow" d="M 65,122 C 66,128 70,130 76,130 C 82,130 87,126 88,118 Z" fill="#8A4A1E" />
+      <path class="cel-shadow" d="M 66,121 C 66,120 70,126 69,126 C 69,125 74,129 74,128 C 73,128 79,128 79,128 C 78,129 84,125 83,126 C 82,126 86,120 86,121 Z" fill="#8A4A1E" />
       <circle class="pet-pupil" data-anchor-x="76" data-anchor-y="116" cx="76" cy="116" r="4.8" fill="#1E0F08" />
       <circle cx="71" cy="110" r="4.2" fill="#FFFFFF" />
       <circle cx="81" cy="122" r="1.9" fill="#FFFFFF" />
@@ -614,7 +614,7 @@ const catStretchSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www
           d="M 118,98 C 138,90 152,70 158,50 C 161,39 157,30 149,31 C 143,32 140,38 144,42 C 148,46 148,52 145,58 C 139,71 130,82 122,94 Z"
           fill="#F2A85E" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
     <path class="cel-shadow"
-          d="M 122,94 C 130,82 139,71 145,58 C 147,53 148,47 145,43 C 149,47 150,53 146,60 C 140,73 131,86 123,96 Z"
+          d="M 122,94 C 130,82 139,71 145,58 C 148,53 148,47 146,43 C 149,47 150,53 146,60 C 140,73 131,86 122,94 Z"
           fill="#C4783A" />
     <path d="M 140,80 C 149,71 155,61 157,50" fill="none" stroke="#3A1E12" stroke-width="1.8" stroke-linecap="round" />
     <path d="M 151,38 C 154,34 158,32 162,33" fill="none" stroke="#3A1E12" stroke-width="1.8" stroke-linecap="round" />
@@ -622,10 +622,10 @@ const catStretchSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www
 
   <g class="back-foot-left" style="transform-origin: 122px 92px;">
     <path class="cel-outline"
-          d="M 120,82 C 131,85 142,93 147,104 C 150,110 148,115 144,117 C 149,119 153,124 152,128 C 151,133 143,134 138,130 C 133,126 132,119 131,111 C 129,101 123,91 118,86 Z"
+          d="M 122,93 C 133,93 143,97 147,104 C 150,110 148,115 144,117 C 149,119 153,124 152,128 C 151,133 143,134 138,130 C 133,126 132,119 131,111 C 129,104 125,97 120,94 Z"
           fill="#F2A85E" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
     <path class="cel-shadow"
-          d="M 138,130 C 143,134 151,133 152,128 C 152,131 150,133 147,134 C 142,135 138,133 136,129 Z"
+          d="M 138,130 C 143,134 151,133 152,128 C 150,129 148,130 146,131 C 143,129 141,129 138,130 Z"
           fill="#C4783A" />
     <path d="M 146,125 C 146,128 147,130 147,131" fill="none" stroke="#3A1E12" stroke-width="1.5" stroke-linecap="round" />
   </g>
@@ -634,7 +634,7 @@ const catStretchSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www
           d="M 132,92 C 144,95 156,103 161,114 C 164,120 162,126 158,128 C 164,130 168,135 167,140 C 166,145 157,146 152,142 C 147,138 146,130 145,122 C 143,111 136,100 130,95 Z"
           fill="#F2A85E" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
     <path class="cel-shadow"
-          d="M 152,142 C 157,146 166,145 167,140 C 167,143 165,145 162,146 C 157,147 152,145 150,142 Z"
+          d="M 152,142 C 157,146 166,145 167,140 C 165,141 163,142 161,143 C 158,142 155,141 152,140 Z"
           fill="#C4783A" />
     <path d="M 160,137 C 160,140 161,142 161,143" fill="none" stroke="#3A1E12" stroke-width="1.5" stroke-linecap="round" />
   </g>
@@ -678,14 +678,14 @@ const catStretchSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www
             d="M 28,116 C 24,102 26,86 34,78 C 45,84 56,96 58,110 C 48,118 36,120 28,116 Z"
             fill="#F2A85E" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
       <path d="M 34,111 C 32,100 33,89 37,84 C 44,89 51,98 53,106 C 46,111 40,113 34,111 Z" fill="#F09A96" />
-      <path class="cel-shadow" d="M 28,116 C 36,120 48,118 58,110 C 53,117 38,122 30,119 Z" fill="#C4783A" />
+      <path class="cel-shadow" d="M 28,116 C 36,120 48,118 58,110 C 50,114 38,116 28,116 Z" fill="#C4783A" />
     </g>
     <g class="pet-ear pet-ear-right" style="transform-origin: 68px 110px;">
       <path class="cel-outline"
             d="M 58,110 C 60,98 71,86 82,78 C 90,86 92,102 88,116 C 78,120 64,118 58,110 Z"
             fill="#F2A85E" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
       <path d="M 64,108 C 66,100 72,90 78,85 C 83,91 85,101 83,109 C 77,113 69,112 64,108 Z" fill="#F09A96" />
-      <path class="cel-shadow" d="M 58,110 C 64,118 78,120 88,116 C 82,122 66,122 59,114 Z" fill="#C4783A" />
+      <path class="cel-shadow" d="M 58,110 C 64,118 78,120 88,116 C 80,117 69,115 58,110 Z" fill="#C4783A" />
     </g>
 
     <path class="cel-outline"
@@ -713,12 +713,12 @@ const catStretchSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www
 
     <g class="anim-blink">
       <ellipse class="cel-outline" cx="40" cy="126" rx="11" ry="13" fill="#8C5A2B" stroke="#3A1E12" stroke-width="3.2" />
-      <path class="cel-shadow" d="M 30,131 C 31,137 35,140 40,140 C 46,140 50,136 51,128 Z" fill="#8A4A1E" />
+      <path class="cel-shadow" d="M 31,130 C 31,130 34,135 34,135 C 33,134 38,138 38,137 C 37,137 43,137 42,137 C 42,138 47,134 46,135 C 46,135 49,130 49,130 Z" fill="#8A4A1E" />
       <circle class="pet-pupil" data-anchor-x="40" data-anchor-y="126" cx="40" cy="126" r="4.5" fill="#1E0F08" />
       <circle cx="36" cy="120" r="3.6" fill="#FFFFFF" />
       <circle cx="45" cy="132" r="1.7" fill="#FFFFFF" />
       <ellipse class="cel-outline" cx="66" cy="126" rx="11" ry="13" fill="#8C5A2B" stroke="#3A1E12" stroke-width="3.2" />
-      <path class="cel-shadow" d="M 56,131 C 57,137 61,140 66,140 C 72,140 76,136 77,128 Z" fill="#8A4A1E" />
+      <path class="cel-shadow" d="M 57,130 C 57,130 60,135 60,135 C 59,134 64,138 64,137 C 63,137 69,137 68,137 C 68,138 73,134 72,135 C 72,135 75,130 75,130 Z" fill="#8A4A1E" />
       <circle class="pet-pupil" data-anchor-x="66" data-anchor-y="126" cx="66" cy="126" r="4.5" fill="#1E0F08" />
       <circle cx="62" cy="120" r="3.6" fill="#FFFFFF" />
       <circle cx="71" cy="132" r="1.7" fill="#FFFFFF" />
