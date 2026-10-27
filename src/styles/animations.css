@@ -190,13 +190,22 @@ body[data-pet="dog"] #pet-container.sitting .pet-body { transform-origin: 100px 
 body[data-pet="dog"] #pet-container.sitting .pet-head { transform-origin: 100px 105px; }
 
 /* Luna idle standing pivots (when not walking / sitting). */
-body[data-pet="cat"] #pet-container:not(.cat-walk):not(.sitting) .anim-wag { transform-origin: 148px 118px; }
-body[data-pet="cat"] #pet-container:not(.cat-walk):not(.sitting) .back-foot-left { transform-origin: 118px 124px; }
-body[data-pet="cat"] #pet-container:not(.cat-walk):not(.sitting) .back-foot-right { transform-origin: 146px 122px; }
-body[data-pet="cat"] #pet-container:not(.cat-walk):not(.sitting) .left-paw { transform-origin: 70px 126px; }
-body[data-pet="cat"] #pet-container:not(.cat-walk):not(.sitting) .right-paw { transform-origin: 96px 124px; }
-body[data-pet="cat"] #pet-container:not(.cat-walk):not(.sitting) .pet-body { transform-origin: 112px 132px; }
-body[data-pet="cat"] #pet-container:not(.cat-walk):not(.sitting) .pet-head { transform-origin: 92px 107px; }
+body[data-pet="cat"] #pet-container:not(.cat-walk):not(.sitting) .anim-wag { transform-origin: 126px 128px; }
+body[data-pet="cat"] #pet-container:not(.cat-walk):not(.sitting) .back-foot-left { transform-origin: 121px 127px; }
+body[data-pet="cat"] #pet-container:not(.cat-walk):not(.sitting) .back-foot-right { transform-origin: 136px 120px; }
+body[data-pet="cat"] #pet-container:not(.cat-walk):not(.sitting) .left-paw { transform-origin: 76px 136px; }
+body[data-pet="cat"] #pet-container:not(.cat-walk):not(.sitting) .right-paw { transform-origin: 110px 138px; }
+body[data-pet="cat"] #pet-container:not(.cat-walk):not(.sitting) .pet-body { transform-origin: 104px 114px; }
+body[data-pet="cat"] #pet-container:not(.cat-walk):not(.sitting) .pet-head { transform-origin: 92px 98px; }
+
+/* Max idle standing pivots (when not walking / sitting). */
+body[data-pet="dog"] #pet-container:not(.dog-walk):not(.sitting) .anim-wag { transform-origin: 126px 126px; }
+body[data-pet="dog"] #pet-container:not(.dog-walk):not(.sitting) .back-foot-left { transform-origin: 121px 127px; }
+body[data-pet="dog"] #pet-container:not(.dog-walk):not(.sitting) .back-foot-right { transform-origin: 136px 120px; }
+body[data-pet="dog"] #pet-container:not(.dog-walk):not(.sitting) .left-paw { transform-origin: 76px 138px; }
+body[data-pet="dog"] #pet-container:not(.dog-walk):not(.sitting) .right-paw { transform-origin: 110px 140px; }
+body[data-pet="dog"] #pet-container:not(.dog-walk):not(.sitting) .pet-body { transform-origin: 104px 116px; }
+body[data-pet="dog"] #pet-container:not(.dog-walk):not(.sitting) .pet-head { transform-origin: 92px 100px; }
 
 /* Mood overlays. Do NOT set transform on .pet-body — that kills @keyframes breathing.
    Body offset is composed into breathing via --mood-dy / --mood-rot.
