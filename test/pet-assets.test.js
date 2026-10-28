@@ -1513,6 +1513,61 @@ test('cel: cada pose se lee como una sola silueta (no hay masas flotando)', () =
   }
 });
 
+test('cel: las patas delanteras no repiten el contorno del cuerpo (sin doble linea)', () => {
+  // QA 2026-10-27: la pata delantera se cerraba sobre el vientre y su
+  // contorno se cruzaba con el del cuerpo -> doble linea y lectura de
+  // "pieza pegada".  El contorno de la pata solo puede apoyarse en el
+  // cuerpo en el punto de union: si comparte un tramo con el contorno
+  // del cuerpo, la costura se ve como una linea interior.
+  const MAX_SHARED = 10;
+  for (const { name, svg } of ART_POSES) {
+    const bodyPolys = massOutlinePolys(svg, 'pet-body');
+    assert.ok(bodyPolys.length > 0, `${name}: no se encontro la masa del cuerpo`);
+    for (const cls of ['left-paw', 'right-paw']) {
+      const pawPolys = massOutlinePolys(svg, cls);
+      assert.ok(pawPolys.length > 0, `${name}: no se encontro la masa .${cls}`);
+      // si la pata esta entera dentro de la silueta del cuerpo (patas
+      // recogidas) no hay costura exterior que revisar.
+      let outside = 0;
+      let total = 0;
+      for (const poly of pawPolys) {
+        for (const p of poly) {
+          total++;
+          if (!bodyPolys.some((b) => celGeo.pointInPolygon(b, p[0], p[1]))) outside++;
+        }
+      }
+      if (total > 0 && outside / total < 0.2) continue;
+      let shared = 0;
+      for (const poly of pawPolys) {
+        for (const p of poly) {
+          let d = Infinity;
+          for (const b of bodyPolys) {
+            d = Math.min(d, celGeo.distanceToPolygonEdge(b, p[0], p[1]));
+          }
+          if (d <= 1.2) shared++;
+        }
+      }
+      assert.ok(shared <= MAX_SHARED,
+        `${name}: .${cls} comparte ${shared} puntos con el contorno del cuerpo ` +
+        `(maximo ${MAX_SHARED}): la costura se ve como una linea interior (pieza pegada)`);
+    }
+  }
+});
+
+test('cel: los parches crema (hocico, pecho) no llevan contorno propio', () => {
+  // Un parche de color con su propio trazo se lee como una pegatina encima
+  // de la cabeza o del pecho.  El plano de sombra plano ya le da volumen.
+  for (const { name, svg } of ART_POSES) {
+    for (const tag of svgTags(svg)) {
+      const fill = (tagAttr(tag, 'fill') || '').toUpperCase();
+      if (fill !== '#FFF4E4' && fill !== '#FFF8EC') continue;
+      if (/class="[^"]*\bcel-(outline|shadow)\b/.test(tag)) continue;
+      assert.equal(tagAttr(tag, 'stroke'), null,
+        `${name}: un parche crema lleva contorno propio y se lee como una pegatina: ${tag}`);
+    }
+  }
+});
+
 test('cel: la base de la cola se esconde bajo la grupa (>= 6 px y con envergadura)', () => {
   // La raiz de la cola no puede ser una punta: tiene que meterse en el
   // cuerpo con profundidad (>= 6 px, plan §4.4.4) y con envergadura (un
