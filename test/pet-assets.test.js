@@ -1481,6 +1481,20 @@ function massOutlinePolys(svg, cls) {
   return out;
 }
 
+/**
+ * Poligonos rellenos de una masa: su silueta (cel-outline) mas el cel-base
+ * y los parches. Es la forma que se ve en pantalla (la tinta y el relleno).
+ */
+function massFilledPolys(svg, cls) {
+  const out = [];
+  for (const shape of celGeo.collectFilledShapes(svg)) {
+    const inMass = shape.chain.some((el) => celGeo.classTokensOf(el).includes(cls));
+    if (!inMass) continue;
+    out.push(...celGeo.transformPolys(shape.polys, shape.matrix));
+  }
+  return out;
+}
+
 test('cel: ningun plano de sombra cruza el contorno de la masa que sombrea', () => {
   // tolerancia: la mitad del trazo de tinta (1.6-1.7 px) tapa el desborde,
   // asi que lo que no se ve sobre el fondo sigue siendo aceptable.
@@ -1600,6 +1614,59 @@ test('cel: la base de la cola se esconde bajo la grupa (>= 6 px y con envergadur
     assert.ok(width >= MIN_WIDTH,
       `${name}: la raiz de la cola metida en la grupa es de ${width.toFixed(1)} px de ancho ` +
       `(minimo ${MIN_WIDTH} px): la cola se lee como una hoja flotante`);
+  }
+});
+
+test('cel: la cabeza se superpone al cuerpo (>= 8 px) y su tinta llega al contorno del cuerpo', () => {
+  // Plan §4.4.3: la cabeza se superpone al cuerpo >= 8 px y el encuentro
+  // cuello/cabeza no se marca con una linea recta (se resuelve con el plano
+  // de sombra del cuello y las lineas de quiebre de pelo).
+  //
+  // QA 2026-10-28: en Max (walk y sleep) la cabeza NO estaba unida al
+  // cuerpo: el borde trasero de la silueta de la cabeza terminaba por
+  // encima de la linea del lomo, dejando una franja de fondo entre la nuca
+  // y el lomo (el "corte de contorno" de la base del cuello). El guard de
+  // silueta unica no lo cazaba: cuenta componentes de la silueta union y
+  // un hueco interior (o una muesca) no lo cambia.
+  //
+  // Por eso se miden DOS cosas:
+  //  1. la profundidad del encaje (la cabeza entra >= 8 px en el cuerpo);
+  //  2. la distancia entre la tinta de la cabeza y el contorno del cuerpo
+  //     (<= 2 px): la tinta del cuello tiene que tocar la linea del lomo,
+  //     si no queda un corte visible en la silueta.
+  const MIN_DEPTH = 8;
+  const MAX_GAP = 2;
+  for (const { name, svg } of ART_POSES) {
+    const head = massFilledPolys(svg, 'pet-head');
+    const headInk = massOutlinePolys(svg, 'pet-head');
+    const body = massOutlinePolys(svg, 'pet-body');
+    assert.ok(head.length > 0, `${name}: no se encontro la silueta de la cabeza`);
+    assert.ok(body.length > 0, `${name}: no se encontro la silueta del cuerpo`);
+
+    let depth = 0;
+    for (const poly of head) {
+      for (const p of poly) {
+        if (!body.some((b) => celGeo.pointInPolygon(b, p[0], p[1]))) continue;
+        let d = Infinity;
+        for (const b of body) d = Math.min(d, celGeo.distanceToPolygonEdge(b, p[0], p[1]));
+        depth = Math.max(depth, d);
+      }
+    }
+    assert.ok(depth >= MIN_DEPTH,
+      `${name}: la cabeza solo se superpone ${depth.toFixed(1)} px al cuerpo ` +
+      `(minimo ${MIN_DEPTH} px): la cabeza flota sobre el cuerpo`);
+
+    let gap = Infinity;
+    for (const poly of headInk) {
+      for (const p of poly) {
+        for (const b of body) {
+          gap = Math.min(gap, celGeo.distanceToPolygonEdge(b, p[0], p[1]));
+        }
+      }
+    }
+    assert.ok(gap <= MAX_GAP,
+      `${name}: la tinta de la cabeza queda a ${gap.toFixed(1)} px del contorno del cuerpo ` +
+      `(maximo ${MAX_GAP} px): se ve un corte de contorno en el cuello`);
   }
 });
 
