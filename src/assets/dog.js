@@ -113,12 +113,13 @@ const dogWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
   <ellipse cx="100" cy="170" rx="76" ry="7" fill="#28140B" opacity="0.22" class="pet-shadow" />
 
   <g class="anim-wag anim-wag-fast" style="transform-origin: 142px 106px; transform: rotate(0deg);">
-    <path class="cel-outline"
+    <path class="cel-base"
           d="M 138,104 C 139,86 132,68 114,59 C 99,52 85,60 92,75 C 96,84 104,87 111,82 C 120,90 133,100 147,110 C 151,113 149,107 147,104 Z"
+          fill="#F7B851" />
+    <path class="cel-outline"
+          d="M 138,104 C 139,86 132,68 114,59 C 99,52 85,60 92,75 C 96,84 104,87 111,82 C 120,90 133,100 147,110 C 151,113 149,107 147,104"
           fill="#F7B851" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
-    <path class="cel-shadow"
     <path class="cel-shadow" d="M 112,80 C 118,86 123,90 129,93 C 131,94 130,90 128,89 C 123,85 118,81 113,76 Z" fill="#C97E22" />
-          fill="#C97E22" />
     <path d="M 91,79 C 86,73 88,64 96,59 C 93,64 92,70 95,75 C 96,77 94,80 91,79 Z" fill="#8A4A12" />
     <path d="M 134,88 C 128,78 120,70 110,66" fill="none" stroke="#3B2416" stroke-width="1.8" stroke-linecap="round" />
     <path d="M 104,62 C 97,66 93,72 94,78" fill="none" stroke="#3B2416" stroke-width="1.8" stroke-linecap="round" />
@@ -129,10 +130,10 @@ const dogWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
           d="M 118,110 C 123,122 126,134 126,143 C 126,151 130,155 136,155 C 142,155 145,150 144,143 C 143,135 140,123 137,108 C 131,104 120,104 118,110 Z"
           fill="#F7B851" />
     <path class="cel-outline"
-          d="M 121,128 C 124,135 126,140 126,143 C 126,151 130,155 136,155 C 142,155 145,150 144,143 C 143,136 141,127 139,117"
+          d="M 118,110 C 123,122 126,134 126,143 C 126,151 130,155 136,155 C 142,155 145,150 144,143 C 143,135 140,123 137,108 C 131,104 120,104 118,110 Z"
           fill="#F7B851" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
     <path class="cel-shadow"
-          d="M 130,148 C 134,150 139,149 142,146 C 142,151 139,155 136,155 C 132,155 129,152 130,148 Z"
+          d="M 124,122 C 126,129 127,135 128,140 C 131,143 135,143 137,140 C 137,134 136,125 134,117 C 130,116 126,118 124,122 Z"
           fill="#C97E22" />
     <path d="M 131,147 C 131,150 131,153 131,154" fill="none" stroke="#3B2416" stroke-width="1.5" stroke-linecap="round" />
   </g>
@@ -141,10 +142,10 @@ const dogWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
           d="M 140,116 C 145,128 148,140 148,149 C 148,157 152,161 158,161 C 164,161 167,156 166,149 C 165,139 161,127 157,112 C 151,108 142,110 140,116 Z"
           fill="#F7B851" />
     <path class="cel-outline"
-          d="M 145,133 C 147,140 148,145 148,149 C 148,157 152,161 158,161 C 164,161 167,156 166,149 C 165,140 162,130 159,120"
+          d="M 140,116 C 145,128 148,140 148,149 C 148,157 152,161 158,161 C 164,161 167,156 166,149 C 165,139 161,127 157,112 C 151,108 142,110 140,116 Z"
           fill="#F7B851" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
     <path class="cel-shadow"
-          d="M 152,154 C 156,156 161,155 164,151 C 164,156 161,161 158,161 C 154,161 151,158 152,154 Z"
+          d="M 145,125 C 148,134 150,143 150,150 C 152,152 154,152 156,150 C 160,143 160,132 157,121 C 153,120 148,121 145,125 Z"
           fill="#C97E22" />
     <path d="M 153,153 C 153,156 153,159 153,160" fill="none" stroke="#3B2416" stroke-width="1.5" stroke-linecap="round" />
   </g>
@@ -163,23 +164,23 @@ const dogWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
 
   <g class="left-paw" style="transform-origin: 74px 140px;">
     <path class="cel-base"
-          d="M 84,142 C 76,140 66,139 60,133 C 56,140 55,150 59,159 C 63,166 72,168 79,166 C 86,164 88,154 84,142 Z"
+          d="M 84,142 C 76,140 66,139 61,133 C 55,137 51,147 55,157 C 58,165 67,168 75,166 C 82,164 87,153 84,142 Z"
           fill="#FFF8EC" />
     <path class="cel-outline"
-          d="M 59,159 C 63,166 72,168 79,166 C 86,164 88,154 84,142"
+          d="M 55,157 C 58,165 67,168 75,166 C 82,164 87,153 84,142"
           fill="#FFF8EC" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
     <path class="cel-shadow"
-          d="M 64.53,162.94 L 66.65,164.25 L 68.98,165.18 L 71.41,165.74 L 73.48,166.73 L 76.29,166.56 L 78.76,165.29 L 80.87,164.31 L 82.55,162.73 L 84.71,160.69 L 85.62,157.75 L 86.02,154.34 L 85.89,150.53 L 84.24,148.03 L 84.24,148.03 L 82.48,150.87 L 81.25,154.16 L 80.04,156.6 L 78.89,158.16 L 77.99,158.89 L 77.48,159.11 L 76.82,159.37 L 75.4,159.85 L 73.54,160.38 L 71.51,160.88 L 69.3,161.32 L 66.78,161.76 L 64.53,162.94 Z"
+          d="M 60,160 C 63,164 68,166 74,165 C 77,164 79,162 80,160 C 80,163 77,165 73,165 C 66,166 62,164 60,160 Z"
           fill="#E9CFA8" />
     <path d="M 65,160 C 65,163 66,165 66,166" fill="none" stroke="#3B2416" stroke-width="1.5" stroke-linecap="round" />
     <path d="M 73,159 C 73,162 74,164 74,165" fill="none" stroke="#3B2416" stroke-width="1.5" stroke-linecap="round" />
   </g>
   <g class="right-paw" style="transform-origin: 100px 140px;">
     <path class="cel-base"
-          d="M 84,142 C 90,143 98,143 110,142 C 112,150 112,158 109,164 C 106,169 99,170 94,167 C 89,164 87,156 86,148 C 85,145 84,143 84,142 Z"
+          d="M 84,142 C 90,143 98,143 110,142 C 113,150 113,158 110,164 C 106,170 98,171 93,167 C 89,164 87,156 86,148 C 85,145 84,143 84,142 Z"
           fill="#FFF8EC" />
     <path class="cel-outline"
-          d="M 109,164 C 106,169 99,170 94,167 C 89,164 87,156 86,148 C 85,145 84,143 84,142"
+          d="M 110,164 C 106,170 98,171 93,167 C 89,164 87,156 86,148 C 85,145 84,143 84,142"
           fill="#FFF8EC" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
     <path class="cel-shadow"
           d="M 106.09,167 L 102.71,166.56 L 100.95,167.05 L 99.1,167.22 L 97.23,167.05 L 95.41,166.56 L 94,167 L 94,167 L 97.68,163.3 L 99.18,162.09 L 100.15,161.69 L 101.08,162.09 L 102.45,163.33 L 106.09,167 Z"
@@ -567,8 +568,11 @@ const dogStretchSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www
   </g>
 
   <g class="left-paw" style="transform-origin: 34px 158px;">
+    <path class="cel-base"
+          d="M 46,138 C 34,144 14,152 4,157 C -2,160 -1,166 5,167 C 15,169 30,166 44,158 C 50,153 50,140 46,138 Z"
+          fill="#FFF8EC" />
     <path class="cel-outline"
-          d="M 42,142 C 32,146 14,152 4,157 C -2,160 -1,166 5,167 C 15,169 30,165 37,161 C 42,157 44,148 42,142 Z"
+          d="M 46,138 C 34,144 14,152 4,157 C -2,160 -1,166 5,167 C 15,169 30,166 44,158"
           fill="#FFF8EC" stroke="#3B2416" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
     <path class="cel-shadow"
           d="M 5,167 C 15,169 30,165 37,161 C 40,159 41,156 41,153 C 40,158 36,162 29,164 C 20,167 10,168 5,167 Z"
