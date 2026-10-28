@@ -141,35 +141,40 @@ const catIdleSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
 const catWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
   <ellipse cx="100" cy="172" rx="54" ry="6" fill="#28140B" opacity="0.22" class="pet-shadow" />
 
-  <g class="anim-wag" style="transform-origin: 138px 122px; transform: rotate(0deg);">
+  <g class="anim-wag" style="transform-origin: 130px 112px; transform: rotate(0deg);">
     <path class="cel-outline"
-          d="M 128,130 C 154,133 173,115 178,93 C 181,76 175,64 167,63 C 161,62 157,68 160,74 C 163,80 164,86 161,94 C 156,108 143,117 130,119 Z"
+          d="M 122,102 C 138,92 152,78 163,63 C 168,57 176,60 175,69 C 174,78 165,87 153,95 C 144,101 138,110 136,120 C 128,118 122,112 122,102 Z"
           fill="#F2A85E" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
     <path class="cel-shadow"
-          d="M 130,119 C 143,117 156,108 161,94 C 164,87 163,80 161,74 C 166,81 167,90 162,99 C 156,111 145,119 132,123 Z"
+          d="M 134,114 C 142,104 149,96 156,88 C 163,80 169,72 173,63 C 172,74 164,84 153,92 C 145,99 138,107 135,115 Z"
           fill="#C4783A" />
-    <path d="M 149,116 C 158,109 164,99 166,88" fill="none" stroke="#3A1E12" stroke-width="1.8" stroke-linecap="round" />
-    <path d="M 162,73 C 165,68 169,66 173,67" fill="none" stroke="#3A1E12" stroke-width="1.8" stroke-linecap="round" />
+    <path d="M 145,90 C 152,82 158,74 162,66" fill="none" stroke="#3A1E12" stroke-width="1.8" stroke-linecap="round" />
+    <path d="M 127,105 C 138,97 148,88 155,78" fill="none" stroke="#3A1E12" stroke-width="1.8" stroke-linecap="round" />
   </g>
 
   <g class="back-foot-left" style="transform-origin: 126px 118px;">
+    <path class="cel-base"
+          d="M 114,114 C 119,126 122,138 122,147 C 122,155 126,159 132,159 C 138,159 141,154 140,147 C 139,139 136,127 133,112 C 127,108 116,108 114,114 Z"
+          fill="#F2A85E" />
     <path class="cel-outline"
-          d="M 122,106 C 133,116 139,131 140,145 C 141,155 138,163 131,164 C 124,165 120,158 120,147 C 120,133 115,117 112,109 C 115,106 119,105 122,106 Z"
+          d="M 118,130 C 121,137 122,143 122,147 C 122,155 126,159 132,159 C 138,159 141,154 140,147 C 139,140 137,131 135,120"
           fill="#F2A85E" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
     <path class="cel-shadow"
-          d="M 120,147 C 120,156 123,163 129,164 C 132,163 134,162 136,161 C 132,160 130,161 127,162 C 126,159 123,155 120,147 Z"
+          d="M 126,152 C 130,154 135,153 138,150 C 138,155 135,159 132,159 C 128,159 125,156 126,152 Z"
           fill="#C4783A" />
-    <path d="M 128,157 C 128,160 128,162 128,163" fill="none" stroke="#3A1E12" stroke-width="1.5" stroke-linecap="round" />
-    <path d="M 134,156 C 134,159 134,161 134,162" fill="none" stroke="#3A1E12" stroke-width="1.5" stroke-linecap="round" />
+    <path d="M 127,151 C 127,154 127,157 127,158" fill="none" stroke="#3A1E12" stroke-width="1.5" stroke-linecap="round" />
   </g>
-  <g class="back-foot-right" style="transform-origin: 140px 114px;">
+  <g class="back-foot-right" style="transform-origin: 140px 118px;">
+    <path class="cel-base"
+          d="M 132,120 C 137,132 140,144 140,153 C 140,161 144,165 150,165 C 156,165 159,160 158,153 C 157,145 153,133 149,117 C 143,113 134,114 132,120 Z"
+          fill="#F2A85E" />
     <path class="cel-outline"
-          d="M 136,102 C 146,112 152,127 153,141 C 154,151 151,159 145,159 C 138,159 135,152 135,141 C 135,127 130,112 127,104 C 130,101 133,100 136,102 Z"
+          d="M 135,131 C 138,140 140,147 140,153 C 140,161 144,165 150,165 C 156,165 159,160 158,153 C 157,145 154,134 150,120"
           fill="#F2A85E" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
     <path class="cel-shadow"
-          d="M 135,141 C 135,152 138,159 145,159 C 148,158 149,157 149,156 C 147,155 145,156 143,157 C 141,155 137,150 135,141 Z"
+          d="M 144,158 C 148,160 153,159 156,155 C 156,160 153,165 150,165 C 147,165 144,162 144,158 Z"
           fill="#C4783A" />
-    <path d="M 142,152 C 142,155 142,157 142,158" fill="none" stroke="#3A1E12" stroke-width="1.5" stroke-linecap="round" />
+    <path d="M 145,157 C 145,160 145,163 145,164" fill="none" stroke="#3A1E12" stroke-width="1.5" stroke-linecap="round" />
   </g>
 
   <g class="anim-breath pet-body" style="transform-origin: 104px 116px; transform: translateY(0px) rotate(0deg);">
@@ -221,6 +226,19 @@ const catWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
             d="M 42,60 C 50,61 58,58 68,50 C 60,52 52,56 45,58 Z"
             fill="#C4783A" />
     </g>
+    <path class="cel-base"
+          d="M 30,84 C 24,68 32,52 50,46 C 70,39 90,47 98,62 C 104,75 99,93 86,102 C 73,111 50,109 38,99 C 32,94 30,89 30,84 Z"
+          fill="#F2A85E" />
+    <path class="cel-outline"
+          d="M 98,88 C 103,80 104,70 98,62 C 90,47 70,39 50,46 C 32,52 24,68 30,84 C 30,89 32,94 38,99 C 45,105 51,108 56,109"
+          fill="#F2A85E" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+    <path class="cel-shadow" d="M 86,51 C 91,53 95,60 96,69 C 97,78 94,85 90,89 C 92,82 93,74 92,67 C 91,59 89,54 86,51 Z" fill="#C4783A" />
+          fill="#C4783A" />
+    <path class="cel-base" d="M 48,94 C 60,102 74,105 86,99 C 82,107 68,111 56,107 C 48,104 44,98 48,94 Z" fill="#F2A85E" />
+    <path class="cel-shadow" d="M 52,96 C 62,103 74,105 84,100 C 80,107 66,109 56,105 C 52,103 50,99 52,96 Z" fill="#C4783A" />
+    <path d="M 58,86 C 64,93 72,97 80,98" fill="none" stroke="#3A1E12" stroke-width="1.8" stroke-linecap="round" />
+    <path d="M 70,82 C 76,89 83,93 89,94" fill="none" stroke="#3A1E12" stroke-width="1.8" stroke-linecap="round" />
+
     <g class="pet-ear pet-ear-right" style="transform-origin: 78px 42px;">
       <path class="cel-outline"
             d="M 68,54 C 68,42 74,32 82,28 C 88,36 92,46 92,56 C 84,60 74,59 68,54 Z"
@@ -231,12 +249,6 @@ const catWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
             fill="#C4783A" />
     </g>
 
-    <path class="cel-outline"
-          d="M 30,84 C 24,68 32,52 50,46 C 70,39 90,47 98,62 C 104,75 99,93 86,102 C 73,111 50,109 38,99 C 32,94 30,89 30,84 Z"
-          fill="#F2A85E" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
-    <path class="cel-shadow"
-          d="M 96.36,59.27 L 98,62 L 99,64.49 L 99.74,67.08 L 100.23,69.75 L 100.48,72.47 L 100.49,75.23 L 100.27,78 L 99.81,80.76 L 99.12,83.5 L 98.22,86.19 L 97.09,88.82 L 95.75,91.35 L 94.2,93.78 L 92.45,96.08 L 90.49,98.23 L 88.34,100.21 L 86,102 L 83.45,103.56 L 80.7,104.87 L 77.77,105.92 L 74.7,106.73 L 71.52,107.31 L 68.26,107.64 L 64.95,107.75 L 61.62,107.62 L 58.31,107.28 L 55.03,106.72 L 51.83,105.94 L 48.73,104.95 L 45.77,103.76 L 42.97,102.37 L 40.37,100.78 L 40.37,100.78 L 44.03,100.45 L 47.04,100.94 L 50.01,101.4 L 53,101.77 L 56.01,102.01 L 59.02,102.11 L 62.02,102.06 L 64.97,101.86 L 67.85,101.5 L 70.63,100.99 L 73.28,100.32 L 75.77,99.5 L 78.07,98.54 L 80.15,97.46 L 82.06,96.24 L 83.84,94.85 L 85.54,93.31 L 87.12,91.64 L 88.59,89.86 L 89.94,87.97 L 91.16,85.98 L 92.26,83.91 L 93.22,81.77 L 94.05,79.56 L 94.73,77.31 L 95.28,75.02 L 95.68,72.7 L 95.95,70.34 L 96.07,67.95 L 96.07,65.49 L 96.04,62.99 L 96.36,59.27 Z"
-          fill="#C4783A" />
     <path d="M 46,48 C 49,56 49,63 47,69 C 44,63 43,55 44,48 Z" fill="#8A4A1E" />
     <path d="M 62,44 C 65,52 65,59 63,65 C 60,59 59,51 60,44 Z" fill="#8A4A1E" />
 

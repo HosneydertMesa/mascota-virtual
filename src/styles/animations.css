@@ -84,7 +84,7 @@
 
 .walking-bob.cat-walk .anim-wag {
   animation: catTailWalk 1.3s infinite ease-in-out !important;
-  transform-origin: 138px 122px !important;
+  transform-origin: 130px 112px !important;
 }
 
 @keyframes catTailWalk {
@@ -104,7 +104,7 @@
 
 .walking-bob.dog-walk .anim-wag-fast {
   animation: dogTailWalk 0.24s infinite ease-in-out !important;
-  transform-origin: 146px 104px !important;
+  transform-origin: 142px 106px !important;
 }
 
 @keyframes dogTailWalk {
@@ -144,7 +144,7 @@
 }
 .cat-walk .back-foot-right {
   animation: catWalkSwingRight 0.65s infinite ease-in-out;
-  transform-origin: 140px 114px;
+  transform-origin: 140px 118px;
 }
 .cat-walk .right-paw {
   animation: catWalkSwingLeft 0.65s infinite ease-in-out;
@@ -155,7 +155,7 @@
 
 .dog-walk .back-foot-left {
   animation: dogWalkSwingLeft 0.48s infinite ease-in-out;
-  transform-origin: 124px 104px;
+  transform-origin: 128px 108px;
 }
 .dog-walk .left-paw {
   animation: dogWalkSwingRight 0.48s infinite ease-in-out;
@@ -163,7 +163,7 @@
 }
 .dog-walk .back-foot-right {
   animation: dogWalkSwingRight 0.48s infinite ease-in-out;
-  transform-origin: 138px 100px;
+  transform-origin: 148px 116px;
 }
 .dog-walk .right-paw {
   animation: dogWalkSwingLeft 0.48s infinite ease-in-out;
