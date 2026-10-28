@@ -104,7 +104,7 @@
 
 .walking-bob.dog-walk .anim-wag-fast {
   animation: dogTailWalk 0.24s infinite ease-in-out !important;
-  transform-origin: 142px 106px !important;
+  transform-origin: 140px 108px !important;
 }
 
 @keyframes dogTailWalk {
