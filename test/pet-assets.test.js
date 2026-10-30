@@ -1850,3 +1850,190 @@ test('README de capturas: indexa las 12 capturas y documenta el comando para reg
   assert.match(md, /python\s+test\/preview\/pet-poses-capture\.py/,
     'el README debe documentar el comando para regenerar las capturas');
 });
+
+// =============================================================
+// PASO 1 — Geometria de las patas delanteras de la pose walk de Luna
+// Plan: docs/plans/2026-10-30-pose-caminar-luna.md (paso 1, §4 T1-T4)
+//
+// Las 4 metricas se derivan de la geometria REAL del SVG (no de literales),
+// asi que un redibujo que vuelva a cruzar las patas, a dejar el hombro
+// fuera del pecho o a convertir la pata en un palo recto cae en rojo.
+//
+//  T1  las patas van separadas en zancuda (aire >= 2 px, solape <= 8%)
+//  T2  los contornos de tinta de las dos patas no se cruzan (no hay X)
+//  T3  el hombro queda enterrado >= 6 px dentro de la silueta del torso
+//  T4  el eje de la pata se desvía >= 3 px de la recta hombro-mano (codo)
+//      y la mano es >= 1.25x mas ancha que el antebrazo
+// =============================================================
+
+/** BBox conjunto de un conjunto de poligonos. */
+function polysBBox(polys) {
+  const box = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
+  for (const poly of polys) {
+    for (const p of poly) {
+      if (p[0] < box.minX) box.minX = p[0];
+      if (p[0] > box.maxX) box.maxX = p[0];
+      if (p[1] < box.minY) box.minY = p[1];
+      if (p[1] > box.maxY) box.maxY = p[1];
+    }
+  }
+  return box;
+}
+
+/** Area total (px2) de un conjunto de poligonos. */
+function polysArea(polys) {
+  return polys.reduce((acc, poly) => acc + Math.abs(celGeo.polygonArea(poly)), 0);
+}
+
+/** Filas horizontales de una silueta rellena: y -> { minX, maxX }. */
+function silhouetteRows(polys, step = 0.5) {
+  const rows = new Map();
+  const add = (x, y) => {
+    const key = Math.round(y * 2) / 2;
+    const row = rows.get(key);
+    if (!row) rows.set(key, { minX: x, maxX: x, y: key });
+    else {
+      if (x < row.minX) row.minX = x;
+      if (x > row.maxX) row.maxX = x;
+    }
+  };
+  for (const poly of polys) {
+    for (const p of celGeo.sampleBoundary(poly, step)) add(p[0], p[1]);
+    for (const p of celGeo.sampleInterior(poly, step)) add(p[0], p[1]);
+  }
+  return [...rows.values()].sort((a, b) => a.y - b.y);
+}
+
+/** Orientacion de un trio de puntos (1 antihorario, -1 horario, 0 colineal). */
+function orient(ax, ay, bx, by, cx, cy) {
+  const v = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
+  if (v > 1e-9) return 1;
+  if (v < -1e-9) return -1;
+  return 0;
+}
+
+/** Cruce PROPIO de dos segmentos (el roce o el contacto no cuentan). */
+function segmentsCross(p1, p2, p3, p4) {
+  const d1 = orient(p3[0], p3[1], p4[0], p4[1], p1[0], p1[1]);
+  const d2 = orient(p3[0], p3[1], p4[0], p4[1], p2[0], p2[1]);
+  const d3 = orient(p1[0], p1[1], p2[0], p2[1], p3[0], p3[1]);
+  const d4 = orient(p1[0], p1[1], p2[0], p2[1], p4[0], p4[1]);
+  return d1 * d2 < 0 && d3 * d4 < 0;
+}
+
+/** Numero de cruces propios entre dos conjuntos de polilineas cerradas. */
+function countCrossings(polysA, polysB) {
+  const segs = (polys) => polys.map((poly) => poly.map((p, i) => [p, poly[(i + 1) % poly.length]]));
+  const a = segs(polysA);
+  const b = segs(polysB);
+  let n = 0;
+  for (const segA of a) {
+    for (const segB of b) {
+      if (segmentsCross(segA[0], segA[1], segB[0], segB[1])) n++;
+    }
+  }
+  return n;
+}
+
+test('pose walk de Luna: las patas delanteras van separadas en zancuda, sin cruzarse', () => {
+  const body = massOutlinePolys(catWalkSVG, 'pet-body');
+  const left = massFilledPolys(catWalkSVG, 'left-paw');
+  const right = massFilledPolys(catWalkSVG, 'right-paw');
+  assert.ok(body.length > 0, 'no se encontro la silueta del torso');
+  assert.ok(left.length > 0, 'no se encontro el relleno de .left-paw');
+  assert.ok(right.length > 0, 'no se encontro el relleno de .right-paw');
+
+  // Por debajo de la linea del vientre las dos patas no se tocan.
+  const yVientre = polysBBox(body).maxY;
+  const below = (polys) => polys.flatMap((poly) => poly).filter((p) => p[1] >= yVientre);
+  const leftBelow = below(left);
+  const rightBelow = below(right);
+  assert.ok(leftBelow.length > 0 && rightBelow.length > 0,
+    'las patas no tienen geometria por debajo del vientre');
+  const maxXLeft = Math.max(...leftBelow.map((p) => p[0]));
+  const minXRight = Math.min(...rightBelow.map((p) => p[0]));
+  const aire = minXRight - maxXLeft;
+  assert.ok(aire >= 2,
+    `las patas delanteras se solapan por debajo del vientre: ` +
+    `.left-paw llega a x=${maxXLeft.toFixed(1)} y .right-paw arranca en x=${minXRight.toFixed(1)} ` +
+    `(aire ${aire.toFixed(1)} px, minimo 2 px): no hay zancuda`);
+
+  // El area de solape es despreciable.
+  const overlap = celGeo.overlapArea(left, right, 0.25);
+  const minArea = Math.min(polysArea(left), polysArea(right));
+  assert.ok(overlap <= 0.08 * minArea,
+    `las patas delanteras se solapan ${overlap.toFixed(1)} px2 ` +
+    `(${(100 * overlap / minArea).toFixed(1)}% de la pata mas chica, maximo 8%)`);
+
+  // Los contornos de tinta no se cruzan entre si (no se lee una X).
+  const crossings = countCrossings(
+    massOutlinePolys(catWalkSVG, 'left-paw'),
+    massOutlinePolys(catWalkSVG, 'right-paw')
+  );
+  assert.equal(crossings, 0,
+    `los contornos de las patas delanteras se cruzan ${crossings} veces: se lee una X`);
+});
+
+test('pose walk de Luna: cada pata delantera nace del pecho (hombro enterrado)', () => {
+  const MIN_DEPTH = 6;
+  const body = massOutlinePolys(catWalkSVG, 'pet-body');
+  assert.ok(body.length > 0, 'no se encontro la silueta del torso');
+  for (const cls of ['left-paw', 'right-paw']) {
+    const paw = massFilledPolys(catWalkSVG, cls);
+    assert.ok(paw.length > 0, `no se encontro el relleno de .${cls}`);
+    let depth = 0;
+    const points = [];
+    for (const poly of paw) {
+      for (const p of poly) points.push(p);
+      for (const p of celGeo.sampleInterior(poly, 0.5)) points.push(p);
+    }
+    for (const p of points) {
+      if (!body.some((b) => celGeo.pointInPolygon(b, p[0], p[1]))) continue;
+      let d = Infinity;
+      for (const b of body) d = Math.min(d, celGeo.distanceToPolygonEdge(b, p[0], p[1]));
+      depth = Math.max(depth, d);
+    }
+    assert.ok(depth >= MIN_DEPTH,
+      `.${cls} solo se hunde ${depth.toFixed(1)} px dentro del pecho ` +
+      `(minimo ${MIN_DEPTH} px): la pata se lee pegada al cuerpo`);
+  }
+});
+
+test('pose walk de Luna: cada pata tiene codo y mano (no es un palo recto)', () => {
+  const MIN_ELBOW = 3;
+  const MIN_HAND = 1.25;
+  for (const cls of ['left-paw', 'right-paw']) {
+    const paw = massFilledPolys(catWalkSVG, cls);
+    assert.ok(paw.length > 0, `no se encontro el relleno de .${cls}`);
+    const rows = silhouetteRows(paw);
+    assert.ok(rows.length >= 4, `.${cls} es demasiado plano para medirlo`);
+    const top = rows[0];
+    const bottom = rows[rows.length - 1];
+    const mid = rows[Math.floor(rows.length / 2)];
+    const shoulder = { x: (top.minX + top.maxX) / 2, y: top.y };
+    const hand = { x: (bottom.minX + bottom.maxX) / 2, y: bottom.y };
+
+    // Desvio maximo del eje de la pata respecto de la recta hombro-mano.
+    const vx = hand.x - shoulder.x;
+    const vy = hand.y - shoulder.y;
+    const len = Math.hypot(vx, vy) || 1;
+    let dev = 0;
+    for (const row of rows) {
+      const cx = (row.minX + row.maxX) / 2;
+      const d = Math.abs((cx - shoulder.x) * vy - (row.y - shoulder.y) * vx) / len;
+      dev = Math.max(dev, d);
+    }
+    assert.ok(dev >= MIN_ELBOW,
+      `.${cls} es un palo recto: su eje se desvía ${dev.toFixed(1)} px de la recta ` +
+      `hombro-mano (minimo ${MIN_ELBOW} px): no se ve el codo`);
+
+    // La mano (parte baja) es mas ancha que el antebrazo (parte media).
+    const handWidth = Math.max(...rows
+      .filter((row) => row.y >= bottom.y - (bottom.y - top.y) * 0.2)
+      .map((row) => row.maxX - row.minX));
+    const armWidth = mid.maxX - mid.minX;
+    assert.ok(handWidth >= MIN_HAND * armWidth,
+      `.${cls} no tiene mano: la mano mide ${handWidth.toFixed(1)} px y el antebrazo ` +
+      `${armWidth.toFixed(1)} px (se exige >= ${MIN_HAND}x)`);
+  }
+});

@@ -140,7 +140,7 @@
 }
 .cat-walk .left-paw {
   animation: catWalkSwingRight 0.65s infinite ease-in-out;
-  transform-origin: 74px 138px;
+  transform-origin: 73px 126px;
 }
 .cat-walk .back-foot-right {
   animation: catWalkSwingRight 0.65s infinite ease-in-out;
@@ -148,7 +148,7 @@
 }
 .cat-walk .right-paw {
   animation: catWalkSwingLeft 0.65s infinite ease-in-out;
-  transform-origin: 98px 138px;
+  transform-origin: 89px 124px;
 }
 .cat-walk .pet-body { transform-origin: 104px 116px; }
 .cat-walk .pet-head { transform-origin: 70px 98px; }
