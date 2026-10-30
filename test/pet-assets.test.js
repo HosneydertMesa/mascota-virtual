@@ -2037,3 +2037,99 @@ test('pose walk de Luna: cada pata tiene codo y mano (no es un palo recto)', () 
       `${armWidth.toFixed(1)} px (se exige >= ${MIN_HAND}x)`);
   }
 });
+
+// =============================================================
+// PASO 2 — Geometria del torso de la pose walk de Luna
+// Plan: docs/plans/2026-10-30-pose-caminar-luna.md (paso 2, §4 T5)
+//
+// El torso de la pose walk era un bloque: el lomo y el vientre eran
+// mesetas horizontales con esquinas de rectangulo redondeado.  La metrica
+// mide el TRAMO HORIZONTAL MAXIMO del perfil del torso (lomo y vientre)
+// que se mantiene dentro de una banda vertical de 3 px: un cuerpo de gato
+// tiene lomo arqueado y vientre curvo, asi que ningun tramo puede ser
+// una meseta larga.
+//
+// La metria se deriva de la geometria real del SVG (perfil vertical de la
+// silueta de .pet-body), asi que un redibujo que vuelva a la barra o que
+//introduzca una meseta nueva cae en rojo.
+// =============================================================
+
+/** Intersecciones de la vertical x con el borde del poligono: [yMin, yMax]. */
+function verticalSpan(poly, x) {
+  const ys = [];
+  for (let i = 0, n = poly.length; i < n; i++) {
+    const [x1, y1] = poly[i];
+    const [x2, y2] = poly[(i + 1) % n];
+    if (x1 === x2) continue;
+    if (x < Math.min(x1, x2) || x > Math.max(x1, x2)) continue;
+    const t = (x - x1) / (x2 - x1);
+    ys.push(y1 + t * (y2 - y1));
+  }
+  if (ys.length === 0) return null;
+  ys.sort((a, b) => a - b);
+  return { min: ys[0], max: ys[ys.length - 1] };
+}
+
+/** Perfil vertical de la silueta: por cada x, el borde superior e inferior. */
+function verticalProfile(poly, step = 0.25) {
+  const box = celGeo.polygonBBox(poly);
+  const out = [];
+  for (let x = box.minX; x <= box.maxX; x += step) {
+    const span = verticalSpan(poly, x);
+    if (!span) continue;
+    out.push({ x, top: span.min, bottom: span.max });
+  }
+  return out;
+}
+
+/**
+ * Tramo horizontal mas largo del perfil que se mantiene dentro de una banda
+ * vertical de `band` px.  Devuelve el span (en px) y el tramo [xDesde, xHasta].
+ */
+function maxFlatSpan(profile, key, band) {
+  let best = 0;
+  let bestRange = null;
+  let from = profile[0].x;
+  let min = profile[0][key];
+  let max = profile[0][key];
+  for (const p of profile) {
+    const nMin = Math.min(min, p[key]);
+    const nMax = Math.max(max, p[key]);
+    if (nMax - nMin <= band) {
+      min = nMin;
+      max = nMax;
+      if (p.x - from > best) {
+        best = p.x - from;
+        bestRange = [from, p.x];
+      }
+    } else {
+      from = p.x;
+      min = p[key];
+      max = p[key];
+    }
+  }
+  return { span: best, range: bestRange };
+}
+
+test('pose walk de Luna: el torso no es un bloque (lomo y vientre curvos)', () => {
+  const MAX_BACK = 20;
+  const MAX_BELLY = 24;
+  const BAND = 3;
+
+  const body = massOutlinePolys(catWalkSVG, 'pet-body');
+  assert.ok(body.length > 0, 'no se encontro la silueta del torso');
+  const profile = verticalProfile(body[0]);
+  assert.ok(profile.length > 20, 'el torso es demasiado plano para medirlo');
+
+  const back = maxFlatSpan(profile, 'top', BAND);
+  assert.ok(back.span <= MAX_BACK,
+    `el lomo del torso tiene una meseta horizontal de ${back.span.toFixed(1)} px ` +
+    `(x ${back.range[0].toFixed(1)}..${back.range[1].toFixed(1)}, maximo ${MAX_BACK} px ` +
+    `dentro de una banda de ${BAND} px): el torso se lee como un bloque recto`);
+
+  const belly = maxFlatSpan(profile, 'bottom', BAND);
+  assert.ok(belly.span <= MAX_BELLY,
+    `el vientre del torso tiene una meseta horizontal de ${belly.span.toFixed(1)} px ` +
+    `(x ${belly.range[0].toFixed(1)}..${belly.range[1].toFixed(1)}, maximo ${MAX_BELLY} px ` +
+    `dentro de una banda de ${BAND} px): el vientre se lee como un bloque recto`);
+});
