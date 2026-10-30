@@ -25,7 +25,7 @@ correr el comando de abajo.
 | [`cat-lay.png`](cat-lay.png) | Luna (gato) | lay | Acostada panza abajo, patas estiradas |
 | [`cat-stretch.png`](cat-stretch.png) | Luna (gato) | stretch | Estirada, grupa alta, cola alzada |
 | [`dog-idle.png`](dog-idle.png) | Max (perro) | idle | Pose de referencia del shiba: orejas caidas, hocico, cola en sable |
-| [`dog-walk.png`](dog-walk.png) | Max (perro) | walk | Perfil: la silueta exterior debe leerse como una sola linea continua |
+| [`dog-walk.png`](dog-walk.png) | Max (perro) | walk | Cola que nace de la grupa y se enrosca hacia arriba sin apoyarse en el lomo (queda aire entre el rizo y la espalda); pecho mas hondo que la cintura; la pata delantera lejana pegada al vientre (sin cuna de fondo entre la pata y el cuerpo); silueta unica (una sola linea continua) |
 | [`dog-sleep.png`](dog-sleep.png) | Max (perro) | sleep | Acostado, ojos cerrados, sombra de piso mas baja |
 | [`dog-sit.png`](dog-sit.png) | Max (perro) | sit | Sentado, pecho erguido, cola en curva baja al costado |
 | [`dog-lay.png`](dog-lay.png) | Max (perro) | lay | Acostado panza abajo, patas estiradas |
