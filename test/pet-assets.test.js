@@ -2113,6 +2113,50 @@ test('pose walk de Luna: la pata delantera se funde con el vientre (sin costura 
 });
 
 // =============================================================
+// PASO 1 (ter) — Las patas delanteras no se comen la sombra del vientre
+//
+// QA 2026-10-30 (ronda 3): el "hombro enterrado" de cada pata delantera era
+// un parche naranja (cel-base) pegado ENCIMA del torso, y como la sombra
+// plana del vientre (cel-shadow) pasa justo por ahi, el parche la comia:
+// en pantalla se leia como un BULTO REDONDO NARANJA en el vientre entre las
+// patas, que partia la banda de sombra en un escalon.
+//
+// El hombro tiene que quedar enterrado en el pecho (guard de >= 6 px) pero
+// su relleno no puede pisar el plano de sombra del torso: ese parche se
+// dibuja DETRAS de la sombra (por encima de su borde interior), que es la
+// unica forma de que la banda de sombra siga siendo una linea continua.
+//
+// El guard mide el area del relleno claro de cada pata que se superpone al
+// plano de sombra del torso: tiene que ser ~0.
+// =============================================================
+
+test('pose walk de Luna: las patas delanteras no tapan la sombra del vientre', () => {
+  const MAX_COVER = 0.01; // 1% del plano de sombra del torso
+  const shapes = celGeo.collectFilledShapes(catWalkSVG);
+  const shadow = shapes.find((s) => s.isShadow &&
+    s.chain.some((el) => celGeo.classTokensOf(el).includes('pet-body')));
+  assert.ok(shadow, 'no se encontro el plano de sombra del torso');
+  const shadowPolys = celGeo.transformPolys(shadow.polys, shadow.matrix);
+  const shadowArea = shadowPolys.reduce((a, p) => a + Math.abs(celGeo.polygonArea(p)), 0);
+  assert.ok(shadowArea > 0, 'el plano de sombra del torso no tiene area');
+
+  for (const cls of ['left-paw', 'right-paw']) {
+    // Solo el relleno CLARO (el color del torso): el calcetin crema y la
+    // sombra propia de la pata no se comen la banda de sombra.
+    const light = shapes.filter((s) =>
+      s.chain.some((el) => celGeo.classTokensOf(el).includes(cls)) &&
+      (s.el.attrs.fill || '').toUpperCase() === '#F2A85E');
+    assert.ok(light.length > 0, `no se encontro el relleno claro de .${cls}`);
+    const polys = light.flatMap((s) => celGeo.transformPolys(s.polys, s.matrix));
+    const covered = celGeo.overlapArea(polys, shadowPolys, 0.25);
+    assert.ok(covered <= MAX_COVER * shadowArea,
+      `.${cls} tapa ${covered.toFixed(1)} px2 (${(100 * covered / shadowArea).toFixed(1)}%) ` +
+      `del plano de sombra del vientre (maximo ${MAX_COVER * 100}%): el relleno claro de la ` +
+      `pata se come la banda de sombra y se ve un bulto en el vientre entre las patas`);
+  }
+});
+
+// =============================================================
 // PASO 2 — Geometria del torso de la pose walk de Luna
 // Plan: docs/plans/2026-10-30-pose-caminar-luna.md (paso 2, §4 T5)
 //
