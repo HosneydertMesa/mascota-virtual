@@ -145,9 +145,15 @@ const catIdleSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
 // franja de fondo entre el torso y la pata) y el `cel-outline` sube hasta ahi
 // con la tinta abierta: si el relleno se recorta por debajo del vientre, el
 // hombro se lee como un parche pegado.
-// Cada pata lleva ademas un `cel-base` naranja pequeno dentro del pecho: es
-// el hombro enterrado (el guard de "hombro enterrado >= 6 px" lo mide) y es
-// invisible a pantalla porque coincide con el color del torso.
+// El `cel-base` de cada pata es UN solo relleno (un unico path) con dos lóbulos:
+// la pata visible y el HOMBRO ENTERRADO en el pecho (el guard de "hombro
+// enterrado >= 6 px" lo mide). Los dos lóbulos no se pueden fundir en uno solo
+// porque entre el pecho y la pata esta la banda de sombra del vientre
+// (`cel-shadow` del torso): el relleno claro de la pata no la puede pisar (el
+// guard de "las patas delanteras no tapan la sombra del vientre"), asi que el
+// lóbulo del hombro cabalga sobre el borde INTERIOR de esa banda. Los dos
+// lóbulos son invisibles a pantalla (coinciden con el naranja del torso) y la
+// banda de sombra sigue siendo una linea continua.
 const catWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
   <ellipse cx="100" cy="172" rx="54" ry="6" fill="#28140B" opacity="0.22" class="pet-shadow" />
 
@@ -216,10 +222,8 @@ const catWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
              C 76,150.7 78,147.7 79.4,143.8
              C 80.4,140.7 80.7,137.3 80.5,133.8
              C 77.5,135.1 75,136.4 73,137.3
-             C 71.5,138 70,138.5 68.5,138.8 Z"
-          fill="#F2A85E" />
-    <path class="cel-base"
-          d="M 70.8,134.8
+             C 71.5,138 70,138.5 68.5,138.8 Z
+             M 70.8,134.8
              C 76.5,129.3 78.1,128.5 80,127.6
              C 79.4,124.6 78.2,121.4 76,120
              C 74.4,119 72.2,119.2 70.4,120.6
@@ -273,10 +277,8 @@ const catWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
              C 103.2,136.6 102.8,132 101.5,128.5
              C 100.6,128 99.2,127.6 97.6,127.4
              C 95.6,127.3 93,127.8 91.2,128.4
-             C 89.6,128.9 88,129.4 86.5,130.7 Z"
-          fill="#F2A85E" />
-    <path class="cel-base"
-          d="M 87,124.8
+             C 89.6,128.9 88,129.4 86.5,130.7 Z
+             M 87,124.8
              C 89.5,124.1 92.2,123.3 95,123.4
              C 95.3,120.6 94.9,117.4 93.2,116.6
              C 91.4,115.6 89.4,116.2 88.2,118

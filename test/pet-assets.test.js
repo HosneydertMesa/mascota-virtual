@@ -2090,7 +2090,8 @@ test('pose walk de Luna: la pata delantera se funde con el vientre (sin costura 
     const xb = ink[ink.length - 1][0];
 
     // El relleno de la pata es el grande del grupo (los demas son la sombra,
-    // el calcetin de la mano y el hombro enterrado).
+    // el calcetin de la mano y el lóbulo del hombro enterrado, que es parte
+    // del mismo `cel-base` de la pata).
     const fills = massFilledPolys(catWalkSVG, cls);
     assert.ok(fills.length > 0, `no se encontro el relleno de .${cls}`);
     const leg = fills.reduce((best, poly) =>
@@ -2122,9 +2123,12 @@ test('pose walk de Luna: la pata delantera se funde con el vientre (sin costura 
 // patas, que partia la banda de sombra en un escalon.
 //
 // El hombro tiene que quedar enterrado en el pecho (guard de >= 6 px) pero
-// su relleno no puede pisar el plano de sombra del torso: ese parche se
-// dibuja DETRAS de la sombra (por encima de su borde interior), que es la
-// unica forma de que la banda de sombra siga siendo una linea continua.
+// su relleno no puede pisar el plano de sombra del torso. OJO con el orden
+// de pintado: las patas delanteras se pintan DESPUES del torso, asi que su
+// relleno claro va ENCIMA de la sombra, nunca detras. Lo que mantiene la
+// banda de sombra continua es que el lóbulo del hombro del `cel-base` de la
+// pata cabalgue sobre el borde INTERIOR de la banda (el lado del pecho), sin
+// taparla: por eso la cobertura medida es 0.
 //
 // El guard mide el area del relleno claro de cada pata que se superpone al
 // plano de sombra del torso: tiene que ser ~0.
