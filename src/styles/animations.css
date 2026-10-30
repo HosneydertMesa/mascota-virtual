@@ -104,7 +104,7 @@
 
 .walking-bob.dog-walk .anim-wag-fast {
   animation: dogTailWalk 0.24s infinite ease-in-out !important;
-  transform-origin: 140px 108px !important;
+  transform-origin: 152px 106px !important;
 }
 
 @keyframes dogTailWalk {
@@ -169,7 +169,7 @@
   animation: dogWalkSwingLeft 0.48s infinite ease-in-out;
   transform-origin: 100px 140px;
 }
-.dog-walk .pet-body { transform-origin: 106px 112px; }
+.dog-walk .pet-body { transform-origin: 108px 113px; }
 .dog-walk .pet-head { transform-origin: 60px 94px; }
 
 /* Sit keeps old frontal pivots (Luna) / Max sit origins. */

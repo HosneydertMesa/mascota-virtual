@@ -14,6 +14,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const {
   catIdleSVG, catWalkSVG, catWalk1SVG, catWalk2SVG, catWalk3SVG, catWalk4SVG, catSleepSVG,
@@ -1835,6 +1836,214 @@ test('capturas: existe un PNG por pose en docs/pet-screenshots', () => {
     assert.ok(buf.length > 1000, `${pose.id}.png esta vacia (${buf.length} bytes)`);
     assert.equal(buf.subarray(1, 4).toString('ascii'), 'PNG',
       `${pose.id}.png no es un PNG valido`);
+  }
+});
+
+// =============================================================
+// POSE DE CAMINAR DE MAX — plan 2026-10-30-dog-walk-pose-fix
+//
+// Dos guards DERIVADOS (se calculan de la geometria real del SVG, asi que
+// un redibujo que rompa la pose falla en verde) + un guard de alcance:
+//
+//  1. la cola nace de la grupa y se curva hacia arriba (gancho de shiba):
+//     no se apoya en el lomo y queda aire entre el rizo y la espalda;
+//  2. el torso se lee como un perro en marcha (lomo con hombro/plinga/grupa
+//     y vientre con pecho/cintura), no como un bloque;
+//  3. el cambio queda acotado a la pose de caminar de Max.
+// =============================================================
+
+/** BBox conjunto de varios poligonos. */
+function polysBBox(polys) {
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const poly of polys) {
+    const b = celGeo.polygonBBox(poly);
+    minX = Math.min(minX, b.minX);
+    minY = Math.min(minY, b.minY);
+    maxX = Math.max(maxX, b.maxX);
+    maxY = Math.max(maxY, b.maxY);
+  }
+  return { minX, minY, maxX, maxY };
+}
+
+/** Intersecciones de la vertical `x` con el borde del poligono. */
+function verticalCrossings(poly, x) {
+  const ys = [];
+  for (let i = 0; i < poly.length; i++) {
+    const a = poly[i];
+    const b = poly[(i + 1) % poly.length];
+    const x1 = a[0];
+    const x2 = b[0];
+    if (Math.abs(x2 - x1) < 1e-9) {
+      if (Math.abs(x - x1) < 1e-9) {
+        ys.push(a[1]);
+        ys.push(b[1]);
+      }
+      continue;
+    }
+    const t = (x - x1) / (x2 - x1);
+    if (t < 0 || t > 1) continue;
+    ys.push(a[1] + t * (b[1] - a[1]));
+  }
+  return ys;
+}
+
+/** Linea del lomo (borde superior del torso) en una x. null si no hay corte. */
+function topLineAt(poly, x) {
+  const ys = verticalCrossings(poly, x);
+  return ys.length ? Math.min(...ys) : null;
+}
+
+/** Linea del vientre (borde inferior del torso) en una x. */
+function bottomLineAt(poly, x) {
+  const ys = verticalCrossings(poly, x);
+  return ys.length ? Math.max(...ys) : null;
+}
+
+test('dog walk: la cola nace de la grupa y se curva hacia arriba sin apoyarse en el lomo', () => {
+  const tail = massOutlinePolys(dogWalkSVG, 'anim-wag');
+  const body = massOutlinePolys(dogWalkSVG, 'pet-body');
+  assert.ok(tail.length > 0, 'no se encontro la silueta de la cola');
+  assert.ok(body.length > 0, 'no se encontro la silueta del cuerpo');
+  const torso = body[0];
+  const bb = polysBBox(body);
+  const width = bb.maxX - bb.minX;
+
+  // 1. la raiz de la cola (la parte que queda dentro del torso) esta en el
+  //    tercio trasero: la cola nace de la grupa, no del lomo.
+  const rearLimit = bb.minX + 0.62 * width;
+  let buried = 0;
+  for (const poly of tail) {
+    for (const p of poly) {
+      if (!body.some((b) => celGeo.pointInPolygon(b, p[0], p[1]))) continue;
+      buried++;
+      assert.ok(p[0] >= rearLimit,
+        `la cola entra en el torso en x=${p[0].toFixed(1)} (limite del tercio trasero ` +
+        `${rearLimit.toFixed(1)}): la cola no nace de la grupa`);
+    }
+  }
+  assert.ok(buried > 0, 'la cola no entra en el torso: la raiz queda suelta');
+
+  // 2. la punta de la cola sube >= 10 px por encima del punto mas alto del
+  //    torso: la cola se curva hacia arriba, no cae como una masa.
+  const tailTop = Math.min(...tail.flat().map((p) => p[1]));
+  const bodyTop = Math.min(...body.flat().map((p) => p[1]));
+  assert.ok(bodyTop - tailTop >= 10,
+    `la cola solo sube ${(bodyTop - tailTop).toFixed(1)} px por encima del torso ` +
+    `(minimo 10 px): la cola no se curva hacia arriba`);
+
+  // 3. en la banda del lomo, todo punto de cola VISIBLE (fuera del torso)
+  //    queda >= 5 px por encima de la linea del lomo: hay aire entre el
+  //    rizo y la espalda.
+  const bandFrom = bb.minX + 0.30 * width;
+  const bandTo = bb.maxX - 10;
+  let visible = 0;
+  for (const poly of tail) {
+    for (const p of poly) {
+      if (p[0] < bandFrom || p[0] > bandTo) continue;
+      if (body.some((b) => celGeo.pointInPolygon(b, p[0], p[1]))) continue;
+      visible++;
+      const top = topLineAt(torso, p[0]);
+      assert.ok(top !== null, `el torso no tiene linea de lomo en x=${p[0].toFixed(1)}`);
+      assert.ok(top - p[1] >= 5,
+        `la cola visible en x=${p[0].toFixed(1)} queda a ${(top - p[1]).toFixed(1)} px ` +
+        'de la linea del lomo (minimo 5 px): la cola se apoya en la espalda');
+    }
+  }
+  assert.ok(visible > 0, 'la cola no se ve sobre la banda del lomo: el guard no mide nada');
+});
+
+test('dog walk: el torso de Max al caminar tiene linea de lomo y de vientre de perro en marcha (no un bloque)', () => {
+  const body = massOutlinePolys(dogWalkSVG, 'pet-body');
+  assert.ok(body.length > 0, 'no se encontro la silueta del cuerpo');
+  const torso = body[0];
+  const bb = polysBBox(body);
+  const width = bb.maxX - bb.minX;
+
+  const frontFrom = bb.minX;
+  const frontTo = bb.minX + width / 3;
+  const waistFrom = bb.minX + width / 3;
+  const waistTo = bb.minX + (2 * width) / 3;
+
+  // profundidad de la silueta (altura) en el pecho y en la cintura
+  let chestDepth = 0;
+  let chestBelly = -Infinity;
+  for (let x = frontFrom; x <= frontTo; x += 0.5) {
+    const top = topLineAt(torso, x);
+    const bottom = bottomLineAt(torso, x);
+    if (top === null || bottom === null) continue;
+    chestDepth = Math.max(chestDepth, bottom - top);
+    chestBelly = Math.max(chestBelly, bottom);
+  }
+  let waistDepth = Infinity;
+  let waistBelly = Infinity;
+  for (let x = waistFrom; x <= waistTo; x += 0.5) {
+    const top = topLineAt(torso, x);
+    const bottom = bottomLineAt(torso, x);
+    if (top === null || bottom === null) continue;
+    waistDepth = Math.min(waistDepth, bottom - top);
+    waistBelly = Math.min(waistBelly, bottom);
+  }
+  assert.ok(chestDepth >= waistDepth + 8,
+    `el pecho (${chestDepth.toFixed(1)} px de fondo) no es 8 px mas hondo que ` +
+    `la cintura (${waistDepth.toFixed(1)} px): el torso se lee como un bloque`);
+
+  // lomo: hombro -> descenso a la plinga -> ascenso a la grupa
+  const shoulderY = topLineAt(torso, bb.minX + 0.30 * width);
+  const loinY = topLineAt(torso, bb.minX + 0.62 * width);
+  const rumpY = topLineAt(torso, bb.minX + 0.85 * width);
+  assert.ok(shoulderY !== null && loinY !== null && rumpY !== null,
+    'el torso no tiene linea de lomo medible');
+  assert.ok(loinY - shoulderY >= 4,
+    `el lomo solo desciende ${(loinY - shoulderY).toFixed(1)} px del hombro a la ` +
+    'plinga (minimo 4 px): el lomo es plano');
+  assert.ok(rumpY <= loinY - 2,
+    `el lomo no vuelve a subir en la grupa (grupa ${rumpY.toFixed(1)} px, ` +
+    `plinga ${loinY.toFixed(1)} px)`);
+
+  // vientre: sube del pecho a la cintura
+  assert.ok(chestBelly - waistBelly >= 8,
+    `el vientre solo sube ${(chestBelly - waistBelly).toFixed(1)} px del pecho a la ` +
+    'cintura (minimo 8 px): no se ve la curva de la cintura');
+});
+
+test('dog walk: el cambio esta acotado a la pose de caminar de Max', () => {
+  // Hashes congelados de las OTRAS 11 poses de produccion (las 6 de Luna +
+  // idle/sleep/sit/lay/stretch de Max). Este hash SOLO se actualiza cuando
+  // otro plan redibuje esa pose concreta, y en el mismo commit.
+  const FROZEN = {
+    'cat idle': '6ba2062d0255e2797e9464a63c0ef768c5667baf4fd6d8a852ae8bad3bc48ea1',
+    'cat walk': '2249df9f82de2df78cf0c496bfd20e35640d454a5b8ddc8eafe5b06f1dbf7e77',
+    'cat sleep': 'bec0986252add4660e7b4a29d3ce76aabef08bf684a61f6215cd993f4f99908b',
+    'cat sit': 'e4e9f1dc61b3b39775010b164d4650ed48a798d0c7b919f9e9d519f381d0d310',
+    'cat lay': '427dc89ad82d7d04a9c6db6e743d8de9498e632d22470e523b6c6f4dbfb8d743',
+    'cat stretch': '31950574fafdd99a5ced1b791844d5a13ea22d33ab6f1e6c024767fcbbb1851b',
+    'dog idle': '925142646cac7a1056cd6002b33dc6e4f32c39f21d55129bb3f0813c9c67cc7c',
+    'dog sleep': '71d85091a1204ede8aca79547e467913ab3cba104ef0100c58241037da00b9fa',
+    'dog sit': '667e36c83f8ec380284879552dfe90815f2fb3cd8707d3b19381f9a04b8189e5',
+    'dog lay': 'b91a96c195bd426fa906382702d690f757adf585c811740f0edb0bce726ddec2',
+    'dog stretch': 'd6af459f84a012e9bbcef83bca0913b21a10609bd006fecbc68eb4f3f6855875'
+  };
+  const CURRENT = {
+    'cat idle': catIdleSVG,
+    'cat walk': catWalkSVG,
+    'cat sleep': catSleepSVG,
+    'cat sit': catSitSVG,
+    'cat lay': catLaySVG,
+    'cat stretch': catStretchSVG,
+    'dog idle': dogIdleSVG,
+    'dog sleep': dogSleepSVG,
+    'dog sit': dogSitSVG,
+    'dog lay': dogLaySVG,
+    'dog stretch': dogStretchSVG
+  };
+  assert.equal(Object.keys(FROZEN).length, 11, 'el hash congelado debe cubrir 11 poses');
+  for (const [name, svg] of Object.entries(CURRENT)) {
+    const hash = crypto.createHash('sha256').update(svg, 'utf8').digest('hex');
+    assert.equal(hash, FROZEN[name],
+      `${name}: la pose cambio. Si otro plan la redibujo, actualiza su hash aqui.`);
   }
 });
 
