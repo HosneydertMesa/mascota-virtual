@@ -1,0 +1,12 @@
+# Config del harness para mascotaVirtual. Providers, roles, sdlcPath y strictCommand
+# vienen de ~/.harness/config.yaml; aquí solo va lo propio del proyecto.
+pipeline: [plan, implement, review, qa, strict, pr]
+
+# Una vez, en el worktree recién creado: git worktree no trae node_modules.
+setup:
+  - npm ci --no-audit --no-fund
+
+# Los mismos que .github/workflows/ci.yml.
+gates:
+  - npm run check
+  - npm test
