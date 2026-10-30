@@ -2059,3 +2059,73 @@ test('README de capturas: indexa las 12 capturas y documenta el comando para reg
   assert.match(md, /python\s+test\/preview\/pet-poses-capture\.py/,
     'el README debe documentar el comando para regenerar las capturas');
 });
+
+/**
+ * Celdas de la fila de la tabla de capturas de una pose.
+ * La tabla es | PNG | Especie | Estado | Que mirar |.
+ * Devuelve null si la pose no tiene fila.
+ */
+function screenshotTableRow(md, poseId) {
+  for (const line of md.split('\n')) {
+    if (!line.trim().startsWith('|')) continue;
+    const cells = line.split('|').slice(1, -1).map((c) => c.trim());
+    if (cells.length < 4) continue;
+    if (cells[0].includes(`${poseId}.png`)) return cells;
+  }
+  return null;
+}
+
+/** Texto sin acentos y en minusculas, para comparar palabras clave. */
+function plainText(s) {
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
+// =============================================================
+// POSE DE CAMINAR DE MAX — plan 2026-10-30-dog-walk-pose-fix
+//
+// La captura docs/pet-screenshots/dog-walk.png es la evidencia que mira
+// el revisor visual, asi que su fila en el README tiene que decir QUE
+// MIRAR en la pose nueva: la cola que nace de la grupa y se enrosca hacia
+// arriba sin apoyarse en el lomo, el pecho mas hondo que la cintura y la
+// silueta unica.
+// =============================================================
+
+test('README de capturas: la fila de dog-walk documenta los criterios visuales de la pose de caminar de Max', () => {
+  assert.ok(fs.existsSync(SHOTS_README_PATH),
+    'falta docs/pet-screenshots/README.md (indice de capturas)');
+  const md = fs.readFileSync(SHOTS_README_PATH, 'utf8');
+
+  const cells = screenshotTableRow(md, 'dog-walk');
+  assert.ok(cells,
+    'el README no tiene la fila de dog-walk.png en la tabla de capturas');
+  assert.match(cells[1], /Max/,
+    'la fila de dog-walk debe seguir diciendo que la pose es de Max');
+  assert.match(cells[2], /walk/,
+    'la fila de dog-walk debe seguir diciendo que el estado es walk');
+
+  const what = plainText(cells[3]);
+
+  // 1. la cola nace de la grupa y se enrosca hacia arriba sin apoyarse en el lomo
+  assert.match(what, /cola/,
+    'la fila debe decir que hay que mirar la cola');
+  assert.match(what, /grupa/,
+    'la fila debe decir que la cola nace de la grupa');
+  assert.match(what, /(hacia arriba|enroscad|gancho|sube)/,
+    'la fila debe decir que la cola se enrosca hacia arriba');
+  assert.match(what, /(sin apoy|no se apoya|apoyada)/,
+    'la fila debe decir que la cola no se apoya en el lomo');
+  assert.match(what, /lomo/,
+    'la fila debe mencionar el lomo');
+
+  // 2. el pecho es mas hondo que la cintura
+  assert.match(what, /pecho/,
+    'la fila debe decir que hay que mirar el pecho');
+  assert.match(what, /cintura/,
+    'la fila debe decir que hay que mirar la cintura');
+  assert.match(what, /(mas hondo|hondo|profundo)/,
+    'la fila debe decir que el pecho es mas hondo que la cintura');
+
+  // 3. la pose se lee como una sola silueta
+  assert.match(what, /(silueta unica|una sola silueta|una sola linea continua|un solo contorno)/,
+    'la fila debe decir que la pose se lee como una sola silueta');
+});
