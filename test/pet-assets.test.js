@@ -1952,6 +1952,43 @@ function flatTopSpan(polys, tol = 2.5) {
   return best;
 }
 
+/**
+ * Poligonos de los PLANOS DE SOMBRA (cel-shadow) de una masa.
+ * Es el counterpart de massOutlinePolys para la banda de sombra: el borde
+ * superior u(x) de esa banda es lo que se mide en el guard del gancho.
+ */
+function massShadowPolys(svg, cls) {
+  const out = [];
+  for (const mass of celGeo.collectMasses(svg)) {
+    if (!mass.classes.includes(cls)) continue;
+    for (const shadow of mass.shadows) {
+      out.push(...celGeo.transformPolys(celGeo.shapePolygons(shadow), mass.matrix));
+    }
+  }
+  return out;
+}
+
+/**
+ * El punto mas bajo del vientre (la "meseta mas baja") y su x mas a la
+ * derecha: `xDeep`. A partir de ahi el vientre tiene que subir hacia la
+ * ingle sin volver a bajar.
+ */
+function deepestBellyX(poly, bb) {
+  const samples = [];
+  for (let x = bb.minX; x <= bb.maxX; x += 0.5) {
+    const y = bottomLineAt(poly, x);
+    if (y === null) continue;
+    samples.push({ x, y });
+  }
+  if (!samples.length) return null;
+  const deepest = Math.max(...samples.map((s) => s.y));
+  let xDeep = null;
+  for (const s of samples) {
+    if (s.y >= deepest - 0.5) xDeep = s.x;
+  }
+  return xDeep === null ? null : { xDeep, samples, deepest };
+}
+
 test('dog walk: la cola nace de la grupa y se curva hacia arriba sin apoyarse en el lomo', () => {
   const tail = massOutlinePolys(dogWalkSVG, 'anim-wag');
   const body = massOutlinePolys(dogWalkSVG, 'pet-body');
@@ -2005,7 +2042,7 @@ test('dog walk: la cola nace de la grupa y se curva hacia arriba sin apoyarse en
   assert.ok(visible > 0, 'la cola no se ve sobre la banda del lomo: el guard no mide nada');
 });
 
-test('dog walk: el torso de Max al caminar tiene linea de lomo y de vientre de perro en marcha (no un bloque)', () => {
+test('dog walk: el torso de Max al caminar tiene lomo casi recto (sin joroba) y vientre de perro en marcha (no un bloque)', () => {
   const body = massOutlinePolys(dogWalkSVG, 'pet-body');
   assert.ok(body.length > 0, 'no se encontro la silueta del cuerpo');
   const torso = body[0];
@@ -2040,23 +2077,125 @@ test('dog walk: el torso de Max al caminar tiene linea de lomo y de vientre de p
     `el pecho (${chestDepth.toFixed(1)} px de fondo) no es 8 px mas hondo que ` +
     `la cintura (${waistDepth.toFixed(1)} px): el torso se lee como un bloque`);
 
-  // lomo: hombro -> descenso a la plinga -> ascenso a la grupa
-  const shoulderY = topLineAt(torso, bb.minX + 0.30 * width);
-  const loinY = topLineAt(torso, bb.minX + 0.62 * width);
-  const rumpY = topLineAt(torso, bb.minX + 0.85 * width);
-  assert.ok(shoulderY !== null && loinY !== null && rumpY !== null,
-    'el torso no tiene linea de lomo medible');
-  assert.ok(loinY - shoulderY >= 4,
-    `el lomo solo desciende ${(loinY - shoulderY).toFixed(1)} px del hombro a la ` +
-    'plinga (minimo 4 px): el lomo es plano');
-  assert.ok(rumpY <= loinY - 2,
-    `el lomo no vuelve a subir en la grupa (grupa ${rumpY.toFixed(1)} px, ` +
-    `plinga ${loinY.toFixed(1)} px)`);
+  // lomo: casi recto, sin joroba.
+  // (1) el lomo NO SUBE en ningun punto entre el hombro y la grupa: la grupa
+  //     no puede quedar por encima de la plinga (eso es la joroba);
+  // (2) el desnivel total del lomo en ese tramo es <= 7 px (lomo casi recto).
+  const shoulderX = bb.minX + 0.30 * width;
+  const rumpX = bb.minX + 0.85 * width;
+  let deepestBack = -Infinity;
+  let highestBack = Infinity;
+  for (let x = shoulderX; x <= rumpX; x += 0.5) {
+    const y = topLineAt(torso, x);
+    assert.ok(y !== null, `el torso no tiene linea de lomo en x=${x.toFixed(1)}`);
+    deepestBack = Math.max(deepestBack, y);
+    highestBack = Math.min(highestBack, y);
+    assert.ok(y >= deepestBack - 1,
+      `el lomo vuelve a subir en x=${x.toFixed(1)} (y=${y.toFixed(1)} px, ` +
+      `${(deepestBack - y).toFixed(1)} px por encima del punto mas bajo ya alcanzado, ` +
+      `y=${deepestBack.toFixed(1)} px): la grupa forma una joroba sobre la plinga`);
+  }
+  assert.ok(deepestBack - highestBack <= 7,
+    `el lomo tiene un desnivel de ${(deepestBack - highestBack).toFixed(1)} px entre el ` +
+    'hombro y la grupa (maximo 7 px): el lomo no es casi recto');
 
   // vientre: sube del pecho a la cintura
   assert.ok(chestBelly - waistBelly >= 8,
     `el vientre solo sube ${(chestBelly - waistBelly).toFixed(1)} px del pecho a la ` +
     'cintura (minimo 8 px): no se ve la curva de la cintura');
+});
+
+test('dog walk: el vientre es una sola curva continua (sin escalon ni gancho delante de las patas traseras)', () => {
+  // El borde inferior del torso tiene que ser UNA sola curva: desde su punto
+  // mas bajo (la meseta del vientre) hasta la ingle el vientre SOLO sube.
+  //
+  // Con el arte de la ronda 1 el vientre sube a y=129 en x=129 y vuelve a
+  // caer a ~132.5 en x=137: ese pico es el "escalon con borde duro" delante
+  // de las patas traseras y se lee como una pieza pegada bajo el cuerpo.
+  //
+  // El criterio es DERIVADO: se mide la linea real del vientre, asi que un
+  // redibujo que vuelva a hacer la muesca cae en rojo.
+  const body = massOutlinePolys(dogWalkSVG, 'pet-body');
+  assert.ok(body.length > 0, 'no se encontro la silueta del cuerpo');
+  const torso = body[0];
+  const bb = polysBBox(body);
+  const width = bb.maxX - bb.minX;
+  const groinX = bb.minX + 0.78 * width;
+
+  const belly = deepestBellyX(torso, bb);
+  assert.ok(belly, 'no se pudo medir la linea del vientre');
+  const { xDeep, samples, deepest } = belly;
+
+  const TOL = 0.5; // px: el vientre puede temblar, pero no volver a bajar
+  let highest = Infinity; // la y mas alta (mas arriba) que ya alcanzo el vientre
+  let checked = 0;
+  for (const s of samples) {
+    if (s.x < xDeep || s.x > groinX) continue;
+    highest = Math.min(highest, s.y);
+    checked++;
+    assert.ok(s.y <= highest + TOL,
+      `el vientre vuelve a bajar en x=${s.x.toFixed(1)} (y=${s.y.toFixed(1)} px, ` +
+      `${(s.y - highest).toFixed(1)} px por debajo del punto mas alto ya alcanzado, ` +
+      `y=${highest.toFixed(1)} px): el vientre tiene un escalon delante de las patas traseras`);
+  }
+  assert.ok(checked > 20, 'el guard no midio el tramo del vientre: la medida esta vacia');
+
+  // ademas el vientre tiene que SUBIR de verdad hacia la ingle
+  const rise = deepest - bottomLineAt(torso, groinX);
+  assert.ok(rise >= 8,
+    `el vientre solo sube ${rise.toFixed(1)} px del punto mas bajo a la ingle ` +
+    '(minimo 8 px): el bajo del cuerpo no se levanta hacia las patas traseras');
+});
+
+test('dog walk: la sombra plana del vientre no forma un gancho', () => {
+  // El borde superior u(x) de la banda de sombra del bajo del cuerpo tiene
+  // que ser una linea suave. Una punta (u(x) mas de 3 px por encima del
+  // promedio de sus vecinas) se lee como un gancho de sombra: es el defecto
+  // que hace que el bajo del cuerpo parezca una pieza pegada.
+  //
+  // Con el arte de la ronda 1 la punta esta en x~122 (6-7 px por encima del
+  // promedio de sus vecinas).
+  const body = massOutlinePolys(dogWalkSVG, 'pet-body');
+  assert.ok(body.length > 0, 'no se encontro la silueta del cuerpo');
+  const torso = body[0];
+  const bb = polysBBox(body);
+  const width = bb.maxX - bb.minX;
+  const groinX = bb.minX + 0.78 * width;
+
+  const belly = deepestBellyX(torso, bb);
+  assert.ok(belly, 'no se pudo medir la linea del vientre');
+  const { xDeep } = belly;
+
+  const shadowPolys = massShadowPolys(dogWalkSVG, 'pet-body');
+  assert.ok(shadowPolys.length > 0, 'no se encontro el plano de sombra del torso');
+
+  /** Borde superior del plano de sombra (el min y del plano) en una x. */
+  const upperAt = (x) => {
+    let u = null;
+    for (const poly of shadowPolys) {
+      const ys = verticalCrossings(poly, x);
+      if (!ys.length) continue;
+      const top = Math.min(...ys);
+      if (u === null || top < u) u = top;
+    }
+    return u;
+  };
+
+  const HALF = 8; // px: las vecinas con las que se compara
+  let checked = 0;
+  for (let x = xDeep - 10; x <= groinX; x += 0.5) {
+    const u = upperAt(x);
+    const uLeft = upperAt(x - HALF);
+    const uRight = upperAt(x + HALF);
+    if (u === null || uLeft === null || uRight === null) continue;
+    checked++;
+    const limit = (uLeft + uRight) / 2 - 3;
+    assert.ok(u >= limit,
+      `la sombra del vientre forma una punta en x=${x.toFixed(1)} ` +
+      `(y=${u.toFixed(1)} px, el limite es ${limit.toFixed(1)} px): ` +
+      'la sombra plana del bajo del cuerpo tiene un gancho');
+  }
+  assert.ok(checked > 20, 'el guard no midio la banda de sombra: la medida esta vacia');
 });
 
 test('dog walk: la pata delantera lejana queda pegada al vientre (sin cuna de fondo)', () => {
