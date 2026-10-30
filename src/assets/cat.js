@@ -138,6 +138,14 @@ const catIdleSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
   </g>
 </svg>
 `;
+// Pose walk de Luna. Las patas delanteras (.left-paw / .right-paw) se pintan
+// ENCIMA del torso, asi que su relleno crema tiene que fundirse con el
+// contorno del vientre (el `cel-base` crema arranca en la curva del vientre y
+// el `cel-outline` sube hasta ahi con la tinta abierta): si el relleno se
+// recorta por debajo del vientre, el hombro se lee como un parche pegado.
+// Cada pata lleva ademas un `cel-base` naranja pequeno dentro del pecho: es
+// el hombro enterrado (el guard de "hombro enterrado >= 6 px" lo mide) y es
+// invisible a pantalla porque coincide con el color del torso.
 const catWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
   <ellipse cx="100" cy="172" rx="54" ry="6" fill="#28140B" opacity="0.22" class="pet-shadow" />
 
@@ -194,8 +202,8 @@ const catWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
 
   <g class="left-paw" style="transform-origin: 73px 126px;">
     <path class="cel-base"
-          d="M 68.1,127
-             C 69.1,131 70.8,137.6 72.6,143.8
+          d="M 68,137.6
+             C 69.6,140.4 71.2,142.2 72.6,143.8
              C 68.8,147.4 64.4,150 60.4,151.7
              C 58,153.4 55.8,155.6 54.6,158.5
              C 52.9,160.6 52.4,163.9 53.6,166
@@ -203,13 +211,21 @@ const catWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
              C 64.4,169.2 66.7,168.3 67.4,166.4
              C 68,164.7 67.7,161.2 66.6,158.3
              C 71.4,153.6 76.2,148 80.4,142.2
-             C 80,135.5 79.2,129 77.9,125
-             C 76.8,123 75,122 73,122
-             C 71,122 69.5,124 68.1,127 Z"
+             C 80.6,138.8 80.7,135.4 80.6,132
+             C 80.1,132.2 79.5,132.3 79,132.4
+             C 76.7,133.5 73.8,135.1 72,136
+             C 70.2,136.9 69.3,138.4 68,137.6 Z"
+          fill="#FFF4E4" />
+    <path class="cel-base"
+          d="M 70.2,123.8
+             C 71.4,121.4 74.4,120.6 76.2,122.4
+             C 77.8,124 77.8,126.4 76.4,128
+             C 74.6,129.9 71.7,129.8 70.3,127.7
+             C 69.3,126.3 69.4,125.1 70.2,123.8 Z"
           fill="#F2A85E" />
     <path class="cel-outline"
-          d="M 70.6,138.3
-             C 71.4,140.6 72,142.4 72.6,143.8
+          d="M 68,137.6
+             C 69.6,140.4 71.2,142.2 72.6,143.8
              C 68.8,147.4 64.4,150 60.4,151.7
              C 58,153.4 55.8,155.6 54.6,158.5
              C 52.9,160.6 52.4,163.9 53.6,166
@@ -217,8 +233,8 @@ const catWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
              C 64.4,169.2 66.7,168.3 67.4,166.4
              C 68,164.7 67.7,161.2 66.6,158.3
              C 71.4,153.6 76.2,148 80.4,142.2
-             C 80.2,140.6 79.7,139.5 79.1,138.8"
-          fill="#FFF4E4" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+             C 80.6,139.5 80.7,136 80.6,133.7"
+             fill="#FFF4E4" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
     <path class="cel-shadow"
           d="M 64.3,160.5
              C 65.4,162 65.4,164 64.4,165.4
@@ -231,8 +247,8 @@ const catWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
   </g>
   <g class="right-paw" style="transform-origin: 89px 124px;">
     <path class="cel-base"
-          d="M 84.2,125.3
-             C 85,130.5 88.3,138.5 92.1,147.1
+          d="M 84.6,129.9
+             C 85.4,133 88.3,138.5 92.1,147.1
              C 89.6,150 87.4,153.2 86,155.5
              C 85.2,157.2 85,159.2 85,161
              C 85.2,163 85.9,164.3 87.2,165.3
@@ -242,12 +258,21 @@ const catWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
              C 99.2,159.2 97.6,159.2 95.8,159.2
              C 95,159.1 94.2,159 93.5,159
              C 95.2,154.5 97.6,149.6 99.9,145
-             C 99.9,138 98,128.5 93.8,122.7
-             C 90.5,121.2 86,122 84.2,125.3 Z"
+             C 100.1,140 100.1,134 99.9,129.2
+             C 98.6,128.4 96.8,128.3 95,128.3
+             C 92,128.2 88.7,128.9 86,129.6
+             C 85.5,129.7 85,129.8 84.6,129.9 Z"
+          fill="#FFF4E4" />
+    <path class="cel-base"
+          d="M 88.6,120.8
+             C 89.9,118.6 92.9,118 94.6,120
+             C 96,121.7 95.9,124 94.5,125.5
+             C 92.7,127.3 89.9,127.1 88.6,125
+             C 87.7,123.6 87.8,122.1 88.6,120.8 Z"
           fill="#F2A85E" />
     <path class="cel-outline"
-          d="M 88.9,140.3
-             C 90,142.2 91,144.6 92.1,147.1
+          d="M 84.6,131.6
+             C 85.4,133.6 88.3,138.5 92.1,147.1
              C 89.6,150 87.4,153.2 86,155.5
              C 85.2,157.2 85,159.2 85,161
              C 85.2,163 85.9,164.3 87.2,165.3
@@ -257,7 +282,7 @@ const catWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
              C 99.2,159.2 97.6,159.2 95.8,159.2
              C 95,159.1 94.2,159 93.5,159
              C 95.2,154.5 97.6,149.6 99.9,145
-             C 99.7,143.6 99.1,141.9 98.2,140.3"
+             C 100.1,140.5 100.1,135.5 99.9,130.9"
           fill="#FFF4E4" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
     <path class="cel-shadow"
           d="M 97.6,160.6
