@@ -2306,12 +2306,17 @@ function plainText(s) {
 
 // =============================================================
 // POSE DE CAMINAR DE MAX — plan 2026-10-30-dog-walk-pose-fix
+//                          + plan 2026-10-30-dog-walk-torso-round2
 //
 // La captura docs/pet-screenshots/dog-walk.png es la evidencia que mira
 // el revisor visual, asi que su fila en el README tiene que decir QUE
 // MIRAR en la pose nueva: la cola que nace de la grupa y se enrosca hacia
 // arriba sin apoyarse en el lomo, el pecho mas hondo que la cintura y la
-// silueta unica.
+// silueta unica (ronda 1).
+//
+// Ronda 2 (torso): ademas del vientre de una sola curva continua (sin
+// escalon delante de las patas traseras), la sombra plana del vientre sin
+// gancho y el lomo casi recto sin joroba.
 // =============================================================
 
 test('README de capturas: la fila de dog-walk documenta los criterios visuales de la pose de caminar de Max', () => {
@@ -2358,4 +2363,21 @@ test('README de capturas: la fila de dog-walk documenta los criterios visuales d
     'la fila debe decir que hay que mirar la pata delantera lejana');
   assert.match(what, /vientre/,
     'la fila debe decir que la pata tiene que quedar pegada al vientre');
+
+  // 5. el vientre es una sola curva continua, sin escalon delante de las
+  //    patas traseras (plan 2026-10-30-dog-walk-torso-round2)
+  assert.match(what, /una sola curva/,
+    'la fila debe decir que el vientre es una sola curva continua');
+  assert.match(what, /escalon/,
+    'la fila debe decir que el vientre no hace escalon delante de las patas traseras');
+
+  // 6. la sombra plana del vientre no forma un gancho
+  assert.match(what, /gancho/,
+    'la fila debe decir que la sombra plana del vientre no forma un gancho');
+
+  // 7. el lomo es casi recto, sin joroba
+  assert.match(what, /recto/,
+    'la fila debe decir que el lomo es casi recto');
+  assert.match(what, /joroba/,
+    'la fila debe decir que el lomo no tiene joroba');
 });
