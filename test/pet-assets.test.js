@@ -1904,6 +1904,24 @@ function silhouetteRows(polys, step = 0.5) {
   return [...rows.values()].sort((a, b) => a.y - b.y);
 }
 
+/** Extremos verticales de un poligono en la columna x (borde cerrado). */
+function columnRange(poly, x) {
+  let min = Infinity;
+  let max = -Infinity;
+  const n = poly.length;
+  for (let i = 0; i < n; i++) {
+    const a = poly[i];
+    const b = poly[(i + 1) % n];
+    if ((a[0] <= x && b[0] >= x) || (b[0] <= x && a[0] >= x)) {
+      const t = a[0] === b[0] ? 0 : (x - a[0]) / (b[0] - a[0]);
+      const y = a[1] + t * (b[1] - a[1]);
+      if (y < min) min = y;
+      if (y > max) max = y;
+    }
+  }
+  return { min, max };
+}
+
 /** Orientacion de un trio de puntos (1 antihorario, -1 horario, 0 colineal). */
 function orient(ax, ay, bx, by, cx, cy) {
   const v = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
@@ -2035,6 +2053,62 @@ test('pose walk de Luna: cada pata tiene codo y mano (no es un palo recto)', () 
     assert.ok(handWidth >= MIN_HAND * armWidth,
       `.${cls} no tiene mano: la mano mide ${handWidth.toFixed(1)} px y el antebrazo ` +
       `${armWidth.toFixed(1)} px (se exige >= ${MIN_HAND}x)`);
+  }
+});
+
+// =============================================================
+// PASO 1 (bis) — La pata se funde con el vientre (sin costura de fondo)
+//
+// QA 2026-10-30 (ronda 3): el borde superior del relleno de la pata
+// delantera atrasada se quedaba 1.5-2.25 px por debajo de la curva del
+// vientre y dejaba una HENDIDURA DE FONDO entre el torso y la pata (una
+// cuña negra colgando del vientre sobre fondo oscuro).  El guard de "una
+// sola silueta" no lo caza: dilata 1.7 px y la hendidura es mas pequena.
+//
+// El criterio: el borde superior VISIBLE de la pata tiene que llegar hasta la
+// banda de tinta del vientre.  La banda de tinta (stroke 3.4) cubre 1.7 px
+// por debajo de la curva, asi que un relleno a <= 1.7 px de la curva no
+// deja ni un pelo de fondo; a mas de 1.7 px queda una franja de fondo
+// entre el torso y la pata (la costura que la QA vio).
+// =============================================================
+
+test('pose walk de Luna: la pata delantera se funde con el vientre (sin costura de fondo)', () => {
+  const INK_HALF = 1.7; // stroke-width 3.4 / 2
+  const body = massOutlinePolys(catWalkSVG, 'pet-body');
+  assert.ok(body.length > 0, 'no se encontro la silueta del torso');
+
+  for (const cls of ['left-paw', 'right-paw']) {
+    const inner = groupInner(catWalkSVG, cls);
+    assert.ok(inner !== null, `no se encontro el grupo .${cls}`);
+    // El borde visible de la pata va de un extremo al otro de su trazo de
+    // tinta (abierto arriba): ahi es donde la pata se une al vientre.
+    const outline = tagsWithClass(inner, 'cel-outline')[0];
+    assert.ok(outline, `no se encontro el cel-outline de .${cls}`);
+    const ink = celGeo.parsePathData(tagAttr(outline, 'd'))[0];
+    assert.ok(ink && ink.length > 1, `no se pudo leer el trazo de .${cls}`);
+    const xa = ink[0][0];
+    const xb = ink[ink.length - 1][0];
+
+    // El relleno de la pata es el grande del grupo (los demas son la sombra,
+    // el calcetin de la mano y el hombro enterrado).
+    const fills = massFilledPolys(catWalkSVG, cls);
+    assert.ok(fills.length > 0, `no se encontro el relleno de .${cls}`);
+    const leg = fills.reduce((best, poly) =>
+      (Math.abs(celGeo.polygonArea(poly)) > Math.abs(celGeo.polygonArea(best)) ? poly : best));
+
+    for (let x = Math.min(xa, xb); x <= Math.max(xa, xb) + 1e-9; x += 0.25) {
+      const top = columnRange(leg, x).min;
+      if (!Number.isFinite(top)) continue;
+      const belly = Math.max(...body
+        .map((p) => columnRange(p, x).max)
+        .filter((v) => Number.isFinite(v)));
+      if (!Number.isFinite(belly)) continue;
+      const gap = top - belly;
+      assert.ok(gap <= INK_HALF,
+        `.${cls}: el relleno de la pata se queda ${gap.toFixed(2)} px por debajo de la ` +
+        `curva del vientre en x=${x.toFixed(2)} (maximo ${INK_HALF} px): queda una ` +
+        `franja de fondo entre el torso y la pata`);
+    }
   }
 });
 

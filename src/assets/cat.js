@@ -139,10 +139,12 @@ const catIdleSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
 </svg>
 `;
 // Pose walk de Luna. Las patas delanteras (.left-paw / .right-paw) se pintan
-// ENCIMA del torso, asi que su relleno crema tiene que fundirse con el
-// contorno del vientre (el `cel-base` crema arranca en la curva del vientre y
-// el `cel-outline` sube hasta ahi con la tinta abierta): si el relleno se
-// recorta por debajo del vientre, el hombro se lee como un parche pegado.
+// ENCIMA del torso, asi que su relleno tiene que fundirse con el contorno del
+// vientre: el `cel-base` naranja sube hasta la curva del vientre (a ~1 px por
+// debajo, dentro de la banda de tinta de 3.4 px, para que no quede ni una
+// franja de fondo entre el torso y la pata) y el `cel-outline` sube hasta ahi
+// con la tinta abierta: si el relleno se recorta por debajo del vientre, el
+// hombro se lee como un parche pegado.
 // Cada pata lleva ademas un `cel-base` naranja pequeno dentro del pecho: es
 // el hombro enterrado (el guard de "hombro enterrado >= 6 px" lo mide) y es
 // invisible a pantalla porque coincide con el color del torso.
@@ -258,7 +260,12 @@ const catWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
              C 89,168.6 92.4,167.6 94.4,164.8
              C 95.8,162.2 96.4,157.8 96,153.5
              C 97.2,149.4 98.6,145 99,140
-             C 100.4,136.6 99.8,131.4 99,128.05             M 90.6,128.5
+             C 100.4,136.6 99.8,131.4 99,127.8
+             C 98.6,127.5 97.2,127.15 95.4,127.15
+             C 93.2,127.15 91,128.05 89,129.15
+             C 88.4,129.45 88,129.7 87.8,129.9
+             Z
+             M 90.6,128.5
              C 90.2,125 90.6,121.4 91.6,119
              C 92.4,116.8 94.2,116.4 95.4,117.8
              C 96.6,119.2 97,121.6 96.8,124
@@ -273,7 +280,7 @@ const catWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
              C 89,168.6 92.4,167.6 94.4,164.8
              C 95.8,162.2 96.4,157.8 96,153.5
              C 97.2,149.4 98.6,145 99,140
-             C 100.4,136.6 99.8,131.4 99,128.05"
+             C 100.4,136.6 99.8,131.4 99,127.8"
           fill="#F2A85E" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
     <path class="cel-shadow"
           d="M 88.4,150.4
