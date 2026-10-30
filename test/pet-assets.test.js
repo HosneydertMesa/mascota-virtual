@@ -1902,6 +1902,56 @@ function bottomLineAt(poly, x) {
   return ys.length ? Math.max(...ys) : null;
 }
 
+/**
+ * Altura del borde superior de un conjunto de poligonos en una x: el punto
+ * mas alto de la masa en esa vertical (null si la vertical no la corta).
+ */
+function topOfPolysAt(polys, x) {
+  let top = null;
+  for (const poly of polys) {
+    const ys = verticalCrossings(poly, x);
+    if (!ys.length) continue;
+    const y = Math.min(...ys);
+    if (top === null || y < top) top = y;
+  }
+  return top;
+}
+
+/**
+ * Tramo "plano" del canto superior de una masa: el tramo de x donde su
+ * borde superior esta a menos de `tol` px de su altura minima.
+ *
+ * Sirve para medir el canto de una pata (el tramo horizontal entre sus dos
+ * esquinas) sin meter en la medida las esquinas, donde el canto baja hacia
+ * los lados y se une al cuerpo.
+ */
+function flatTopSpan(polys, tol = 2.5) {
+  const box = polysBBox(polys);
+  const xs = [];
+  const ys = [];
+  for (let x = box.minX; x <= box.maxX; x += 0.25) {
+    const y = topOfPolysAt(polys, x);
+    if (y === null) continue;
+    xs.push(x);
+    ys.push(y);
+  }
+  if (!xs.length) return null;
+  const minY = Math.min(...ys);
+  let best = null;
+  let cur = null;
+  for (let i = 0; i < xs.length; i++) {
+    if (ys[i] <= minY + tol) {
+      if (!cur) cur = [xs[i], xs[i]];
+      else cur[1] = xs[i];
+    } else {
+      if (cur && (!best || cur[1] - cur[0] > best[1] - best[0])) best = cur;
+      cur = null;
+    }
+  }
+  if (cur && (!best || cur[1] - cur[0] > best[1] - best[0])) best = cur;
+  return best;
+}
+
 test('dog walk: la cola nace de la grupa y se curva hacia arriba sin apoyarse en el lomo', () => {
   const tail = massOutlinePolys(dogWalkSVG, 'anim-wag');
   const body = massOutlinePolys(dogWalkSVG, 'pet-body');
@@ -2007,6 +2057,41 @@ test('dog walk: el torso de Max al caminar tiene linea de lomo y de vientre de p
   assert.ok(chestBelly - waistBelly >= 8,
     `el vientre solo sube ${(chestBelly - waistBelly).toFixed(1)} px del pecho a la ` +
     'cintura (minimo 8 px): no se ve la curva de la cintura');
+});
+
+test('dog walk: la pata delantera lejana queda pegada al vientre (sin cuna de fondo)', () => {
+  // MAJOR-1 del review del 2026-10-30: el vientre del torso subia antes de
+  // tiempo (y=138 en x=102, ~135.7 en x=106) y dejaba a la pata delantera
+  // lejana (.right-paw, canto 139-141) despegada del cuerpo: una cuna de
+  // fondo de ~5 px y el extremo de tinta abierto al aire en (107,142).
+  // Ningun guard lo cazaba (el de doble linea se vuelve mas facil de cumplir
+  // y el de silueta no ve huecos interiores).
+  //
+  // El vientre tiene que tapar el canto de la pata en todo su tramo plano:
+  // el torso llega al menos tan abajo como el canto de la pata, para que no
+  // quede fondo entre los dos.
+  const body = massOutlinePolys(dogWalkSVG, 'pet-body');
+  const paw = massFilledPolys(dogWalkSVG, 'right-paw');
+  assert.ok(body.length > 0, 'no se encontro la silueta del cuerpo');
+  assert.ok(paw.length > 0, 'no se encontro la pata delantera lejana (.right-paw)');
+  const torso = body[0];
+
+  const span = flatTopSpan(paw, 2.5);
+  assert.ok(span, 'no se pudo medir el canto superior de la pata delantera lejana');
+
+  const TOL = 0.5; // px de tolerancia de muestreo
+  let checked = 0;
+  for (let x = span[0]; x <= span[1]; x += 0.25) {
+    const belly = bottomLineAt(torso, x);
+    const pawTop = topOfPolysAt(paw, x);
+    if (belly === null || pawTop === null) continue;
+    checked++;
+    assert.ok(belly >= pawTop - TOL,
+      `el vientre (y=${belly.toFixed(1)}) queda ${(pawTop - belly).toFixed(1)} px por ` +
+      `encima del canto de la pata delantera lejana (y=${pawTop.toFixed(1)}) en ` +
+      `x=${x.toFixed(1)}: la pata se despega del torso y queda una cuna de fondo`);
+  }
+  assert.ok(checked > 20, 'el guard no midio el canto de la pata: la medida esta vacia');
 });
 
 test('dog walk: el cambio esta acotado a la pose de caminar de Max', () => {
@@ -2128,4 +2213,10 @@ test('README de capturas: la fila de dog-walk documenta los criterios visuales d
   // 3. la pose se lee como una sola silueta
   assert.match(what, /(silueta unica|una sola silueta|una sola linea continua|un solo contorno)/,
     'la fila debe decir que la pose se lee como una sola silueta');
+
+  // 4. la pata delantera lejana queda pegada al vientre (review MAJOR-1)
+  assert.match(what, /pata/,
+    'la fila debe decir que hay que mirar la pata delantera lejana');
+  assert.match(what, /vientre/,
+    'la fila debe decir que la pata tiene que quedar pegada al vientre');
 });

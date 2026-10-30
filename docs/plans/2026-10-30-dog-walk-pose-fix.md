@@ -21,6 +21,7 @@ acceptance:
   - "El torso tiene el pecho >= 8 px más hondo que la cintura y su línea de lomo no es plana (descenso >= 4 px entre el hombro y la plinga y ascenso final en la grupa)"
   - "Los pivotes de animación quedan sincronizados con la geometría nueva: el transform-origin inline de .anim-wag y de .pet-body en dogWalkSVG coincide con el de las reglas .walking-bob.dog-walk .anim-wag-fast y .dog-walk .pet-body de src/styles/animations.css"
   - "Los guards de arte existentes siguen verdes: silueta de un solo componente, plano de sombra dentro de su masa, cabeza superpuesta al cuerpo >= 8 px, patas delanteras sin doble línea contra el contorno del cuerpo, orden de pintado intacto"
+  - "La pata delantera lejana (.right-paw) queda pegada al vientre del torso: el vientre tapa su canto en todo el tramo plano (sin cuna de fondo entre la pata y el cuerpo, ni extremo de tinta abierto al aire)"
   - "npm test y npm run check verdes, sin regresiones en la suite existente"
   - "docs/pet-screenshots/dog-walk.png está regenerada desde el SVG de producción (test/preview/pet-poses-capture.py) y docs/pet-screenshots/README.md documenta qué mirar en esta pose"
 risks:
@@ -135,3 +136,33 @@ Max, el CSS de la marcha de Luna, la cámara PixiJS y los estados de ánimo.
 - El paso 2 deja `docs/pet-screenshots/dog-walk.png` regenerada desde el SVG
   de producción, que es lo que mira el revisor visual contra los criterios
   visuales de la acceptance.
+
+---
+
+## 6. Addendum — review del 2026-10-30 (CHANGES_REQUESTED, MAJOR-1)
+
+El review encontró que el vientre nuevo subía antes de tiempo: en `x=102`
+llegaba a `y=138` (y `~135.7` en `x=106`), así que la pata delantera lejana
+(`.right-paw`, canto 139-141) quedaba **despegada** del torso: una cuna de
+fondo de hasta ~5 px y el extremo de tinta abierto al aire en `(107,142)`.
+El arte viejo (vientre plano en `y=142`) sí lo tapaba. Ningún guard lo cazaba
+(el de doble línea se vuelve más fácil de cumplir y el de silueta no ve huecos
+interiores): eso violaba la acceptance de silueta continua y el riesgo 2 de
+este mismo plan.
+
+Decisión (la que pedía el review, sin enmendar el plan): **aplanar el vientre
+hasta `x≈107` y arrancar la cintura después**, más un **guard derivado** que
+lo impida volver a pasar.
+
+- El vientre queda plano en `y=142` de `x=78` a `x=107` y la cintura sube
+  entre `x=113` y `x=129` (`y=129`), como pide la geometría objetivo de §3
+  ("vientre casi recto hasta x≈105, cintura que sube en x≈120-135").
+- El plano de sombra del torso se recalculó sobre el vientre nuevo (sigue
+  dentro de la silueta: guard `cel: ningun plano de sombra cruza el contorno`).
+- Guard nuevo: `dog walk: la pata delantera lejana queda pegada al vientre
+  (sin cuna de fondo)` — mide la línea del vientre contra el canto superior
+  de `.right-paw` en su tramo plano (el que no baja por las esquinas) y
+  exige que el vientre llegue al menos tan abajo como el canto de la pata.
+- La captura `docs/pet-screenshots/dog-walk.png` se regeneró y la fila de
+  `dog-walk` del README dice que hay que mirar que la pata delantera lejana
+  quede pegada al vientre.
