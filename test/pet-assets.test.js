@@ -2085,27 +2085,34 @@ function verticalProfile(poly, step = 0.25) {
 /**
  * Tramo horizontal mas largo del perfil que se mantiene dentro de una banda
  * vertical de `band` px.  Devuelve el span (en px) y el tramo [xDesde, xHasta].
+ *
+ * Ventana deslizante de dos punteros (la definicion del plan, §4 T5): para
+ * cada extremo derecho se busca el extremo izquierdo mas a la izquierda que
+ * todavia cabe en la banda, asi que el resultado es el arco contiguo mas
+ * largo que permanece dentro de la banda.  Los dos indices monotonos (min y
+ * max) mantienen el rango en O(1) por paso.
  */
 function maxFlatSpan(profile, key, band) {
+  const minDeque = []; // indices con valores crecientes (el minimo esta al principio)
+  const maxDeque = []; // indices con valores decrecientes (el maximo esta al principio)
   let best = 0;
   let bestRange = null;
-  let from = profile[0].x;
-  let min = profile[0][key];
-  let max = profile[0][key];
-  for (const p of profile) {
-    const nMin = Math.min(min, p[key]);
-    const nMax = Math.max(max, p[key]);
-    if (nMax - nMin <= band) {
-      min = nMin;
-      max = nMax;
-      if (p.x - from > best) {
-        best = p.x - from;
-        bestRange = [from, p.x];
-      }
-    } else {
-      from = p.x;
-      min = p[key];
-      max = p[key];
+  let left = 0;
+  for (let right = 0; right < profile.length; right++) {
+    const value = profile[right][key];
+    while (minDeque.length && profile[minDeque[minDeque.length - 1]][key] >= value) minDeque.pop();
+    minDeque.push(right);
+    while (maxDeque.length && profile[maxDeque[maxDeque.length - 1]][key] <= value) maxDeque.pop();
+    maxDeque.push(right);
+    while (profile[maxDeque[0]][key] - profile[minDeque[0]][key] > band) {
+      if (minDeque[0] === left) minDeque.shift();
+      if (maxDeque[0] === left) maxDeque.shift();
+      left++;
+    }
+    const span = profile[right].x - profile[left].x;
+    if (span > best) {
+      best = span;
+      bestRange = [profile[left].x, profile[right].x];
     }
   }
   return { span: best, range: bestRange };
