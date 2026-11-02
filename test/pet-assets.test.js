@@ -1850,3 +1850,495 @@ test('README de capturas: indexa las 12 capturas y documenta el comando para reg
   assert.match(md, /python\s+test\/preview\/pet-poses-capture\.py/,
     'el README debe documentar el comando para regenerar las capturas');
 });
+
+// =============================================================
+// PASO 1 — Geometria de las patas delanteras de la pose walk de Luna
+// Plan: docs/plans/2026-10-30-pose-caminar-luna.md (paso 1, §4 T1-T4)
+//
+// Las 4 metricas se derivan de la geometria REAL del SVG (no de literales),
+// asi que un redibujo que vuelva a cruzar las patas, a dejar el hombro
+// fuera del pecho o a convertir la pata en un palo recto cae en rojo.
+//
+//  T1  las patas van separadas en zancuda (aire >= 2 px, solape <= 8%)
+//  T2  los contornos de tinta de las dos patas no se cruzan (no hay X)
+//  T3  el hombro queda enterrado >= 6 px dentro de la silueta del torso
+//  T4  el eje de la pata se desvía >= 3 px de la recta hombro-mano (codo)
+//      y la mano es >= 1.25x mas ancha que el antebrazo
+// =============================================================
+
+/** BBox conjunto de un conjunto de poligonos. */
+function polysBBox(polys) {
+  const box = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
+  for (const poly of polys) {
+    for (const p of poly) {
+      if (p[0] < box.minX) box.minX = p[0];
+      if (p[0] > box.maxX) box.maxX = p[0];
+      if (p[1] < box.minY) box.minY = p[1];
+      if (p[1] > box.maxY) box.maxY = p[1];
+    }
+  }
+  return box;
+}
+
+/** Area total (px2) de un conjunto de poligonos. */
+function polysArea(polys) {
+  return polys.reduce((acc, poly) => acc + Math.abs(celGeo.polygonArea(poly)), 0);
+}
+
+/** Filas horizontales de una silueta rellena: y -> { minX, maxX }. */
+function silhouetteRows(polys, step = 0.5) {
+  const rows = new Map();
+  const add = (x, y) => {
+    const key = Math.round(y * 2) / 2;
+    const row = rows.get(key);
+    if (!row) rows.set(key, { minX: x, maxX: x, y: key });
+    else {
+      if (x < row.minX) row.minX = x;
+      if (x > row.maxX) row.maxX = x;
+    }
+  };
+  for (const poly of polys) {
+    for (const p of celGeo.sampleBoundary(poly, step)) add(p[0], p[1]);
+    for (const p of celGeo.sampleInterior(poly, step)) add(p[0], p[1]);
+  }
+  return [...rows.values()].sort((a, b) => a.y - b.y);
+}
+
+/** Extremos verticales de un poligono en la columna x (borde cerrado). */
+function columnRange(poly, x) {
+  let min = Infinity;
+  let max = -Infinity;
+  const n = poly.length;
+  for (let i = 0; i < n; i++) {
+    const a = poly[i];
+    const b = poly[(i + 1) % n];
+    if ((a[0] <= x && b[0] >= x) || (b[0] <= x && a[0] >= x)) {
+      const t = a[0] === b[0] ? 0 : (x - a[0]) / (b[0] - a[0]);
+      const y = a[1] + t * (b[1] - a[1]);
+      if (y < min) min = y;
+      if (y > max) max = y;
+    }
+  }
+  return { min, max };
+}
+
+/** Orientacion de un trio de puntos (1 antihorario, -1 horario, 0 colineal). */
+function orient(ax, ay, bx, by, cx, cy) {
+  const v = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
+  if (v > 1e-9) return 1;
+  if (v < -1e-9) return -1;
+  return 0;
+}
+
+/** Cruce PROPIO de dos segmentos (el roce o el contacto no cuentan). */
+function segmentsCross(p1, p2, p3, p4) {
+  const d1 = orient(p3[0], p3[1], p4[0], p4[1], p1[0], p1[1]);
+  const d2 = orient(p3[0], p3[1], p4[0], p4[1], p2[0], p2[1]);
+  const d3 = orient(p1[0], p1[1], p2[0], p2[1], p3[0], p3[1]);
+  const d4 = orient(p1[0], p1[1], p2[0], p2[1], p4[0], p4[1]);
+  return d1 * d2 < 0 && d3 * d4 < 0;
+}
+
+/** Numero de cruces propios entre dos conjuntos de polilineas cerradas. */
+function countCrossings(polysA, polysB) {
+  const segs = (polys) => polys.map((poly) => poly.map((p, i) => [p, poly[(i + 1) % poly.length]]));
+  const a = segs(polysA);
+  const b = segs(polysB);
+  let n = 0;
+  for (const segA of a) {
+    for (const segB of b) {
+      if (segmentsCross(segA[0], segA[1], segB[0], segB[1])) n++;
+    }
+  }
+  return n;
+}
+
+test('pose walk de Luna: las patas delanteras van separadas en zancuda, sin cruzarse', () => {
+  const body = massOutlinePolys(catWalkSVG, 'pet-body');
+  const left = massFilledPolys(catWalkSVG, 'left-paw');
+  const right = massFilledPolys(catWalkSVG, 'right-paw');
+  assert.ok(body.length > 0, 'no se encontro la silueta del torso');
+  assert.ok(left.length > 0, 'no se encontro el relleno de .left-paw');
+  assert.ok(right.length > 0, 'no se encontro el relleno de .right-paw');
+
+  // Por debajo de la linea del vientre las dos patas no se tocan.
+  const yVientre = polysBBox(body).maxY;
+  const below = (polys) => polys.flatMap((poly) => poly).filter((p) => p[1] >= yVientre);
+  const leftBelow = below(left);
+  const rightBelow = below(right);
+  assert.ok(leftBelow.length > 0 && rightBelow.length > 0,
+    'las patas no tienen geometria por debajo del vientre');
+  const maxXLeft = Math.max(...leftBelow.map((p) => p[0]));
+  const minXRight = Math.min(...rightBelow.map((p) => p[0]));
+  const aire = minXRight - maxXLeft;
+  assert.ok(aire >= 2,
+    `las patas delanteras se solapan por debajo del vientre: ` +
+    `.left-paw llega a x=${maxXLeft.toFixed(1)} y .right-paw arranca en x=${minXRight.toFixed(1)} ` +
+    `(aire ${aire.toFixed(1)} px, minimo 2 px): no hay zancuda`);
+
+  // El area de solape es despreciable.
+  const overlap = celGeo.overlapArea(left, right, 0.25);
+  const minArea = Math.min(polysArea(left), polysArea(right));
+  assert.ok(overlap <= 0.08 * minArea,
+    `las patas delanteras se solapan ${overlap.toFixed(1)} px2 ` +
+    `(${(100 * overlap / minArea).toFixed(1)}% de la pata mas chica, maximo 8%)`);
+
+  // Los contornos de tinta no se cruzan entre si (no se lee una X).
+  const crossings = countCrossings(
+    massOutlinePolys(catWalkSVG, 'left-paw'),
+    massOutlinePolys(catWalkSVG, 'right-paw')
+  );
+  assert.equal(crossings, 0,
+    `los contornos de las patas delanteras se cruzan ${crossings} veces: se lee una X`);
+});
+
+test('pose walk de Luna: cada pata delantera nace del pecho (hombro enterrado)', () => {
+  const MIN_DEPTH = 6;
+  const body = massOutlinePolys(catWalkSVG, 'pet-body');
+  assert.ok(body.length > 0, 'no se encontro la silueta del torso');
+  for (const cls of ['left-paw', 'right-paw']) {
+    const paw = massFilledPolys(catWalkSVG, cls);
+    assert.ok(paw.length > 0, `no se encontro el relleno de .${cls}`);
+    let depth = 0;
+    const points = [];
+    for (const poly of paw) {
+      for (const p of poly) points.push(p);
+      for (const p of celGeo.sampleInterior(poly, 0.5)) points.push(p);
+    }
+    for (const p of points) {
+      if (!body.some((b) => celGeo.pointInPolygon(b, p[0], p[1]))) continue;
+      let d = Infinity;
+      for (const b of body) d = Math.min(d, celGeo.distanceToPolygonEdge(b, p[0], p[1]));
+      depth = Math.max(depth, d);
+    }
+    assert.ok(depth >= MIN_DEPTH,
+      `.${cls} solo se hunde ${depth.toFixed(1)} px dentro del pecho ` +
+      `(minimo ${MIN_DEPTH} px): la pata se lee pegada al cuerpo`);
+  }
+});
+
+test('pose walk de Luna: cada pata tiene codo y mano (no es un palo recto)', () => {
+  const MIN_ELBOW = 3;
+  const MIN_HAND = 1.25;
+  for (const cls of ['left-paw', 'right-paw']) {
+    const paw = massFilledPolys(catWalkSVG, cls);
+    assert.ok(paw.length > 0, `no se encontro el relleno de .${cls}`);
+    const rows = silhouetteRows(paw);
+    assert.ok(rows.length >= 4, `.${cls} es demasiado plano para medirlo`);
+    const top = rows[0];
+    const bottom = rows[rows.length - 1];
+    const mid = rows[Math.floor(rows.length / 2)];
+    const shoulder = { x: (top.minX + top.maxX) / 2, y: top.y };
+    const hand = { x: (bottom.minX + bottom.maxX) / 2, y: bottom.y };
+
+    // Desvio maximo del eje de la pata respecto de la recta hombro-mano.
+    const vx = hand.x - shoulder.x;
+    const vy = hand.y - shoulder.y;
+    const len = Math.hypot(vx, vy) || 1;
+    let dev = 0;
+    for (const row of rows) {
+      const cx = (row.minX + row.maxX) / 2;
+      const d = Math.abs((cx - shoulder.x) * vy - (row.y - shoulder.y) * vx) / len;
+      dev = Math.max(dev, d);
+    }
+    assert.ok(dev >= MIN_ELBOW,
+      `.${cls} es un palo recto: su eje se desvía ${dev.toFixed(1)} px de la recta ` +
+      `hombro-mano (minimo ${MIN_ELBOW} px): no se ve el codo`);
+
+    // La mano (parte baja) es mas ancha que el antebrazo (parte media).
+    const handWidth = Math.max(...rows
+      .filter((row) => row.y >= bottom.y - (bottom.y - top.y) * 0.2)
+      .map((row) => row.maxX - row.minX));
+    const armWidth = mid.maxX - mid.minX;
+    assert.ok(handWidth >= MIN_HAND * armWidth,
+      `.${cls} no tiene mano: la mano mide ${handWidth.toFixed(1)} px y el antebrazo ` +
+      `${armWidth.toFixed(1)} px (se exige >= ${MIN_HAND}x)`);
+  }
+});
+
+// =============================================================
+// PASO 1 (bis) — La pata se funde con el vientre (sin costura de fondo)
+//
+// QA 2026-10-30 (ronda 3): el borde superior del relleno de la pata
+// delantera atrasada se quedaba 1.5-2.25 px por debajo de la curva del
+// vientre y dejaba una HENDIDURA DE FONDO entre el torso y la pata (una
+// cuña negra colgando del vientre sobre fondo oscuro).  El guard de "una
+// sola silueta" no lo caza: dilata 1.7 px y la hendidura es mas pequena.
+//
+// El criterio: el borde superior VISIBLE de la pata tiene que llegar hasta la
+// banda de tinta del vientre.  La banda de tinta (stroke 3.4) cubre 1.7 px
+// por debajo de la curva, asi que un relleno a <= 1.7 px de la curva no
+// deja ni un pelo de fondo; a mas de 1.7 px queda una franja de fondo
+// entre el torso y la pata (la costura que la QA vio).
+// =============================================================
+
+test('pose walk de Luna: la pata delantera se funde con el vientre (sin costura de fondo)', () => {
+  const INK_HALF = 1.7; // stroke-width 3.4 / 2
+  const body = massOutlinePolys(catWalkSVG, 'pet-body');
+  assert.ok(body.length > 0, 'no se encontro la silueta del torso');
+
+  for (const cls of ['left-paw', 'right-paw']) {
+    const inner = groupInner(catWalkSVG, cls);
+    assert.ok(inner !== null, `no se encontro el grupo .${cls}`);
+    // El borde visible de la pata va de un extremo al otro de su trazo de
+    // tinta (abierto arriba): ahi es donde la pata se une al vientre.
+    const outline = tagsWithClass(inner, 'cel-outline')[0];
+    assert.ok(outline, `no se encontro el cel-outline de .${cls}`);
+    const ink = celGeo.parsePathData(tagAttr(outline, 'd'))[0];
+    assert.ok(ink && ink.length > 1, `no se pudo leer el trazo de .${cls}`);
+    const xa = ink[0][0];
+    const xb = ink[ink.length - 1][0];
+
+    // El relleno de la pata es el grande del grupo (los demas son la sombra,
+    // el calcetin de la mano y el lóbulo del hombro enterrado, que es parte
+    // del mismo `cel-base` de la pata).
+    const fills = massFilledPolys(catWalkSVG, cls);
+    assert.ok(fills.length > 0, `no se encontro el relleno de .${cls}`);
+    const leg = fills.reduce((best, poly) =>
+      (Math.abs(celGeo.polygonArea(poly)) > Math.abs(celGeo.polygonArea(best)) ? poly : best));
+
+    for (let x = Math.min(xa, xb); x <= Math.max(xa, xb) + 1e-9; x += 0.25) {
+      const top = columnRange(leg, x).min;
+      if (!Number.isFinite(top)) continue;
+      const belly = Math.max(...body
+        .map((p) => columnRange(p, x).max)
+        .filter((v) => Number.isFinite(v)));
+      if (!Number.isFinite(belly)) continue;
+      const gap = top - belly;
+      assert.ok(gap <= INK_HALF,
+        `.${cls}: el relleno de la pata se queda ${gap.toFixed(2)} px por debajo de la ` +
+        `curva del vientre en x=${x.toFixed(2)} (maximo ${INK_HALF} px): queda una ` +
+        `franja de fondo entre el torso y la pata`);
+    }
+  }
+});
+
+// =============================================================
+// PASO 1 (ter) — Las patas delanteras no se comen la sombra del vientre
+//
+// QA 2026-10-30 (ronda 3): el "hombro enterrado" de cada pata delantera era
+// un parche naranja (cel-base) pegado ENCIMA del torso, y como la sombra
+// plana del vientre (cel-shadow) pasa justo por ahi, el parche la comia:
+// en pantalla se leia como un BULTO REDONDO NARANJA en el vientre entre las
+// patas, que partia la banda de sombra en un escalon.
+//
+// El hombro tiene que quedar enterrado en el pecho (guard de >= 6 px) pero
+// su relleno no puede pisar el plano de sombra del torso. OJO con el orden
+// de pintado: las patas delanteras se pintan DESPUES del torso, asi que su
+// relleno claro va ENCIMA de la sombra, nunca detras. Lo que mantiene la
+// banda de sombra continua es que el lóbulo del hombro del `cel-base` de la
+// pata cabalgue sobre el borde INTERIOR de la banda (el lado del pecho), sin
+// taparla: por eso la cobertura medida es 0.
+//
+// El guard mide el area del relleno claro de cada pata que se superpone al
+// plano de sombra del torso: tiene que ser ~0.
+// =============================================================
+
+test('pose walk de Luna: las patas delanteras no tapan la sombra del vientre', () => {
+  const MAX_COVER = 0.01; // 1% del plano de sombra del torso
+  const shapes = celGeo.collectFilledShapes(catWalkSVG);
+  const shadow = shapes.find((s) => s.isShadow &&
+    s.chain.some((el) => celGeo.classTokensOf(el).includes('pet-body')));
+  assert.ok(shadow, 'no se encontro el plano de sombra del torso');
+  const shadowPolys = celGeo.transformPolys(shadow.polys, shadow.matrix);
+  const shadowArea = shadowPolys.reduce((a, p) => a + Math.abs(celGeo.polygonArea(p)), 0);
+  assert.ok(shadowArea > 0, 'el plano de sombra del torso no tiene area');
+
+  for (const cls of ['left-paw', 'right-paw']) {
+    // Solo el relleno CLARO (el color del torso): el calcetin crema y la
+    // sombra propia de la pata no se comen la banda de sombra.
+    const light = shapes.filter((s) =>
+      s.chain.some((el) => celGeo.classTokensOf(el).includes(cls)) &&
+      (s.el.attrs.fill || '').toUpperCase() === '#F2A85E');
+    assert.ok(light.length > 0, `no se encontro el relleno claro de .${cls}`);
+    const polys = light.flatMap((s) => celGeo.transformPolys(s.polys, s.matrix));
+    const covered = celGeo.overlapArea(polys, shadowPolys, 0.25);
+    assert.ok(covered <= MAX_COVER * shadowArea,
+      `.${cls} tapa ${covered.toFixed(1)} px2 (${(100 * covered / shadowArea).toFixed(1)}%) ` +
+      `del plano de sombra del vientre (maximo ${MAX_COVER * 100}%): el relleno claro de la ` +
+      `pata se come la banda de sombra y se ve un bulto en el vientre entre las patas`);
+  }
+});
+
+// =============================================================
+// PASO 2 — Geometria del torso de la pose walk de Luna
+// Plan: docs/plans/2026-10-30-pose-caminar-luna.md (paso 2, §4 T5)
+//
+// El torso de la pose walk era un bloque: el lomo y el vientre eran
+// mesetas horizontales con esquinas de rectangulo redondeado.  La metrica
+// mide el TRAMO HORIZONTAL MAXIMO del perfil del torso (lomo y vientre)
+// que se mantiene dentro de una banda vertical de 3 px: un cuerpo de gato
+// tiene lomo arqueado y vientre curvo, asi que ningun tramo puede ser
+// una meseta larga.
+//
+// La metria se deriva de la geometria real del SVG (perfil vertical de la
+// silueta de .pet-body), asi que un redibujo que vuelva a la barra o que
+//introduzca una meseta nueva cae en rojo.
+// =============================================================
+
+/** Intersecciones de la vertical x con el borde del poligono: [yMin, yMax]. */
+function verticalSpan(poly, x) {
+  const ys = [];
+  for (let i = 0, n = poly.length; i < n; i++) {
+    const [x1, y1] = poly[i];
+    const [x2, y2] = poly[(i + 1) % n];
+    if (x1 === x2) continue;
+    if (x < Math.min(x1, x2) || x > Math.max(x1, x2)) continue;
+    const t = (x - x1) / (x2 - x1);
+    ys.push(y1 + t * (y2 - y1));
+  }
+  if (ys.length === 0) return null;
+  ys.sort((a, b) => a - b);
+  return { min: ys[0], max: ys[ys.length - 1] };
+}
+
+/** Perfil vertical de la silueta: por cada x, el borde superior e inferior. */
+function verticalProfile(poly, step = 0.25) {
+  const box = celGeo.polygonBBox(poly);
+  const out = [];
+  for (let x = box.minX; x <= box.maxX; x += step) {
+    const span = verticalSpan(poly, x);
+    if (!span) continue;
+    out.push({ x, top: span.min, bottom: span.max });
+  }
+  return out;
+}
+
+/**
+ * Tramo horizontal mas largo del perfil que se mantiene dentro de una banda
+ * vertical de `band` px.  Devuelve el span (en px) y el tramo [xDesde, xHasta].
+ *
+ * Ventana deslizante de dos punteros (la definicion del plan, §4 T5): para
+ * cada extremo derecho se busca el extremo izquierdo mas a la izquierda que
+ * todavia cabe en la banda, asi que el resultado es el arco contiguo mas
+ * largo que permanece dentro de la banda.  Los dos indices monotonos (min y
+ * max) mantienen el rango en O(1) por paso.
+ */
+function maxFlatSpan(profile, key, band) {
+  const minDeque = []; // indices con valores crecientes (el minimo esta al principio)
+  const maxDeque = []; // indices con valores decrecientes (el maximo esta al principio)
+  let best = 0;
+  let bestRange = null;
+  let left = 0;
+  for (let right = 0; right < profile.length; right++) {
+    const value = profile[right][key];
+    while (minDeque.length && profile[minDeque[minDeque.length - 1]][key] >= value) minDeque.pop();
+    minDeque.push(right);
+    while (maxDeque.length && profile[maxDeque[maxDeque.length - 1]][key] <= value) maxDeque.pop();
+    maxDeque.push(right);
+    while (profile[maxDeque[0]][key] - profile[minDeque[0]][key] > band) {
+      if (minDeque[0] === left) minDeque.shift();
+      if (maxDeque[0] === left) maxDeque.shift();
+      left++;
+    }
+    const span = profile[right].x - profile[left].x;
+    if (span > best) {
+      best = span;
+      bestRange = [profile[left].x, profile[right].x];
+    }
+  }
+  return { span: best, range: bestRange };
+}
+
+test('pose walk de Luna: el torso no es un bloque (lomo y vientre curvos)', () => {
+  const MAX_BACK = 20;
+  const MAX_BELLY = 24;
+  const BAND = 3;
+
+  const body = massOutlinePolys(catWalkSVG, 'pet-body');
+  assert.ok(body.length > 0, 'no se encontro la silueta del torso');
+  const profile = verticalProfile(body[0]);
+  assert.ok(profile.length > 20, 'el torso es demasiado plano para medirlo');
+
+  const back = maxFlatSpan(profile, 'top', BAND);
+  assert.ok(back.span <= MAX_BACK,
+    `el lomo del torso tiene una meseta horizontal de ${back.span.toFixed(1)} px ` +
+    `(x ${back.range[0].toFixed(1)}..${back.range[1].toFixed(1)}, maximo ${MAX_BACK} px ` +
+    `dentro de una banda de ${BAND} px): el torso se lee como un bloque recto`);
+
+  const belly = maxFlatSpan(profile, 'bottom', BAND);
+  assert.ok(belly.span <= MAX_BELLY,
+    `el vientre del torso tiene una meseta horizontal de ${belly.span.toFixed(1)} px ` +
+    `(x ${belly.range[0].toFixed(1)}..${belly.range[1].toFixed(1)}, maximo ${MAX_BELLY} px ` +
+    `dentro de una banda de ${BAND} px): el vientre se lee como un bloque recto`);
+});
+
+// =============================================================
+// PASO 3 — La union de las patas delanteras con el pecho
+//
+// QA 2026-10-30 (ronda 4): la linea de tinta del vientre pasaba por ENCIMA de
+// la parte alta de las dos patas delanteras y el trazo del pecho terminaba en
+// un pico justo sobre el hombro de la pata adelantada: las patas se veian
+// apoyadas contra el torso en vez de nacer de el.
+//
+// El criterio se deriva de la geometria real del SVG:
+//  1. La pata adelantada NACE del pecho: el primer punto de su trazo de
+//     tinta esta SOBRE el contorno del torso (distancia <= 1.2 px), asi que
+//     la linea del pecho continua sin corte en el borde delantero de la pata.
+//  2. El vientre NO cruza ninguna pata: por debajo de las uniones, el
+//     contorno del torso queda por ENCIMA del borde superior del relleno de
+//     la pata (>= 1.7 px = la mitad del trazo de tinta), de modo que la
+//     banda de tinta del vientre queda escondida bajo la pata y no se lee
+//     una linea por encima de las patas.
+// =============================================================
+
+test('pose walk de Luna: la pata adelantada nace del pecho (el trazo del pecho continua en la pata)', () => {
+  const body = massOutlinePolys(catWalkSVG, 'pet-body');
+  assert.ok(body.length > 0, 'no se encontro la silueta del torso');
+
+  const inner = groupInner(catWalkSVG, 'left-paw');
+  assert.ok(inner !== null, 'no se encontro el grupo .left-paw');
+  const outline = tagsWithClass(inner, 'cel-outline')[0];
+  assert.ok(outline, 'no se encontro el cel-outline de .left-paw');
+  const ink = celGeo.parsePathData(tagAttr(outline, 'd'))[0];
+  assert.ok(ink && ink.length > 1, 'no se pudo leer el trazo de .left-paw');
+
+  const start = ink[0];
+  let d = Infinity;
+  for (const b of body) d = Math.min(d, celGeo.distanceToPolygonEdge(b, start[0], start[1]));
+  assert.ok(d <= 1.2,
+    `el trazo de la pata adelantada arranca en (${start[0].toFixed(1)},${start[1].toFixed(1)}), ` +
+    `a ${d.toFixed(2)} px del contorno del pecho (maximo 1.2 px): la pata se lee ` +
+    `apoyada contra el torso en vez de nacer de el`);
+});
+
+test('pose walk de Luna: la linea del vientre no cruza las patas delanteras', () => {
+  const INK_HALF = 1.7; // stroke-width 3.4 / 2
+  const body = massOutlinePolys(catWalkSVG, 'pet-body');
+  assert.ok(body.length > 0, 'no se encontro la silueta del torso');
+
+  for (const cls of ['left-paw', 'right-paw']) {
+    const inner = groupInner(catWalkSVG, cls);
+    assert.ok(inner !== null, `no se encontro el grupo .${cls}`);
+    const outline = tagsWithClass(inner, 'cel-outline')[0];
+    assert.ok(outline, `no se encontro el cel-outline de .${cls}`);
+    const ink = celGeo.parsePathData(tagAttr(outline, 'd'))[0];
+    assert.ok(ink && ink.length > 1, `no se pudo leer el trazo de .${cls}`);
+
+    const fills = massFilledPolys(catWalkSVG, cls);
+    assert.ok(fills.length > 0, `no se encontro el relleno de .${cls}`);
+    const leg = fills.reduce((best, poly) =>
+      (Math.abs(celGeo.polygonArea(poly)) > Math.abs(celGeo.polygonArea(best)) ? poly : best));
+
+    const x0 = ink[0][0];
+    const x1 = ink[ink.length - 1][0];
+    for (const p of ink) {
+      const x = p[0];
+      // Las uniones (donde la pata se abre) son la excepcion: ahi el trazo
+      // de la pata y el del torso se juntan a proposito.
+      if (Math.abs(x - x0) < 4 || Math.abs(x - x1) < 4) continue;
+      const top = columnRange(leg, x).min;
+      if (!Number.isFinite(top)) continue;
+      const belly = Math.max(...body
+        .map((b) => columnRange(b, x).max)
+        .filter((v) => Number.isFinite(v)));
+      if (!Number.isFinite(belly)) continue;
+      // Si el borde superior de la pata esta lejos del vientre no hay cruce.
+      if (top - belly >= 6) continue;
+      assert.ok(belly - top >= INK_HALF,
+        `.${cls}: en x=${x.toFixed(2)} el contorno del torso queda ${(belly - top).toFixed(2)} px ` +
+        `por encima del borde superior de la pata (minimo ${INK_HALF} px): la linea de ` +
+        `tinta del vientre cruza la parte alta de la pata`);
+    }
+  }
+});

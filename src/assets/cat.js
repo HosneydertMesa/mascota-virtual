@@ -138,6 +138,22 @@ const catIdleSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
   </g>
 </svg>
 `;
+// Pose walk de Luna. Las patas delanteras (.left-paw / .right-paw) se pintan
+// ENCIMA del torso, asi que su relleno tiene que fundirse con el contorno del
+// vientre: el `cel-base` naranja sube hasta la curva del vientre (a ~1 px por
+// debajo, dentro de la banda de tinta de 3.4 px, para que no quede ni una
+// franja de fondo entre el torso y la pata) y el `cel-outline` sube hasta ahi
+// con la tinta abierta: si el relleno se recorta por debajo del vientre, el
+// hombro se lee como un parche pegado.
+// El `cel-base` de cada pata es UN solo relleno (un unico path) con dos lóbulos:
+// la pata visible y el HOMBRO ENTERRADO en el pecho (el guard de "hombro
+// enterrado >= 6 px" lo mide). Los dos lóbulos no se pueden fundir en uno solo
+// porque entre el pecho y la pata esta la banda de sombra del vientre
+// (`cel-shadow` del torso): el relleno claro de la pata no la puede pisar (el
+// guard de "las patas delanteras no tapan la sombra del vientre"), asi que el
+// lóbulo del hombro cabalga sobre el borde INTERIOR de esa banda. Los dos
+// lóbulos son invisibles a pantalla (coinciden con el naranja del torso) y la
+// banda de sombra sigue siendo una linea continua.
 const catWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
   <ellipse cx="100" cy="172" rx="54" ry="6" fill="#28140B" opacity="0.22" class="pet-shadow" />
 
@@ -182,43 +198,126 @@ const catWalkSVG = `<svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3
 
   <g class="anim-breath pet-body" style="transform-origin: 104px 116px; transform: translateY(0px) rotate(0deg);">
     <path class="cel-outline"
-          d="M 58,112 C 55,97 66,88 84,88 C 106,87 130,89 143,94 C 155,98 158,110 151,119 C 143,128 128,135 112,137 C 100,139 92,139 86,138 C 78,137 70,137 64,135 C 60,133 58,124 58,112 Z"
+          d="M 59,111 C 59.2,108.2 61,106.4 64,105 C 66.2,103.1 69,101.1 72,99.5 C 75,97.9 79,96.6 82,95.5 C 85,94.4 87.3,93.8 90,93 C 92.7,92.2 95.3,91.3 98,90.5 C 100.7,89.8 103,89.4 106,88.5 C 109,87.6 112.7,85.3 116,85.3 C 119.3,85.3 122.7,87.3 126,88.5 C 129.3,89.7 132.7,91.2 136,92.5 C 139.3,93.8 143.5,94.8 146,96.5 C 148.5,98.2 149.8,100.4 151,102.5 C 152.2,104.6 153,106.8 153,109 C 153,111.3 151.8,114.2 151,116 C 150.2,117.8 149.8,117.9 148,120 C 146.2,122.1 142.7,126.3 140,128.5 C 137.3,130.8 134.7,132.3 132,133.5 C 129.3,134.7 127,135.5 124,135.6 C 122.6,135.6 118.4,135 114.4,133.4 C 110.4,131.8 105.2,129.7 101.5,128.5 C 100.6,129.6 99.4,130.8 98,131.4 C 96.4,132 94.6,132.4 92.8,132.4 C 91.2,132.4 89.8,131.8 89,131.5 C 88.2,131.2 87,131 86.5,130.7 C 83.7,127.9 82.7,130.4 80.5,133.8 C 79.8,134.4 78.8,135.2 77.8,136.2 C 76,137.8 73.6,138.6 71.6,139.2 C 70.4,139.6 69.4,140 68.9,140.2 C 68.6,139.9 68.5,139.3 68.5,138.8 L 65.8,133.4 C 65,132.6 64.4,131.8 64,131 C 62.8,128.1 61.8,123.3 61,120 C 60.2,116.7 58.5,113.5 59,111 Z"
           fill="#F2A85E" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
     <path class="cel-shadow"
-          d="M 151,119 C 143,128 128,135 112,137 C 100,139 92,139 86,138 C 78,137 70,137 64,135 C 68,131 77,131 88,132 C 93,132 99,132 110,131 C 123,127 136,122 145,119 Z"
+          d="M 148,120 C 146.2,122.1 142.7,126.3 140,128.5 C 137.3,130.8 134.7,132.3 132,133.5 C 129.3,134.7 127,135.5 124,135.6 C 122.6,135.6 118.4,135 114.4,133.4 C 110.4,131.8 105.2,129.7 101.5,128.5 C 104,127.6 106,126.8 108,127 C 110,127.2 112,127.8 114,128.5 C 117.3,129.8 121,130.8 124,130.8 C 127,130.8 129.5,129.9 132,128.8 C 134.5,127.7 136.8,125.7 139,124 C 141.2,122.3 143.5,120.1 145,118.6 C 146.5,117.1 147.5,115.6 148,115 Z M 62,124 C 62.6,127.6 63.6,130.6 65.8,133.4 C 66.8,131.4 67.4,128.8 67.2,126.4 C 65.6,125 63.6,123.8 62,124 Z"
           fill="#C4783A" />
-    <path d="M 94,89 C 97,97 97,105 95,112 C 92,105 91,97 92,89 Z" fill="#8A4A1E" />
-    <path d="M 112,89 C 115,97 115,105 113,113 C 110,106 109,97 110,89 Z" fill="#8A4A1E" />
-    <path d="M 129,91 C 132,99 132,106 130,114 C 127,107 126,99 127,91 Z" fill="#8A4A1E" />
+    <path d="M 93.5,92.6 C 96.5,99 96.5,106 94.5,113 C 91.5,106 91,99 89.5,94 Z" fill="#8A4A1E" />
+    <path d="M 109.5,87.7 C 112.5,94 112.5,101 110.5,108 C 107.5,101 107,94 105.5,89.2 Z" fill="#8A4A1E" />
+    <path d="M 126.5,89.1 C 129.5,95 129.5,102 127.5,109 C 124.5,102 124,95 122.5,87.9 Z" fill="#8A4A1E" />
   </g>
 
-  <g class="left-paw" style="transform-origin: 74px 138px;">
+  <g class="left-paw" style="transform-origin: 76px 124px;">
     <path class="cel-base"
-          d="M 86.3,139.6 L 89.3,153.1 L 92,163 L 92.1,164.8 L 91.7,166.8 L 91.2,167.7 L 90.3,168.8 L 89.4,169.3 L 88,169.9 L 85.8,170.2 L 83.4,169.9 L 80.6,168.7 L 78.3,166.8 L 76.4,164.3 L 75.1,161.8 L 74,159 L 68.3,146.6 L 65.8,140.6 L 64.3,135.9"
-          fill="#FFF4E4" />
+          d="M 65.8,133.4
+             L 68.5,138.8
+             C 66.3,141.4 64.3,144.6 62.6,147.6
+             C 61,150.4 59.4,153 57.6,155.1
+             C 52,155.4 47.5,156.2 45,158.2
+             C 43,159.8 42.2,162.4 43.5,164.6
+             C 45.5,168 51,169.9 57,169.2
+             C 62.5,168.6 66.4,166.4 67.4,163.4
+             C 68,161 68.4,158.5 68.6,156.1
+             C 69.8,155.5 71.4,154.7 73.4,153.2
+             C 76,150.7 78,147.7 79.4,143.8
+             C 80.4,140.7 80.7,137.3 80.5,133.8
+             C 78.2,135.2 76,136.4 74,137.1
+             C 72,137.8 70,137.6 68.6,136.6
+             C 67.6,135.9 66.6,134.6 65.8,133.4 Z
+             M 70.8,133.8
+             C 76.5,128.3 78.1,127.5 80,126.6
+             C 79.4,123.6 78.2,120.4 76,119
+             C 74.4,118 72.2,118.2 70.4,119.6
+             C 68.6,121 67.8,123.4 67.6,126.2
+             C 67.4,129.4 68.6,132.4 70.8,133.8 Z"
+          fill="#F2A85E" />
     <path class="cel-outline"
-          d="M 66.2,137.2 L 92,163 L 92.1,164.8 L 91.9,166.3 L 91.2,167.7 L 89.9,169 L 88.5,169.7 L 87,170.1 L 85.2,170.2 L 83.4,169.9 L 81.7,169.3 L 80.1,168.4 L 78.7,167.3 L 77.5,165.9 L 75.4,162.5 L 74,159 L 69.1,148.7 L 66.2,141.6 L 64.3,135.9"
-          fill="#FFF4E4" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+          d="M 65.8,133.4
+             L 68.5,138.8
+             C 66.3,141.4 64.3,144.6 62.6,147.6
+             C 61,150.4 59.4,153 57.6,155.1
+             C 52,155.4 47.5,156.2 45,158.2
+             C 43,159.8 42.2,162.4 43.5,164.6
+             C 45.5,168 51,169.9 57,169.2
+             C 62.5,168.6 66.4,166.4 67.4,163.4
+             C 68,161 68.4,158.5 68.6,156.1
+             C 69.8,155.5 71.4,154.7 73.4,153.2
+             C 76,150.7 78,147.7 79.4,143.8
+             C 80.4,140.7 80.7,137.3 80.5,133.8"
+          fill="#F2A85E" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="butt" />
     <path class="cel-shadow"
-          d="M 90.2,165.5 L 89.7,166.7 L 88.8,167.7 L 89,169.5 L 87.5,170 L 85.8,170.2 L 84,170 L 81.7,168.3 L 80.6,168.7 L 86.1,163.2 L 86.5,164.2 L 87.6,165.3 L 90.2,165.5"
-          fill="#E4C4A0" />
-    <path d="M 79,164 C 79,167 79,169 79,170" fill="none" stroke="#3A1E12" stroke-width="1.5" stroke-linecap="round" />
-    <path d="M 86,163 C 86,166 86,168 86,170" fill="none" stroke="#3A1E12" stroke-width="1.5" stroke-linecap="round" />
-  </g>
-  <g class="right-paw" style="transform-origin: 98px 138px;">
+          d="M 74.4,136.4
+             C 76,138 76.7,140.2 76.8,142.6
+             C 76.9,144.8 76.3,146.8 75.2,148.6
+             C 74,147.2 73.2,145.2 73,143
+             C 72.8,141 73.4,138.4 74.4,136.4 Z"
+          fill="#C4783A" />
     <path class="cel-base"
-          d="M 112.1,138.5 L 112.4,144.9 L 112.1,151.9 L 111.3,158 L 110,163 L 108.8,165.2 L 107.1,167 L 105.1,168.1 L 102.3,168.8 L 99.2,168.4 L 97.4,167.7 L 95.7,166.8 L 93.2,164.5 L 91.3,161.6 L 90.4,159.6 L 89.5,156.5 L 86.3,139"
+          d="M 45.6,160.4
+             C 44.2,162 44,164.4 45,166.2
+             C 46.6,168.4 51.4,169.2 56.6,168.6
+             C 61.6,168 65.2,166 66.2,163.4
+             C 66.8,161.4 67.2,159.6 67.4,158.2
+             C 62,158.8 56,159.4 50,159.8
+             C 48.4,160 46.8,160.2 45.6,160.4 Z"
           fill="#FFF4E4" />
-    <path class="cel-outline"
-          d="M 87.7,139.8 L 110,163 L 108.8,165.2 L 108,166.2 L 106.6,167.3 L 105.1,168.1 L 102.9,168.7 L 101.1,168.7 L 99.2,168.4 L 97.4,167.7 L 95.7,166.8 L 94.1,165.5 L 92.4,163.5 L 91,161 L 89.7,157.3 L 86.3,139"
-          fill="#FFF4E4" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
-    <path class="cel-shadow"
-          d="M 107.4,163.9 L 108,166.2 L 105.2,166.2 L 105.1,168.1 L 102.4,167.3 L 100.8,167.5 L 99.9,168.6 L 98,168 L 96.2,167.1 L 102.2,161.7 L 104.9,163.2 L 107.4,163.9"
-          fill="#E4C4A0" />
-    <path d="M 96,163 C 96,166 96,168 96,169" fill="none" stroke="#3A1E12" stroke-width="1.5" stroke-linecap="round" />
-    <path d="M 103,162 C 103,165 103,167 103,168" fill="none" stroke="#3A1E12" stroke-width="1.5" stroke-linecap="round" />
+    <path d="M 48.6,161.8 C 48.6,164 48.9,166 49.5,167.6" fill="none" stroke="#3A1E12" stroke-width="1.5" stroke-linecap="round" />
+    <path d="M 55,161.4 C 55,163.6 55.2,165.6 55.8,167.2" fill="none" stroke="#3A1E12" stroke-width="1.5" stroke-linecap="round" />
   </g>
-
+  <g class="right-paw" style="transform-origin: 94px 124px;">
+    <path class="cel-base"
+          d="M 86.5,130.7
+             C 87.2,133.8 87.9,137.4 88.4,140.8
+             C 88.9,144.4 89.2,148.2 89.6,152
+             C 87.6,153.4 85.4,154.8 83.8,156.8
+             C 82.6,158.6 82.6,161 83.4,163.2
+             C 84.8,166.2 88.8,168 93.4,167.8
+             C 97.8,167.6 101.4,166.2 102.6,163.4
+             C 103.4,161.2 103.4,158.8 102.4,157
+             C 101.2,154.8 99.6,153.4 98,152.4
+             C 100,148.8 101.6,144.8 102.4,140.8
+             C 103.2,136.6 102.8,132 101.5,128.5
+             C 100.6,128 99.2,127.6 97.6,127.4
+             C 95.6,127.3 93,127.8 91.2,128.4
+             C 89.6,128.9 88,129.4 86.5,130.7 Z
+             M 87,123.6
+             C 89.5,122.9 92.2,122.1 95,122.2
+             C 95.3,119.4 94.9,116.2 93.2,115.4
+             C 91.4,114.4 89.4,115 88.2,116.8
+             C 87.2,118.6 86.9,121 87,123.6 Z"
+          fill="#F2A85E" />
+    <path class="cel-outline"
+          d="M 86.5,130.7
+             C 87.2,133.8 87.9,137.4 88.4,140.8
+             C 88.9,144.4 89.2,148.2 89.6,152
+             C 87.6,153.4 85.4,154.8 83.8,156.8
+             C 82.6,158.6 82.6,161 83.4,163.2
+             C 84.8,166.2 88.8,168 93.4,167.8
+             C 97.8,167.6 101.4,166.2 102.6,163.4
+             C 103.4,161.2 103.4,158.8 102.4,157
+             C 101.2,154.8 99.6,153.4 98,152.4
+             C 100,148.8 101.6,144.8 102.4,140.8
+             C 103.2,136.6 102.8,132 101.5,128.5"
+          fill="#F2A85E" stroke="#3A1E12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="butt" />
+    <path class="cel-shadow"
+          d="M 97.8,131.6
+             C 99,134.6 99.8,138 100,141.4
+             C 100.1,143.8 99.7,146 98.9,147.8
+             C 97.3,146.4 96.2,144 96,141.4
+             C 95.8,139 96.4,135.6 97.8,131.6 Z"
+          fill="#C4783A" />
+    <path class="cel-base"
+          d="M 84.4,159.4
+             C 83.6,161 83.4,163 84.4,165
+             C 86,167 89.8,167.6 93.4,167.4
+             C 97.4,167.2 100.8,165.8 101.8,163.2
+             C 102.2,161.8 102.4,160 102.2,158.8
+             C 97,159.4 90.4,159.6 84.4,159.4 Z"
+          fill="#FFF4E4" />
+    <path d="M 86.6,160.8 C 86.6,163 86.8,164.8 87.4,166.4" fill="none" stroke="#3A1E12" stroke-width="1.5" stroke-linecap="round" />
+    <path d="M 93,161 C 93,163 93.2,164.8 93.8,166.2" fill="none" stroke="#3A1E12" stroke-width="1.5" stroke-linecap="round" />
+  </g>
   <g class="pet-head anim-breath" style="transform-origin: 70px 98px; transform: translateY(0px) rotate(0deg);">
     <g class="pet-ear pet-ear-left" style="transform-origin: 52px 40px;">
       <path class="cel-outline"
