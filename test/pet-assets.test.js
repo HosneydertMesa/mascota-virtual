@@ -2262,3 +2262,83 @@ test('pose walk de Luna: el torso no es un bloque (lomo y vientre curvos)', () =
     `(x ${belly.range[0].toFixed(1)}..${belly.range[1].toFixed(1)}, maximo ${MAX_BELLY} px ` +
     `dentro de una banda de ${BAND} px): el vientre se lee como un bloque recto`);
 });
+
+// =============================================================
+// PASO 3 — La union de las patas delanteras con el pecho
+//
+// QA 2026-10-30 (ronda 4): la linea de tinta del vientre pasaba por ENCIMA de
+// la parte alta de las dos patas delanteras y el trazo del pecho terminaba en
+// un pico justo sobre el hombro de la pata adelantada: las patas se veian
+// apoyadas contra el torso en vez de nacer de el.
+//
+// El criterio se deriva de la geometria real del SVG:
+//  1. La pata adelantada NACE del pecho: el primer punto de su trazo de
+//     tinta esta SOBRE el contorno del torso (distancia <= 1.2 px), asi que
+//     la linea del pecho continua sin corte en el borde delantero de la pata.
+//  2. El vientre NO cruza ninguna pata: por debajo de las uniones, el
+//     contorno del torso queda por ENCIMA del borde superior del relleno de
+//     la pata (>= 1.7 px = la mitad del trazo de tinta), de modo que la
+//     banda de tinta del vientre queda escondida bajo la pata y no se lee
+//     una linea por encima de las patas.
+// =============================================================
+
+test('pose walk de Luna: la pata adelantada nace del pecho (el trazo del pecho continua en la pata)', () => {
+  const body = massOutlinePolys(catWalkSVG, 'pet-body');
+  assert.ok(body.length > 0, 'no se encontro la silueta del torso');
+
+  const inner = groupInner(catWalkSVG, 'left-paw');
+  assert.ok(inner !== null, 'no se encontro el grupo .left-paw');
+  const outline = tagsWithClass(inner, 'cel-outline')[0];
+  assert.ok(outline, 'no se encontro el cel-outline de .left-paw');
+  const ink = celGeo.parsePathData(tagAttr(outline, 'd'))[0];
+  assert.ok(ink && ink.length > 1, 'no se pudo leer el trazo de .left-paw');
+
+  const start = ink[0];
+  let d = Infinity;
+  for (const b of body) d = Math.min(d, celGeo.distanceToPolygonEdge(b, start[0], start[1]));
+  assert.ok(d <= 1.2,
+    `el trazo de la pata adelantada arranca en (${start[0].toFixed(1)},${start[1].toFixed(1)}), ` +
+    `a ${d.toFixed(2)} px del contorno del pecho (maximo 1.2 px): la pata se lee ` +
+    `apoyada contra el torso en vez de nacer de el`);
+});
+
+test('pose walk de Luna: la linea del vientre no cruza las patas delanteras', () => {
+  const INK_HALF = 1.7; // stroke-width 3.4 / 2
+  const body = massOutlinePolys(catWalkSVG, 'pet-body');
+  assert.ok(body.length > 0, 'no se encontro la silueta del torso');
+
+  for (const cls of ['left-paw', 'right-paw']) {
+    const inner = groupInner(catWalkSVG, cls);
+    assert.ok(inner !== null, `no se encontro el grupo .${cls}`);
+    const outline = tagsWithClass(inner, 'cel-outline')[0];
+    assert.ok(outline, `no se encontro el cel-outline de .${cls}`);
+    const ink = celGeo.parsePathData(tagAttr(outline, 'd'))[0];
+    assert.ok(ink && ink.length > 1, `no se pudo leer el trazo de .${cls}`);
+
+    const fills = massFilledPolys(catWalkSVG, cls);
+    assert.ok(fills.length > 0, `no se encontro el relleno de .${cls}`);
+    const leg = fills.reduce((best, poly) =>
+      (Math.abs(celGeo.polygonArea(poly)) > Math.abs(celGeo.polygonArea(best)) ? poly : best));
+
+    const x0 = ink[0][0];
+    const x1 = ink[ink.length - 1][0];
+    for (const p of ink) {
+      const x = p[0];
+      // Las uniones (donde la pata se abre) son la excepcion: ahi el trazo
+      // de la pata y el del torso se juntan a proposito.
+      if (Math.abs(x - x0) < 4 || Math.abs(x - x1) < 4) continue;
+      const top = columnRange(leg, x).min;
+      if (!Number.isFinite(top)) continue;
+      const belly = Math.max(...body
+        .map((b) => columnRange(b, x).max)
+        .filter((v) => Number.isFinite(v)));
+      if (!Number.isFinite(belly)) continue;
+      // Si el borde superior de la pata esta lejos del vientre no hay cruce.
+      if (top - belly >= 6) continue;
+      assert.ok(belly - top >= INK_HALF,
+        `.${cls}: en x=${x.toFixed(2)} el contorno del torso queda ${(belly - top).toFixed(2)} px ` +
+        `por encima del borde superior de la pata (minimo ${INK_HALF} px): la linea de ` +
+        `tinta del vientre cruza la parte alta de la pata`);
+    }
+  }
+});
