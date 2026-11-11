@@ -228,6 +228,33 @@ function getScoreLabel(score) {
   return 'crack';
 }
 
+// --- Streak API resolution ---
+
+/**
+ * Resuelve el modulo de racha segun el entorno, de forma perezosa y guardada:
+ *   - Node: require('./pomodoro-streak') solo si module.exports existe.
+ *   - Navegador (<script> clasico): window.PomodoroStreak.
+ *   - Si ninguna esta disponible: null (el reporte degrada sin lanzar).
+ *
+ * No se hace require a nivel top-level para no romper la carga como
+ * <script> en el renderer.
+ *
+ * @returns {{getNextMilestone: Function, STREAK_MILESTONES: number[]} | null}
+ */
+function getStreakApi() {
+  if (typeof module !== 'undefined' && module.exports && typeof require === 'function') {
+    try {
+      return require('./pomodoro-streak');
+    } catch (_err) {
+      // si el require falla (bundle roto), degradamos a null
+    }
+  }
+  if (typeof window !== 'undefined' && window && window.PomodoroStreak) {
+    return window.PomodoroStreak;
+  }
+  return null;
+}
+
 // --- Build report ---
 
 /**
@@ -259,6 +286,10 @@ function buildWeeklyReport(input = {}) {
   const top = topCapturesByLength(inRangeCaptures, 5);
 
   const score = computeProductivityScore({ focusBlocks, totalFocusSeconds, streak });
+  const streakApi = getStreakApi();
+  const nextMilestone = streakApi && typeof streakApi.getNextMilestone === 'function'
+    ? streakApi.getNextMilestone(streak)
+    : null;
 
   return {
     period: {
@@ -277,7 +308,8 @@ function buildWeeklyReport(input = {}) {
     },
     streak: {
       current: streak,
-      longest: longestStreak
+      longest: longestStreak,
+      nextMilestone
     },
     score
   };
@@ -329,6 +361,29 @@ function formatReportAsMarkdown(report) {
   const longest = report.streak?.longest || 0;
   lines.push(`- Actual: ${cur} día${cur === 1 ? '' : 's'}`);
   lines.push(`- Mejor: ${longest} día${longest === 1 ? '' : 's'}`);
+
+  // Próximo hito: la regla vive en pomodoro-streak.js, acá sólo se pinta.
+  const nextMilestone = report.streak?.nextMilestone;
+  if (nextMilestone
+      && typeof nextMilestone.milestone === 'number'
+      && typeof nextMilestone.daysLeft === 'number') {
+    lines.push(`- Próximo hito: ${nextMilestone.milestone} días (faltan ${nextMilestone.daysLeft})`);
+  } else {
+    const streakApi = getStreakApi();
+    const milestones = streakApi && Array.isArray(streakApi.STREAK_MILESTONES)
+      ? streakApi.STREAK_MILESTONES
+      : null;
+    const lastMilestone = milestones && milestones.length > 0
+      ? milestones[milestones.length - 1]
+      : null;
+    if (typeof lastMilestone === 'number') {
+      lines.push(`- Próximo hito: ya alcanzaste el último (${lastMilestone} días)`);
+    } else {
+      // Sin API de racha disponible: misma línea, sin el detalle del último hito.
+      lines.push('- Próximo hito: ya alcanzaste el último');
+    }
+  }
+
   lines.push('');
 
   // Score

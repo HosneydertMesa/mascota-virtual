@@ -2,6 +2,11 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const vm = require('node:vm');
+const fs = require('node:fs');
+const path = require('node:path');
+
+const PomodoroStreak = require('../src/core/pomodoro-streak');
 
 const {
   DAY_KEYS_MONDAY_FIRST,
@@ -513,4 +518,98 @@ test('integration: corpus realista genera markdown valido', () => {
   assert.ok(md.includes('Total: 3 ideas'));
   assert.ok(md.includes('**100/100**'));
   assert.ok(md.includes('crack'));
+});
+
+// --- Próximo hito de racha ---
+
+const TODAY_FIJO = new Date('2026-07-22T15:00:00');
+
+/** Devuelve el texto de la sección ## Racha (hasta ## Score). */
+function rachaSection(md) {
+  const start = md.indexOf('## Racha');
+  assert.notEqual(start, -1, 'el markdown debe tener la sección ## Racha');
+  const end = md.indexOf('## Score', start);
+  return end === -1 ? md.slice(start) : md.slice(start, end);
+}
+
+test('buildWeeklyReport: streak.nextMilestone es deepEqual a PomodoroStreak.getNextMilestone', () => {
+  for (const streak of [0, 2, 3, 5, 6, 7, 59, 60, 99, 100, 101]) {
+    const report = buildWeeklyReport({ streak, today: TODAY_FIJO });
+    assert.deepEqual(
+      report.streak.nextMilestone,
+      PomodoroStreak.getNextMilestone(streak),
+      `streak=${streak}`
+    );
+  }
+});
+
+test('buildWeeklyReport: sin streak usa la racha normalizada (0) para el próximo hito', () => {
+  const report = buildWeeklyReport({ today: TODAY_FIJO });
+  assert.equal(report.streak.current, 0);
+  assert.deepEqual(report.streak.nextMilestone, PomodoroStreak.getNextMilestone(0));
+});
+
+test('buildWeeklyReport: shape exacto { milestone, daysLeft } y null sin hito', () => {
+  assert.deepEqual(
+    buildWeeklyReport({ streak: 5, today: TODAY_FIJO }).streak.nextMilestone,
+    { milestone: 7, daysLeft: 2 }
+  );
+  assert.deepEqual(
+    buildWeeklyReport({ streak: 99, today: TODAY_FIJO }).streak.nextMilestone,
+    { milestone: 100, daysLeft: 1 }
+  );
+  assert.equal(buildWeeklyReport({ streak: 100, today: TODAY_FIJO }).streak.nextMilestone, null);
+  assert.equal(buildWeeklyReport({ streak: 101, today: TODAY_FIJO }).streak.nextMilestone, null);
+  assert.equal(buildWeeklyReport({ streak: 200, today: TODAY_FIJO }).streak.nextMilestone, null);
+});
+
+test('formatReportAsMarkdown: con racha 5 muestra el próximo hito en ## Racha', () => {
+  const report = buildWeeklyReport({ streak: 5, today: TODAY_FIJO });
+  const md = formatReportAsMarkdown(report);
+  assert.ok(rachaSection(md).includes('- Próximo hito: 7 días (faltan 2)'));
+});
+
+test('formatReportAsMarkdown: con racha 100 avisa que alcanzó el último hito', () => {
+  const report = buildWeeklyReport({ streak: 100, today: TODAY_FIJO });
+  const md = formatReportAsMarkdown(report);
+  assert.ok(rachaSection(md).includes('- Próximo hito: ya alcanzaste el último (100 días)'));
+});
+
+// --- Carga tipo navegador (sin module/require) ---
+
+const SRC_DIR = path.join(__dirname, '..', 'src', 'core');
+const STREAK_SRC = fs.readFileSync(path.join(SRC_DIR, 'pomodoro-streak.js'), 'utf8');
+const WEEKLY_SRC = fs.readFileSync(path.join(SRC_DIR, 'weekly-report.js'), 'utf8');
+
+test('vm: window.WeeklyReport calcula nextMilestone con window.PomodoroStreak', () => {
+  const sandbox = { window: {} };
+  const context = vm.createContext(sandbox);
+  vm.runInContext(STREAK_SRC, context, { filename: 'pomodoro-streak.js' });
+  vm.runInContext(WEEKLY_SRC, context, { filename: 'weekly-report.js' });
+  assert.ok(sandbox.window.WeeklyReport, 'debe exponer window.WeeklyReport');
+  assert.equal(typeof sandbox.window.WeeklyReport.buildWeeklyReport, 'function');
+  const report = sandbox.window.WeeklyReport.buildWeeklyReport({ streak: 5 });
+  const nm = JSON.parse(JSON.stringify(report.streak.nextMilestone));
+  assert.deepEqual(nm, { milestone: 7, daysLeft: 2 });
+});
+
+test('vm: sin window.PomodoroStreak degrada sin lanzar y sin paréntesis', () => {
+  const sandbox = { window: {} };
+  const context = vm.createContext(sandbox);
+  vm.runInContext(WEEKLY_SRC, context, { filename: 'weekly-report.js' });
+  const WeeklyReport = sandbox.window.WeeklyReport;
+  assert.ok(WeeklyReport, 'debe exponer window.WeeklyReport');
+
+  let report;
+  assert.doesNotThrow(() => {
+    report = WeeklyReport.buildWeeklyReport({ streak: 100 });
+  });
+  assert.equal(report.streak.nextMilestone, null);
+
+  let md;
+  assert.doesNotThrow(() => {
+    md = WeeklyReport.formatReportAsMarkdown(report);
+  });
+  const lines = md.split('\n');
+  assert.ok(lines.includes('- Próximo hito: ya alcanzaste el último'));
 });
