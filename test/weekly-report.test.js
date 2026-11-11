@@ -613,3 +613,38 @@ test('vm: sin window.PomodoroStreak degrada sin lanzar y sin paréntesis', () =>
   const lines = md.split('\n');
   assert.ok(lines.includes('- Próximo hito: ya alcanzaste el último'));
 });
+
+// --- Detalles del próximo hito (singular / dato ausente) ---
+
+test('formatReportAsMarkdown: con un solo día de diferencia usa singular "falta 1"', () => {
+  const report = buildWeeklyReport({ streak: 99, today: TODAY_FIJO });
+  assert.deepEqual(report.streak.nextMilestone, { milestone: 100, daysLeft: 1 });
+  const section = rachaSection(formatReportAsMarkdown(report));
+  assert.ok(section.includes('- Próximo hito: 100 días (falta 1)'));
+  assert.ok(!section.includes('faltan 1'));
+});
+
+test('formatReportAsMarkdown: con dos o más días de diferencia sigue en plural', () => {
+  const md = formatReportAsMarkdown(buildWeeklyReport({ streak: 5, today: TODAY_FIJO }));
+  const section = rachaSection(md);
+  assert.ok(section.includes('- Próximo hito: 7 días (faltan 2)'));
+  assert.ok(!section.includes('falta 2'));
+});
+
+test('formatReportAsMarkdown: sin el campo nextMilestone no aparece la línea de próximo hito', () => {
+  const report = buildWeeklyReport({ streak: 5, today: TODAY_FIJO });
+  const sinDato = { ...report, streak: { ...report.streak } };
+  delete sinDato.streak.nextMilestone;
+  assert.ok(!('nextMilestone' in sinDato.streak), 'el campo debe estar ausente');
+
+  const section = rachaSection(formatReportAsMarkdown(sinDato));
+  assert.ok(!section.includes('Próximo hito'), `no debe afirmar el hito: ${section}`);
+  assert.ok(section.includes('- Actual: 5 días'));
+});
+
+test('formatReportAsMarkdown: nextMilestone null sí anuncia que alcanzó el último hito', () => {
+  const report = buildWeeklyReport({ streak: 100, today: TODAY_FIJO });
+  const aMano = { ...report, streak: { current: 100, longest: 100, nextMilestone: null } };
+  const section = rachaSection(formatReportAsMarkdown(aMano));
+  assert.ok(section.includes('- Próximo hito: ya alcanzaste el último (100 días)'));
+});

@@ -363,12 +363,16 @@ function formatReportAsMarkdown(report) {
   lines.push(`- Mejor: ${longest} día${longest === 1 ? '' : 's'}`);
 
   // Próximo hito: la regla vive en pomodoro-streak.js, acá sólo se pinta.
+  // Sin el dato (campo ausente) no se afirma nada; null significa "ya alcanzó el último".
   const nextMilestone = report.streak?.nextMilestone;
-  if (nextMilestone
+  if (nextMilestone !== undefined && nextMilestone !== null
       && typeof nextMilestone.milestone === 'number'
       && typeof nextMilestone.daysLeft === 'number') {
-    lines.push(`- Próximo hito: ${nextMilestone.milestone} días (faltan ${nextMilestone.daysLeft})`);
-  } else {
+    const falta = nextMilestone.daysLeft === 1
+      ? 'falta 1'
+      : `faltan ${nextMilestone.daysLeft}`;
+    lines.push(`- Próximo hito: ${nextMilestone.milestone} días (${falta})`);
+  } else if (nextMilestone !== undefined) {
     const streakApi = getStreakApi();
     const milestones = streakApi && Array.isArray(streakApi.STREAK_MILESTONES)
       ? streakApi.STREAK_MILESTONES
