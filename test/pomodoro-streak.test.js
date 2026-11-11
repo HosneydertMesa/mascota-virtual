@@ -9,7 +9,8 @@ const {
   computeStreak,
   computeLongestStreak,
   isStreakMilestone,
-  getStreakMilestoneMessage
+  getStreakMilestoneMessage,
+  getNextMilestone
 } = require('../src/core/pomodoro-streak');
 
 // --- Constantes ---
@@ -205,6 +206,66 @@ test('isStreakMilestone: input invalido → false', () => {
   assert.equal(isStreakMilestone('3'), false);
   assert.equal(isStreakMilestone(NaN), false);
   assert.equal(isStreakMilestone(-1), false);
+});
+
+// --- getNextMilestone ---
+
+test('getNextMilestone: 0 → { milestone: 3, daysLeft: 3 }', () => {
+  assert.deepEqual(getNextMilestone(0), { milestone: 3, daysLeft: 3 });
+});
+
+test('getNextMilestone: 2 → { milestone: 3, daysLeft: 1 }', () => {
+  assert.deepEqual(getNextMilestone(2), { milestone: 3, daysLeft: 1 });
+});
+
+test('getNextMilestone: 3 (hito exacto) → siguiente hito { milestone: 7, daysLeft: 4 }', () => {
+  assert.deepEqual(getNextMilestone(3), { milestone: 7, daysLeft: 4 });
+});
+
+test('getNextMilestone: 6 → { milestone: 7, daysLeft: 1 }', () => {
+  assert.deepEqual(getNextMilestone(6), { milestone: 7, daysLeft: 1 });
+});
+
+test('getNextMilestone: 7 (hito exacto) → { milestone: 14, daysLeft: 7 }', () => {
+  assert.deepEqual(getNextMilestone(7), { milestone: 14, daysLeft: 7 });
+});
+
+test('getNextMilestone: 59 → { milestone: 60, daysLeft: 1 }', () => {
+  assert.deepEqual(getNextMilestone(59), { milestone: 60, daysLeft: 1 });
+});
+
+test('getNextMilestone: 60 (hito exacto) → { milestone: 100, daysLeft: 40 }', () => {
+  assert.deepEqual(getNextMilestone(60), { milestone: 100, daysLeft: 40 });
+});
+
+test('getNextMilestone: 99 → { milestone: 100, daysLeft: 1 }', () => {
+  assert.deepEqual(getNextMilestone(99), { milestone: 100, daysLeft: 1 });
+});
+
+test('getNextMilestone: 100 (ultimo hito) → null', () => {
+  assert.equal(getNextMilestone(100), null);
+});
+
+test('getNextMilestone: 101 → null', () => {
+  assert.equal(getNextMilestone(101), null);
+});
+
+test('getNextMilestone: 200 → null', () => {
+  assert.equal(getNextMilestone(200), null);
+});
+
+test('getNextMilestone: input invalido (null, undefined, "3", NaN, -5, Infinity) se trata como 0', () => {
+  const expected = { milestone: 3, daysLeft: 3 };
+  for (const bad of [null, undefined, '3', NaN, -5, Infinity]) {
+    assert.deepEqual(getNextMilestone(bad), expected, `entrada ${String(bad)} deberia tratarse como 0`);
+  }
+});
+
+test('getNextMilestone: redondea hacia abajo como isStreakMilestone', () => {
+  // 2.9 → floor 2 → siguiente hito 3 con 1 dia restante
+  assert.deepEqual(getNextMilestone(2.9), { milestone: 3, daysLeft: 1 });
+  // 3.9 → floor 3 → hito exacto, siguiente 7 con 4 dias restantes
+  assert.deepEqual(getNextMilestone(3.9), { milestone: 7, daysLeft: 4 });
 });
 
 // --- getStreakMilestoneMessage ---

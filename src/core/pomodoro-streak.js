@@ -141,6 +141,31 @@ function isStreakMilestone(days) {
 }
 
 /**
+ * Devuelve el proximo hito de racha y cuantos dias faltan para alcanzarlo.
+ *
+ * Entrada invalida (no numerica, NaN, Infinity o negativa) se trata como 0,
+ * igual que una racha sin empezar. Redondea hacia abajo con Math.floor, en
+ * linea con isStreakMilestone.
+ *
+ * Si la racha ya alcanzo o paso el ultimo hito, retorna null.
+ *
+ * @param {number} streak
+ * @returns {{milestone: number, daysLeft: number} | null}
+ */
+function getNextMilestone(streak) {
+  let days = 0;
+  if (typeof streak === 'number' && Number.isFinite(streak) && streak > 0) {
+    days = Math.floor(streak);
+  }
+  for (const milestone of STREAK_MILESTONES) {
+    if (milestone > days) {
+      return { milestone, daysLeft: milestone - days };
+    }
+  }
+  return null;
+}
+
+/**
  * Calcula la racha MAS LARGA historica en un set de completedDays.
  * Util para reportes semanales ("mejor racha de la semana").
  *
@@ -224,7 +249,8 @@ const PomodoroStreak = {
   computeStreak,
   computeLongestStreak,
   isStreakMilestone,
-  getStreakMilestoneMessage
+  getStreakMilestoneMessage,
+  getNextMilestone
 };
 
 if (typeof module !== 'undefined' && module.exports) {
