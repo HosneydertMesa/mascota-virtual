@@ -575,6 +575,64 @@ test('formatReportAsMarkdown: con racha 100 avisa que alcanzó el último hito',
   assert.ok(rachaSection(md).includes('- Próximo hito: ya alcanzaste el último (100 días)'));
 });
 
+// --- Mejor día del reporte ---
+
+/** Devuelve las líneas de la sección ## Pomodoro. */
+function pomodoroLines(md) {
+  const start = md.indexOf('## Pomodoro');
+  assert.notEqual(start, -1, 'el markdown debe tener la sección ## Pomodoro');
+  const end = md.indexOf('## Capturas', start);
+  const section = end === -1 ? md.slice(start) : md.slice(start, end);
+  return section.split('\n').filter(l => l !== '');
+}
+
+/** Sesión focus sintética en un día/hora dados. */
+function focusSession(day, hour) {
+  return { startedAt: new Date(2026, 6, day, hour, 0, 0).getTime(), kind: 'focus', durationSec: 1500 };
+}
+
+test('formatReportAsMarkdown: muestra el día ganador con varios focus blocks', () => {
+  const sessions = [
+    focusSession(20, 9), focusSession(20, 10),                       // lunes: 2
+    focusSession(23, 9), focusSession(23, 10), focusSession(23, 11), focusSession(23, 12) // jueves: 4
+  ];
+  const report = buildWeeklyReport({ sessions, today: TODAY_FIJO });
+  const lines = pomodoroLines(formatReportAsMarkdown(report));
+  assert.ok(lines.includes('- Mejor día: jue (4 focus blocks)'), lines.join(' | '));
+});
+
+test('formatReportAsMarkdown: la línea "Mejor día" va justo después de "Por día"', () => {
+  const report = buildWeeklyReport({ sessions: [focusSession(20, 9)], today: TODAY_FIJO });
+  const lines = pomodoroLines(formatReportAsMarkdown(report));
+  const porDiaIdx = lines.findIndex(l => l.startsWith('- Por día:'));
+  assert.notEqual(porDiaIdx, -1);
+  assert.ok(lines[porDiaIdx + 1].startsWith('- Mejor día:'), lines.join(' | '));
+});
+
+test('formatReportAsMarkdown: usa singular "focus block" cuando N = 1', () => {
+  const report = buildWeeklyReport({ sessions: [focusSession(22, 10)], today: TODAY_FIJO });
+  const lines = pomodoroLines(formatReportAsMarkdown(report));
+  assert.ok(lines.includes('- Mejor día: mie (1 focus block)'), lines.join(' | '));
+  assert.ok(!lines.includes('- Mejor día: mie (1 focus blocks)'));
+});
+
+test('formatReportAsMarkdown: con empate gana el primero en el orden de "Por día"', () => {
+  const sessions = [
+    focusSession(20, 9), focusSession(20, 10),   // lunes: 2
+    focusSession(24, 9), focusSession(24, 10)    // viernes: 2
+  ];
+  const report = buildWeeklyReport({ sessions, today: TODAY_FIJO });
+  const lines = pomodoroLines(formatReportAsMarkdown(report));
+  assert.ok(lines.includes('- Mejor día: lun (2 focus blocks)'), lines.join(' | '));
+  assert.ok(!lines.includes('- Mejor día: vie (2 focus blocks)'));
+});
+
+test('formatReportAsMarkdown: semana sin focus blocks usa el texto fijo', () => {
+  const report = buildWeeklyReport({ sessions: [], today: TODAY_FIJO });
+  const lines = pomodoroLines(formatReportAsMarkdown(report));
+  assert.ok(lines.includes('- Mejor día: sin focus blocks esta semana'), lines.join(' | '));
+});
+
 // --- Carga tipo navegador (sin module/require) ---
 
 const SRC_DIR = path.join(__dirname, '..', 'src', 'core');
