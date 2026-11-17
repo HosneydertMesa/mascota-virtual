@@ -340,6 +340,23 @@ function formatReportAsMarkdown(report) {
   const dayOrder = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
   const dayLabels = dayOrder.map(k => `${DAY_LABELS_ES[k] || k} ${byDay[k] || 0}`).join(', ');
   lines.push(`- Por día: ${dayLabels}`);
+
+  // Mejor día: primer máximo (> 0) recorriendo el mismo orden que "Por día".
+  let bestDayKey = null;
+  let bestDayCount = 0;
+  for (const k of dayOrder) {
+    const count = byDay[k] || 0;
+    if (count > bestDayCount) {
+      bestDayKey = k;
+      bestDayCount = count;
+    }
+  }
+  if (bestDayKey) {
+    const bestLabel = DAY_LABELS_ES[bestDayKey] || bestDayKey;
+    lines.push(`- Mejor día: ${bestLabel} (${bestDayCount} focus block${bestDayCount === 1 ? '' : 's'})`);
+  } else {
+    lines.push('- Mejor día: sin focus blocks esta semana');
+  }
   lines.push('');
 
   // Capturas
